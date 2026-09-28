@@ -120,6 +120,20 @@ body.cb-redesign-active #hoy .today-event .button-row button { flex:0 1 auto !im
 #cbx-header #cbx-header-actions #manual-refresh { width:28px !important; min-width:28px !important; padding:0 !important; font-size:0 !important; }
 #cbx-header #cbx-header-actions #manual-refresh { width:84px !important; min-width:84px !important; padding:0 8px !important; font:700 12px var(--cbx-ui) !important; white-space:nowrap !important; }
 #cbx-header #cbx-header-actions #manual-refresh::after { content:none !important; }
+#cbx-header #cbx-header-actions #manual-refresh {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  flex: 0 0 36px !important;
+}
+#cbx-header #cbx-header-actions #manual-refresh::after {
+  content: '↻' !important;
+  font: 700 22px/1 var(--cbx-ui) !important;
+}
 @media(max-width:1099px){
  #cbx-header #cbx-header-actions { width:auto !important; gap:6px !important; display:flex !important; flex-wrap:nowrap !important; grid-template-columns:none !important; }
  #cbx-header #cbx-header-actions #logout { width:48px !important; min-width:48px !important; font-size:0 !important; }

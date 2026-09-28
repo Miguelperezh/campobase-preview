@@ -83,3 +83,12 @@ body.cb-redesign-active:not([data-theme-bg]):not([data-has-custom-font-color="tr
   --cb-slate-900: #0f172a !important;
   --ink: #0f172a !important;
 }
+
+/* Keep Claude's display face for the brand, and its UI face for navigation. */
+#cb-claude-sidebar .cb-shell-group button,
+#cb-claude-sidebar .cb-shell-role,
+#cbx-header,
+#cbx-header button,
+#cb-bottom-nav button { font-family: var(--cbx-ui) !important; }
+#cb-claude-sidebar .cb-shell-brand strong { font-family: var(--cbx-disp) !important; }
+#cbx-header #active-format { background: var(--cbx-green-soft) !important; color: var(--cbx-green-ink) !important; border: 0 !important; font-family: var(--cbx-ui) !important; font-weight: 800 !important; }
