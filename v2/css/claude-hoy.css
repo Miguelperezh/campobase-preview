@@ -1,7 +1,6 @@
 /* Claude: shell + Hoy only. Business modules keep their own styles and handlers. */
 /* Shell and Hoy use the Claude reference typography from the first paint.
    Existing saved theme preferences remain available to the other modules. */
-body.cb-redesign-active { --cbx-ui: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 body.cb-redesign-active #hoy,
 body.cb-redesign-active #cb-claude-sidebar,
 body.cb-redesign-active #cbx-header,
@@ -13,7 +12,7 @@ body.cb-redesign-active #logout { background:#fff !important; border:1px solid v
 body.cb-redesign-active #cb-claude-sidebar .cb-shell-brand strong { font-family:var(--cbx-disp) !important; font-weight:800 !important; }
 body.cb-redesign-active #hoy { max-width:none !important; width:100% !important; margin:0 !important; font-family:var(--cbx-ui) !important; }
 body.cb-redesign-active #hoy .today-section-head { display:none !important; }
-body.cb-redesign-active #hoy .today-hero { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:20px !important; padding:22px !important; border:0 !important; border-radius:22px !important; background:linear-gradient(135deg,#0a251b,#123c2d) !important; box-shadow:var(--cbx-shadow-hero) !important; }
+body.cb-redesign-active #hoy .today-hero { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:20px !important; padding:22px !important; border:0 !important; border-radius:22px !important; background:radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--cbx-acc) 38%,transparent),transparent 55%),linear-gradient(135deg,var(--cbx-hero),color-mix(in srgb,var(--cbx-hero) 72%,#297053)) !important; box-shadow:var(--cbx-shadow-hero) !important; }
 body.cb-redesign-active #hoy .today-hero h3 { color:white !important; font:800 34px/1.05 var(--cbx-disp) !important; text-transform:uppercase !important; margin:4px 0 0 !important; letter-spacing:0 !important; }
 body.cb-redesign-active #hoy .today-hero .eyebrow { color:#b9c9c2 !important; margin:0 !important; font:800 12px var(--cbx-ui) !important; letter-spacing:.1em !important; }
 body.cb-redesign-active #hoy .today-hero-counts { gap:8px !important; display:flex !important; flex-wrap:wrap !important; }
@@ -148,7 +147,19 @@ body.cb-redesign-active #hoy .today-event .button-row button { flex:0 1 auto !im
  #cbx-header #cbx-header-actions #manual-refresh,
  #cbx-header #cbx-header-actions #logout { width:100% !important; min-width:0 !important; }
 }
-/* La cabecera móvil de Claude deja la actualización en Ajustes. */
+/* El control de actualización conserva su texto completo en todas las escalas. */
+#cbx-header #cbx-header-actions #manual-refresh {
+ display:inline-flex !important; align-items:center !important; justify-content:center !important;
+ width:auto !important; min-width:96px !important; flex:0 0 auto !important;
+ padding:0 12px !important; font:700 13px var(--cbx-ui) !important;
+ white-space:nowrap !important;
+}
+#cbx-header #cbx-header-actions #manual-refresh::after { content:none !important; }
 @media(max-width:700px){
- #cbx-header #cbx-header-actions #manual-refresh { display:none !important; }
+ #cbx-header { display:grid !important; grid-template-columns:minmax(0,1fr) !important; }
+ #cbx-header #cbx-header-brand { width:100% !important; }
+ #cbx-header #cbx-header-actions { grid-column:1 !important; width:100% !important; justify-content:stretch !important; }
+ #cbx-header #cbx-header-actions #open-field-mode,
+ #cbx-header #cbx-header-actions #manual-refresh { flex:1 1 0 !important; min-width:0 !important; }
+ #cbx-header #cbx-header-actions #logout { flex:0 0 48px !important; }
 }

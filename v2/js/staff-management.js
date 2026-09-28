@@ -37,9 +37,15 @@ export function getRoleMeta(roleId) {
 export async function getStaffMembers() {
   try {
     const settings = await getAll('settings');
+    const claudeRoleOrder = {
+      head_coach: 0, assistant_coach: 1, goalkeeper_coach: 2,
+      fitness_coach: 3, team_delegate: 4, pitch_delegate: 5,
+    };
     return settings
       .filter((item) => item?.recordType === 'staffMember')
-      .sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.createdAt ?? 0) - (b.createdAt ?? 0));
+      .sort((a, b) => (claudeRoleOrder[a.role] ?? 6) - (claudeRoleOrder[b.role] ?? 6)
+        || (a.order ?? 99) - (b.order ?? 99)
+        || (a.createdAt ?? 0) - (b.createdAt ?? 0));
   } catch (err) {
     console.error('Error al obtener cuerpo técnico:', err);
     return [];

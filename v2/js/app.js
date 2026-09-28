@@ -16,7 +16,7 @@ import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
-import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-equipo-1';
+import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-correccion-1';
 import { renderTodayDashboard } from './today-dashboard.js?v=2457';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
@@ -670,6 +670,12 @@ function renderAll() {
   try { window.dispatchEvent(new CustomEvent('campobase:data-updated')); } catch {}
 }
 
+function renderPlayerFamilyContact(label, name, phone) {
+  const detail = `${label}: ${name || (phone ? 'Sin nombre' : 'Sin registrar')}${phone ? ` · ${phone}` : ''}`;
+  if (!phone) return `<span class="contact-pill meta">${escapeHtml(detail)}</span>`;
+  return `<a href="https://wa.me/${formatWhatsAppPhone(phone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp ${label}">${escapeHtml(detail)}</a>`;
+}
+
 function renderPlayers() {
   const currentMatchIds = new Set(state.matches.map((match) => match.id));
   const currentCallups = state.callups.filter((callup) => !callup.matchId || currentMatchIds.has(callup.matchId));
@@ -770,11 +776,10 @@ function renderPlayers() {
       </div>
       ${specialistTags}
       <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(cleanPlayerNumber(player.number) || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div>
-      ${(player.fatherPhone || player.motherPhone || player.fatherName || player.motherName) ? `
       <div class="player-family-contacts">
-        ${player.fatherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.fatherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Padre">👨 ${escapeHtml(player.fatherName || 'Padre')}: ${escapeHtml(player.fatherPhone)}</a>` : (player.fatherName ? `<span class="contact-pill meta">👨 Padre: ${escapeHtml(player.fatherName)}</span>` : '')}
-        ${player.motherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.motherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Madre">👩 ${escapeHtml(player.motherName || 'Madre')}: ${escapeHtml(player.motherPhone)}</a>` : (player.motherName ? `<span class="contact-pill meta">👩 Madre: ${escapeHtml(player.motherName)}</span>` : '')}
-      </div>` : ''}
+        ${renderPlayerFamilyContact('Padre', player.fatherName, player.fatherPhone)}
+        ${renderPlayerFamilyContact('Madre', player.motherName, player.motherPhone)}
+      </div>
       <div class="player-card-actions-bar">
         <button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">WhatsApp</button>
         <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button>
@@ -4954,6 +4959,29 @@ function applyCustomTheme(themeInput) {
   root.style.setProperty('--cb-font-family', fontFamVal);
   body.style.setProperty('--cb-font-family', fontFamVal);
 
+  // La capa visual de Claude usa los mismos Ajustes que el resto de CampoBase.
+  const claudeHeroes = {
+    default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
+    navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
+    steel: '#171d24', burgundy: '#170408', purple: '#110722',
+    light: '#0a251b', warm: '#0a251b', sepia: '#0a251b', 'high-vis': '#000000',
+  };
+  const claudeBackgrounds = {
+    default: '#f4f6f5', dark: '#eef1ef', 'pitch-vivid': '#eef6f1',
+    navy: '#f1f4f9', ocean: '#eff5f8', charcoal: '#f2f2f3',
+    steel: '#f1f3f5', burgundy: '#f8f2f3', purple: '#f4f2f8',
+    light: '#ffffff', warm: '#f6f3eb', sepia: '#eee6d8', 'high-vis': '#ffffff',
+  };
+  const displayFont = ['modern', 'technical', 'classic'].includes(family)
+    ? fontFamVal : '"Barlow Condensed", sans-serif';
+  for (const target of [root, body]) {
+    target.style.setProperty('--cbx-hero', claudeHeroes[bg] || claudeHeroes.default);
+    target.style.setProperty('--cbx-bg', claudeBackgrounds[bg] || claudeBackgrounds.default);
+    target.style.setProperty('--cbx-acc', theme.accentColor || '#10b981');
+    target.style.setProperty('--cbx-ui', fontFamVal);
+    target.style.setProperty('--cbx-disp', displayFont);
+  }
+
   // 4. Tamaño / Escala de fuentes (data-font-scale y rem base en html)
   const scale = theme.fontScale || 'normal';
   if (scale && scale !== 'normal') {
@@ -6937,11 +6965,12 @@ function wireEvents() {
   document.addEventListener('click', (event) => {
     const openSetPiecesBtn = event.target.closest('#open-set-pieces-btn, .open-set-pieces-trigger');
     if (openSetPiecesBtn) {
-      if (!roleCanUseOwnerFeatures(state.role)) {
-        toast('Solo Migue puede configurar los especialistas.');
-        return;
-      }
       populateSetPiecesForm();
+      const canEdit = roleCanUseOwnerFeatures(state.role);
+      const form = $('#set-pieces-form');
+      form?.querySelectorAll('select').forEach((select) => { select.disabled = !canEdit; });
+      const saveButton = form?.querySelector('button[type="submit"]');
+      if (saveButton) saveButton.hidden = !canEdit;
       $('#set-pieces-dialog')?.showModal();
       return;
     }
