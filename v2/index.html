@@ -19,7 +19,8 @@
   <link rel="stylesheet" href="billing.css?v=1">
   <link rel="stylesheet" href="css/campobase-diseno.css?v=hoy-real-2">
   <link rel="stylesheet" href="css/claude-shell.css?v=hoy-real-2">
-  <link rel="stylesheet" href="css/claude-hoy.css?v=hoy-real-2">
+  <link rel="stylesheet" href="css/claude-hoy.css?v=claude-equipo-1">
+  <link rel="stylesheet" href="css/claude-plantilla.css?v=claude-equipo-1">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -107,22 +108,22 @@
       <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>
     </section>
 
-    <section id="plantilla" class="view" aria-labelledby="title-plantilla">
-      <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><div class="button-row"><button type="button" class="secondary" id="open-set-pieces-btn">🎯 Balón parado y Capitanes</button><button data-dialog="player-dialog" class="primary">+ Jugador</button></div></div>
+    <section id="plantilla" class="view cbx-plantilla" aria-labelledby="title-plantilla">
+      <div class="section-head cbx-banner"><div><p class="cbx-eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><div class="button-row"><button type="button" class="cbx-btn-light" id="open-set-pieces-btn">Balón parado y Capitanes</button><button data-dialog="player-dialog" class="cbx-btn">+ Jugador</button></div></div>
       <article id="demo-team-panel" class="panel hidden"><h3>Equipo de demostración</h3><p class="meta">Esta información es temporal, no se sincroniza y se elimina al cerrar la demo o al cumplirse dos horas.</p><form id="demo-team-form"><label>Nombre del equipo de prueba<input name="teamName" maxlength="100" required placeholder="Ej. Equipo de prueba"></label><label>Formato<select name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo de prueba</button></form></article>
-      <div id="plantilla-staff-top" class="plantilla-staff-top"></div>
-      <div id="squad-stats" class="stats"></div>
-      <div id="plantilla-specialists-bar" class="plantilla-specialists-bar"></div>
-      <div id="squad-leaderboards" class="squad-leaderboards"></div>
-      <div id="players-list" class="card-grid"></div>
+      <div id="plantilla-staff-top" class="plantilla-staff-top cbx-plantilla-staff"></div>
+      <div id="squad-stats" class="stats cbx-plantilla-stats"></div>
+      <div id="plantilla-specialists-bar" class="plantilla-specialists-bar cbx-plantilla-specialists"></div>
+      <div id="squad-leaderboards" class="squad-leaderboards cbx-plantilla-leaders"></div>
+      <div id="players-list" class="card-grid cbx-plantilla-players"></div>
     </section>
 
-    <section id="cuerpo-tecnico" class="view" aria-labelledby="title-cuerpo-tecnico">
-      <div class="section-head">
-        <div><p class="eyebrow">Equipo · Estructura técnica</p><h2 id="title-cuerpo-tecnico">Cuerpo Técnico</h2></div>
+    <section id="cuerpo-tecnico" class="view cbx-equipo-tecnicos" aria-labelledby="title-cuerpo-tecnico">
+      <div class="section-head cbx-banner">
+        <div><p class="cbx-eyebrow">Equipo · Estructura técnica</p><h2 id="title-cuerpo-tecnico">Cuerpo Técnico</h2></div>
         <div class="button-row">
           <span class="badge staff-count-badge" id="staff-total-count">0 miembros</span>
-          <button type="button" id="new-staff-btn" class="primary">+ Añadir técnico</button>
+          <button type="button" id="new-staff-btn" class="cbx-btn">+ Añadir técnico</button>
         </div>
       </div>
       <div id="staff-list-container" class="staff-container"></div>
@@ -153,8 +154,8 @@
       <div id="matches-list" class="stack"></div>
     </section>
 
-    <section id="asistencia" class="view" aria-labelledby="title-training">
-      <div class="section-head"><div><p class="eyebrow">Entrenos y partidos</p><h2 id="title-training">Asistencia</h2></div><button id="new-training" class="primary">+ Registro</button></div>
+    <section id="asistencia" class="view cbx-equipo-asistencia" aria-labelledby="title-training">
+      <div class="section-head cbx-banner"><div><p class="cbx-eyebrow">Entrenos y partidos</p><h2 id="title-training">Asistencia</h2></div><button id="new-training" class="cbx-btn">+ Registro</button></div>
       <div id="attendance-stats" class="stack"></div>
       <div id="training-builder" class="panel hidden"></div><div id="trainings-list" class="stack"></div>
     </section>
@@ -785,8 +786,8 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20260927-v66-real-calendar-dates"></script>
-  <script type="module" src="js/redesign-nav.js?v=claude-hoy-real-2"></script>
+  <script type="module" src="js/app.js?v=claude-equipo-1"></script>
+  <script type="module" src="js/redesign-nav.js?v=claude-equipo-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

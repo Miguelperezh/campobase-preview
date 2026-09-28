@@ -140,14 +140,14 @@ export function renderStaffList(members, container) {
           : '';
 
         return `
-          <article class="card staff-card" data-staff-id="${member.id}">
+          <article class="card staff-card cbx-staff-card" data-staff-id="${member.id}">
             <div class="staff-card-header">
               <div class="staff-avatar-wrapper">
                 ${staffAvatarHtml(member)}
-                <span class="staff-badge staff-role-${member.color || 'zinc'}">
-                  ${escapeHtml(member.badgeText || member.roleTitle)}
-                </span>
               </div>
+              <span class="staff-badge staff-role-${member.color || 'zinc'}">
+                  ${escapeHtml(({ head_coach: 'Principal', assistant_coach: 'Segundo', goalkeeper_coach: 'Preparador', team_delegate: 'Delegado' })[member.role] || member.badgeText || member.roleTitle)}
+              </span>
               <div class="staff-info">
                 <h3 class="staff-name">${escapeHtml(member.name)}</h3>
                 <p class="staff-role-title">${escapeHtml(member.roleTitle)}</p>
@@ -160,11 +160,6 @@ export function renderStaffList(members, container) {
                   <div class="staff-contact-row">
                     <span class="staff-contact-label">📞 Teléfono:</span>
                     <a href="tel:${phoneFormatted}" class="staff-phone-link">${phoneFormatted}</a>
-                    ${whatsappUrl ? `
-                      <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="staff-wa-btn" title="Contactar por WhatsApp">
-                        WhatsApp
-                      </a>
-                    ` : ''}
                   </div>
                 ` : ''}
                 ${member.notes ? `
@@ -174,11 +169,12 @@ export function renderStaffList(members, container) {
             ` : ''}
 
             <div class="staff-card-actions">
+              ${whatsappUrl ? `<a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="staff-wa-btn" title="Contactar por WhatsApp">WhatsApp</a>` : ''}
               <button type="button" class="secondary compact edit-staff-btn" data-id="${member.id}">
-                ✏️ Editar
+                Editar
               </button>
               <button type="button" class="ghost-danger compact delete-staff-btn" data-id="${member.id}">
-                🗑️ Eliminar
+                Eliminar
               </button>
             </div>
           </article>

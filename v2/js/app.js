@@ -16,7 +16,7 @@ import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
-import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js';
+import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-equipo-1';
 import { renderTodayDashboard } from './today-dashboard.js?v=2457';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
@@ -746,7 +746,7 @@ function renderPlayers() {
     const ratingTier = ratingNum >= 4.0 ? 'rating-tier-top' : (ratingNum >= 3.0 ? 'rating-tier-good' : (ratingNum > 0 ? 'rating-tier-fair' : 'rating-tier-none'));
     const ratingDisplay = ratingNum !== null ? ratingNum.toFixed(1) : (summary.averageRating ?? '—');
 
-    return `<article class="card player" data-player-id="${player.id}">
+    return `<article class="card player cbx-player" data-player-id="${player.id}">
     <div class="player-head">
       <div class="player-identity">
         ${playerCardPhoto(player)}
@@ -776,9 +776,9 @@ function renderPlayers() {
         ${player.motherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.motherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Madre">👩 ${escapeHtml(player.motherName || 'Madre')}: ${escapeHtml(player.motherPhone)}</a>` : (player.motherName ? `<span class="contact-pill meta">👩 Madre: ${escapeHtml(player.motherName)}</span>` : '')}
       </div>` : ''}
       <div class="player-card-actions-bar">
-        <button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">📱 WhatsApp</button>
-        <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">✏️ Editar</button>
-        <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">🗑️ Borrar</button>
+        <button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">WhatsApp</button>
+        <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button>
+        <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button>
       </div>
       <details class="player-performance"${openPerfPlayerIds.has(player.id) ? ' open' : ''}><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.assists ?? 0}</strong> asist.</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.assists ?? 0}</strong> asist.</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Minutos`) ? ' open' : ''}><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details${openSubSectionKeys.has(`${player.id}::Puntuaciones`) ? ' open' : ''}><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details${openSubSectionKeys.has(`${player.id}::Media`) ? ' open' : ''}><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Motivos`) ? ' open' : ''}><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details${openSubSectionKeys.has(`${player.id}::Incidencias`) ? ' open' : ''}><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"${openSubSectionKeys.has(`${player.id}::Historial`) ? ' open' : ''}><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
     </article>`;
@@ -811,21 +811,21 @@ function renderSquadSpecialistsBar() {
     <div class="specialists-summary-card">
       <div class="specialists-summary-head">
         <div>
-          <h3>🎯 Lanzadores y Capitanes</h3>
+          <h3>Lanzadores y Capitanes</h3>
           <p class="meta">Especialistas a balón parado asignados para faltas, córners, penaltis y capitanía</p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-          <button type="button" class="secondary open-set-pieces-trigger">⚙️ Configurar lanzadores</button>
+          <button type="button" class="secondary open-set-pieces-trigger">Configurar lanzadores</button>
           <button type="button" class="secondary share-database-mobile-btn" style="display:none;" title="Pasar lanzadores y plantilla a tu móvil por WhatsApp o AirDrop">📲 Pasar al móvil</button>
         </div>
       </div>
       <div class="specialists-quick-grid">
-        <div class="specialist-item"><span class="sp-icon">🎯</span><div><small>Penaltis</small><strong>${escapeHtml(penaltyNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">⚡</span><div><small>Faltas Izq. (diestro)</small><strong>${escapeHtml(fkLeftNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">⚡</span><div><small>Faltas Der. (zurdo)</small><strong>${escapeHtml(fkRightNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">📐</span><div><small>Córners Izquierda</small><strong>${escapeHtml(cornerLeftNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">📐</span><div><small>Córners Derecha</small><strong>${escapeHtml(cornerRightNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">©️</span><div><small>Capitanes</small><strong>${escapeHtml(captainNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">PB</span><div><small>Penaltis</small><strong>${escapeHtml(penaltyNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">FI</span><div><small>Faltas Izq. (diestro)</small><strong>${escapeHtml(fkLeftNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">FD</span><div><small>Faltas Der. (zurdo)</small><strong>${escapeHtml(fkRightNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">CI</span><div><small>Córners Izquierda</small><strong>${escapeHtml(cornerLeftNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">CD</span><div><small>Córners Derecha</small><strong>${escapeHtml(cornerRightNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">CA</span><div><small>Capitanes</small><strong>${escapeHtml(captainNames || 'Sin asignar')}</strong></div></div>
       </div>
     </div>
   `;
@@ -923,11 +923,11 @@ function renderSquadLeaderboards() {
   const tabsMarkup = `
     <div class="leaderboard-tabs-bar">
       <div class="leaderboard-nav-tabs">
-        <button type="button" class="lb-tab-btn ${tab === 'scorers' ? 'active' : ''}" data-lb-tab="scorers">⚽ Goleadores</button>
-        <button type="button" class="lb-tab-btn ${tab === 'assists' ? 'active' : ''}" data-lb-tab="assists">👟 Asistencias</button>
-        <button type="button" class="lb-tab-btn ${tab === 'goalkeepers' ? 'active' : ''}" data-lb-tab="goalkeepers">🧤 Zamora (Porteros)</button>
-        <button type="button" class="lb-tab-btn ${tab === 'minutes' ? 'active' : ''}" data-lb-tab="minutes">⏱️ Reparto de Minutos</button>
-        <button type="button" class="lb-tab-btn ${tab === 'fairplay' ? 'active' : ''}" data-lb-tab="fairplay">🟨 Fair Play</button>
+        <button type="button" class="lb-tab-btn ${tab === 'scorers' ? 'active' : ''}" data-lb-tab="scorers">Goleadores</button>
+        <button type="button" class="lb-tab-btn ${tab === 'assists' ? 'active' : ''}" data-lb-tab="assists">Asistencias</button>
+        <button type="button" class="lb-tab-btn ${tab === 'goalkeepers' ? 'active' : ''}" data-lb-tab="goalkeepers">Zamora (Porteros)</button>
+        <button type="button" class="lb-tab-btn ${tab === 'minutes' ? 'active' : ''}" data-lb-tab="minutes">Reparto de minutos</button>
+        <button type="button" class="lb-tab-btn ${tab === 'fairplay' ? 'active' : ''}" data-lb-tab="fairplay">Fair Play</button>
       </div>
       <div class="leaderboard-scope-toggle">
         <button type="button" class="lb-scope-btn ${scope === 'all' ? 'active' : ''}" data-lb-scope="all">Todo</button>
@@ -938,7 +938,7 @@ function renderSquadLeaderboards() {
   `;
 
   let tableContent = '';
-  const medal = (idx) => idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}.º`));
+  const medal = (idx) => String(idx + 1);
 
   if (tab === 'scorers') {
     const list = leaderboards.topScorers;
@@ -1146,7 +1146,7 @@ function renderSquadLeaderboards() {
   const isLbOpen = state.isLeaderboardsOpen ?? true;
 
   container.innerHTML = `
-    <details class="squad-leaderboards-card"${isLbOpen ? ' open' : ''}>
+    <details class="squad-leaderboards-card${state.leaderboardExpanded ? ' cbx-leaders-all' : ''}"${isLbOpen ? ' open' : ''}>
       <summary class="squad-leaderboards-summary">
         <div class="lb-summary-left">
           <span class="summary-toggle-icon">📊</span>
@@ -1160,6 +1160,7 @@ function renderSquadLeaderboards() {
       <div class="squad-leaderboards-body">
         ${tabsMarkup}
         ${tableContent}
+        ${state.players.length > 5 ? `<button type="button" class="cbx-leaders-more" data-lb-expand="1">${state.leaderboardExpanded ? 'Mostrar cinco primeros' : 'Ver clasificación completa'}</button>` : ''}
       </div>
     </details>
   `;
@@ -6967,6 +6968,12 @@ function wireEvents() {
     const lbScopeBtn = event.target.closest('.lb-scope-btn[data-lb-scope]');
     if (lbScopeBtn) {
       state.leaderboardScope = lbScopeBtn.dataset.lbScope;
+      renderSquadLeaderboards();
+      return;
+    }
+
+    if (event.target.closest('[data-lb-expand]')) {
+      state.leaderboardExpanded = !state.leaderboardExpanded;
       renderSquadLeaderboards();
       return;
     }

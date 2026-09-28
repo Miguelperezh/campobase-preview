@@ -148,3 +148,7 @@ body.cb-redesign-active #hoy .today-event .button-row button { flex:0 1 auto !im
  #cbx-header #cbx-header-actions #manual-refresh,
  #cbx-header #cbx-header-actions #logout { width:100% !important; min-width:0 !important; }
 }
+/* La cabecera móvil de Claude deja la actualización en Ajustes. */
+@media(max-width:700px){
+ #cbx-header #cbx-header-actions #manual-refresh { display:none !important; }
+}

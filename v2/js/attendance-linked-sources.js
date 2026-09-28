@@ -14,6 +14,7 @@ let renderQueued = false;
 let rendering = false;
 let cleanupQueued = false;
 let activeFilter = 'all';
+let defaultAttendanceOpened = false;
 
 function formatDate(value = '') {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
@@ -223,6 +224,12 @@ async function renderSources() {
         </div>
       </div>
       ${contentHTML}`;
+    const section = $('#asistencia');
+    const defaultSession = rows.find((row) => row.source === 'session' && row.ready && !row.attendance && row.date <= todayKey);
+    if (!defaultAttendanceOpened && section?.classList.contains('active') && defaultSession && data.players.length) {
+      defaultAttendanceOpened = true;
+      openActivityAttendance('session', defaultSession.id).catch((error) => showToast(error.message));
+    }
   } catch (error) {
     panel.innerHTML = `<p class="error panel">No se pudieron cargar las actividades para asistencia: ${esc(error?.message || 'error desconocido')}</p>`;
   } finally {
@@ -268,13 +275,13 @@ function statusRow(player, entry = {}) {
   const { hour, minute } = splitTime(entry.arrivalTime || '');
   const initials = String(player.name || 'J').split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
   return `<article class="attendance-player-row panel" data-attendance-player="${esc(player.id)}">
-    <div class="attendance-player-ident"><span class="attendance-avatar">${esc(initials)}</span><div><strong>${esc(player.name || 'Jugador')}</strong><small>${player.number ? `Dorsal ${esc(player.number)}` : 'Sin dorsal'}</small></div></div>
+    <div class="attendance-player-ident"><span class="attendance-avatar">${esc(player.number || initials)}</span><div><strong>${esc(player.name || 'Jugador')}</strong><small>${player.number ? `Dorsal ${esc(player.number)}` : 'Sin dorsal'}</small></div></div>
     <div class="attendance-status-choices" role="radiogroup" aria-label="Asistencia de ${esc(player.name)}">
       ${statusChoice(player.id, 'present', status, 'Presente')}${statusChoice(player.id, 'late', status, 'Tarde')}${statusChoice(player.id, 'absent', status, 'Ausente')}
     </div>
     <div class="attendance-row-extra">
       <div class="arrival-time ${status === 'late' ? '' : 'hidden'}"><span>Hora de llegada</span><div class="time-24"><select name="arrivalHour-${esc(player.id)}">${timeOptions(24, hour, 'hh')}</select><span>:</span><select name="arrivalMinute-${esc(player.id)}">${timeOptions(60, minute, 'mm')}</select></div></div>
-      <label class="attendance-note">Comentario<input name="note-${esc(player.id)}" value="${esc(entry.note || '')}" maxlength="200" placeholder="Opcional: motivo, incidencia, observación…"></label>
+      <details class="cbx-attendance-note"${entry.note ? ' open' : ''}><summary>Nota</summary><label class="attendance-note">Comentario<input name="note-${esc(player.id)}" value="${esc(entry.note || '')}" maxlength="200" placeholder="Opcional: motivo, incidencia, observación…"></label></details>
     </div>
   </article>`;
 }
@@ -324,7 +331,7 @@ async function openActivityAttendance(source, sourceId) {
   root.classList.remove('hidden');
   root.innerHTML = `<form id="training-form" data-visual-attendance="1" data-attendance-source="${source}" data-source-id="${esc(sourceId)}" data-attendance-id="${esc(existing?.id || '')}">
     <div class="attendance-editor-head">
-      <div><span class="pill ${match ? 'accent' : ''}">${match ? 'Partido' : 'Sesión'}</span><h3>${esc(title)}</h3><p class="meta">${esc(subtitle)}</p></div>
+      <div><h3>Pasar lista</h3><p class="meta">${esc(subtitle)} · ${esc(title)}</p></div>
       <button type="button" class="secondary attendance-all-present">Todos presentes</button>
     </div>
     <div class="attendance-editor-summary" aria-live="polite"></div>
@@ -475,6 +482,10 @@ function install() {
     const stores = new Set(event.detail?.stores ?? []);
     if (['trainings', 'matches', 'callups', 'players', 'settings'].some((store) => stores.has(store))) scheduleRender();
   });
+  const attendanceView = $('#asistencia');
+  if (attendanceView) new MutationObserver(() => {
+    if (attendanceView.classList.contains('active')) scheduleRender();
+  }).observe(attendanceView, { attributes: true, attributeFilter: ['class'] });
 }
 
 if (typeof document !== 'undefined') {
