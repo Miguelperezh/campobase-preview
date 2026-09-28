@@ -577,7 +577,7 @@ async function refresh() {
     }));
 
   state.exercises = [...validatedExercises, ...myExercises];
-  if (state.exercises.length < 400 && typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.onLine) {
+  if (state.exercises.length < 400 && !window.__CAMPOBASE_READONLY_PREVIEW && typeof navigator !== 'undefined' && navigator.onLine) {
     const healKey = 'campobase.auto_catalog_heal_v29';
     try {
       if (!sessionStorage.getItem(healKey)) {

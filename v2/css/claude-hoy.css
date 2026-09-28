@@ -1,5 +1,11 @@
 /* Claude: shell + Hoy only. Business modules keep their own styles and handlers. */
-body.cb-redesign-active { --cbx-ui: var(--cb-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); }
+/* Shell and Hoy use the Claude reference typography from the first paint.
+   Existing saved theme preferences remain available to the other modules. */
+body.cb-redesign-active { --cbx-ui: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+body.cb-redesign-active #hoy,
+body.cb-redesign-active #cb-claude-sidebar,
+body.cb-redesign-active #cbx-header,
+body.cb-redesign-active #cb-bottom-nav { font-family:var(--cbx-ui) !important; }
 body.cb-redesign-active .topbar { background:#fff !important; border-bottom:1px solid var(--cbx-line) !important; box-shadow:none !important; }
 body.cb-redesign-active .topbar h1 { font-family:var(--cbx-ui) !important; }
 body.cb-redesign-active #open-field-mode { background:var(--cbx-red) !important; color:#fff !important; border:0 !important; border-radius:10px !important; min-height:36px !important; font-size:13px !important; padding:0 12px !important; }
@@ -112,10 +118,19 @@ body.cb-redesign-active #hoy .today-event .button-row button { flex:0 1 auto !im
 #cbx-header #cbx-header-brand > div { min-width:0 !important; }
 #cbx-header #cbx-header-actions button { width:auto !important; min-height:36px !important; font:700 13px var(--cbx-ui) !important; }
 #cbx-header #cbx-header-actions #manual-refresh { width:28px !important; min-width:28px !important; padding:0 !important; font-size:0 !important; }
+#cbx-header #cbx-header-actions #manual-refresh { width:84px !important; min-width:84px !important; padding:0 8px !important; font:700 12px var(--cbx-ui) !important; white-space:nowrap !important; }
+#cbx-header #cbx-header-actions #manual-refresh::after { content:none !important; }
 @media(max-width:1099px){
- #cbx-header #cbx-header-actions { width:auto !important; gap:6px !important; }
+ #cbx-header #cbx-header-actions { width:auto !important; gap:6px !important; display:flex !important; flex-wrap:nowrap !important; grid-template-columns:none !important; }
  #cbx-header #cbx-header-actions #logout { width:48px !important; min-width:48px !important; font-size:0 !important; }
  #cbx-header #cbx-header-brand .club-crest { width:32px !important; height:36px !important; }
  #cbx-header #cbx-header-brand .eyebrow { font:800 10px/1.05 var(--cbx-ui) !important; }
  #cbx-header #cbx-header-brand h1 { font:800 16px/1.1 var(--cbx-ui) !important; }
+}
+@media(max-width:359px){
+ #cbx-header { grid-template-columns:minmax(0,1fr) !important; }
+ #cbx-header #cbx-header-actions { grid-column:1 !important; display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; width:100% !important; }
+ #cbx-header #cbx-header-actions #open-field-mode,
+ #cbx-header #cbx-header-actions #manual-refresh,
+ #cbx-header #cbx-header-actions #logout { width:100% !important; min-width:0 !important; }
 }

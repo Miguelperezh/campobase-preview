@@ -103,8 +103,9 @@ export function buildTodaySummary({ sessions = [], matches = [], trainings = [],
     .filter((match) => match?.status !== 'finished' && dateOnly(match.date) >= today && !callupForMatch(callups, match))
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-  const upcomingSession = [...usableSessions].filter(session => dateOnly(session.date) > today).sort((a,b) => String(a.date).localeCompare(String(b.date)))[0] || null;
-  return { today, todaySessions, todayMatches, nextSession, upcomingSession, nextMatch, attendancePending, callupPending };
+  const upcomingSessions = [...usableSessions].filter(session => dateOnly(session.date) > today).sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  const upcomingSession = upcomingSessions[0] || null;
+  return { today, todaySessions, todayMatches, nextSession, upcomingSession, upcomingSessions, nextMatch, attendancePending, callupPending };
 }
 
 function ensureShell() {
@@ -243,10 +244,10 @@ function pendingPanel(summary) {
 }
 
 function nextPanel(summary, data) {
-  const items = [];
-  if (summary.upcomingSession) items.push(sessionCard(summary.upcomingSession, data.trainings, summary.today));
-  if (summary.nextMatch && dateOnly(summary.nextMatch.date) !== summary.today) items.push(matchCard(summary.nextMatch, data.trainings, data.callups, summary.today));
-  return `<article class="panel"><div class="today-title-row"><h3>Lo próximo</h3></div>${items.length ? `<div class="today-event-grid">${items.join('')}</div>` : '<div class="today-empty">Lo próximo ya está incluido en las actividades de hoy.</div>'}</article>`;
+  const items = (summary.upcomingSessions || []).slice(0, 3).map(session => ({date:session.date, markup:sessionCard(session, data.trainings, summary.today)}));
+  if (summary.nextMatch && dateOnly(summary.nextMatch.date) !== summary.today) items.push({date:summary.nextMatch.date, markup:matchCard(summary.nextMatch, data.trainings, data.callups, summary.today)});
+  items.sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  return `<article class="panel"><div class="today-title-row"><h3>Lo próximo</h3></div>${items.length ? `<div class="today-event-grid">${items.map(item=>item.markup).join('')}</div>` : '<div class="today-empty">Lo próximo ya está incluido en las actividades de hoy.</div>'}</article>`;
 }
 
 export function buildLeagueSummary(matches = []) {

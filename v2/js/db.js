@@ -381,19 +381,25 @@ async function queueInitialRecords(store, records) {
 export async function syncFromCloud() {
   if (isReadOnlyPreview()) {
     if (!canUseCloud()) return { online:false, pending:0 };
-    // Same adapter and stores. Reconcile remote reads, never flush or add pending writes.
-    try {
-      let downloaded = 0;
-      for (const store of STORES) {
-        const snapshot = await cloudStore.getSnapshot(store);
-        await replaceLocalStore(store, snapshot.records);
-        downloaded += snapshot.records.length;
+    // The preview uses its own browser database. Serialize reads so two refreshes
+    // cannot replace stores in opposite orders and render a partial snapshot.
+    if (syncPromise) return syncPromise;
+    syncPromise = (async () => {
+      try {
+        let downloaded = 0;
+        for (const store of STORES) {
+          const snapshot = await cloudStore.getSnapshot(store);
+          await replaceLocalStore(store, snapshot.records);
+          downloaded += snapshot.records.length;
+        }
+        return { online:true, pending:0, downloaded, changed:true, readOnly:true };
+      } catch (error) {
+        if (error?.code === 'CAMPOBASE_AUTH_REQUIRED') return {online:false,pending:0,authRequired:true};
+        throw error;
       }
-      return { online:true, pending:0, downloaded, changed:true, readOnly:true };
-    } catch (error) {
-      if (error?.code === 'CAMPOBASE_AUTH_REQUIRED') return {online:false,pending:0,authRequired:true};
-      throw error;
-    }
+    })();
+    try { return await syncPromise; }
+    finally { syncPromise = null; }
   }
 
   if (isDemoDatabase()) return { online: false, pending: 0, demo: true };

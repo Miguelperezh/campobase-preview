@@ -4,6 +4,63 @@
   const enabled = location.hostname === 'miguelperezh.github.io' && location.pathname.startsWith('/campobase-preview/');
   if (!enabled) return;
   window.__CAMPOBASE_READONLY_PREVIEW = true;
+  // GitHub Pages serves both repositories from the same origin. Give this
+  // document its own browser stores before Auth or the application loads.
+  const namespace = 'campobase.preview.v2:';
+  const originalStorage = {
+    getItem: Storage.prototype.getItem,
+    setItem: Storage.prototype.setItem,
+    removeItem: Storage.prototype.removeItem,
+    key: Storage.prototype.key,
+  };
+  const scopedStorage = (storage) => storage === localStorage || storage === sessionStorage;
+  const storageKeys = (storage) => {
+    const keys = [];
+    for (let index = 0; index < storage.length; index++) {
+      const key = originalStorage.key.call(storage, index);
+      if (key?.startsWith(namespace)) keys.push(key);
+    }
+    return keys;
+  };
+  Storage.prototype.getItem = function (key) {
+    return originalStorage.getItem.call(this, scopedStorage(this) ? namespace + key : key);
+  };
+  Storage.prototype.setItem = function (key, value) {
+    return originalStorage.setItem.call(this, scopedStorage(this) ? namespace + key : key, value);
+  };
+  Storage.prototype.removeItem = function (key) {
+    return originalStorage.removeItem.call(this, scopedStorage(this) ? namespace + key : key);
+  };
+  Storage.prototype.key = function (index) {
+    return scopedStorage(this) ? storageKeys(this)[index]?.slice(namespace.length) ?? null : originalStorage.key.call(this, index);
+  };
+  Storage.prototype.clear = function () {
+    if (!scopedStorage(this)) return;
+    for (const key of storageKeys(this)) originalStorage.removeItem.call(this, key);
+  };
+  const originalOpen = indexedDB.open.bind(indexedDB);
+  const originalDelete = indexedDB.deleteDatabase.bind(indexedDB);
+  indexedDB.open = (name, ...args) => originalOpen(namespace + name, ...args);
+  indexedDB.deleteDatabase = (name) => originalDelete(namespace + name);
+  if (typeof indexedDB.databases === 'function') {
+    const originalDatabases = indexedDB.databases.bind(indexedDB);
+    indexedDB.databases = async () => (await originalDatabases())
+      .filter((database) => database.name?.startsWith(namespace))
+      .map((database) => ({ ...database, name: database.name.slice(namespace.length) }));
+  }
+  if ('caches' in window) {
+    const originalCacheKeys = caches.keys.bind(caches);
+    const originalCacheDelete = caches.delete.bind(caches);
+    const originalCacheOpen = caches.open.bind(caches);
+    caches.keys = async () => (await originalCacheKeys()).filter((name) => name.startsWith(namespace)).map((name) => name.slice(namespace.length));
+    caches.delete = (name) => originalCacheDelete(namespace + name);
+    caches.open = (name) => originalCacheOpen(namespace + name);
+  }
+  if ('serviceWorker' in navigator) {
+    const originalRegistrations = navigator.serviceWorker.getRegistrations.bind(navigator.serviceWorker);
+    navigator.serviceWorker.getRegistrations = async () => (await originalRegistrations())
+      .filter((registration) => registration.scope.startsWith(location.origin + '/campobase-preview/'));
+  }
   function allowed(url, method) {
     const target = new URL(url, location.href);
     if (!target.hostname.endsWith('.supabase.co')) return true;

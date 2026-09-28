@@ -1,5 +1,3 @@
 # CampoBase preview
 
-Alojamiento estático del commit 7ae9d69d7c29d2e4048000acfc4769a2fde32969 del repositorio público Miguelperezh/campobase, rama implement/claude-hoy-real.
-
-No es una aplicación independiente. Los cambios se realizan en la rama original; este repositorio contiene sus archivos de publicación, sin informes ni exportaciones de datos.
+Alojamiento estático del commit dab44bc4167c3d41f5b02ae9a2f4941af2c2be5d de la rama implement/claude-hoy-real en Miguelperezh/campobase. Esta versión usa /v2/ para evitar reutilizar archivos cacheados de la prueba anterior. La aplicación original y Supabase no se despliegan aquí.
