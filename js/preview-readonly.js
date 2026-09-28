@@ -10,7 +10,7 @@
     if (['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) return true;
     // Existing authentication is retained; only the known read-only context RPC is allowed.
     return method.toUpperCase() === 'POST' && (
-      /^\/auth\/v1\/(token|logout)$/.test(target.pathname)
+      /^\/auth\/v1\/(token|logout|verify)$/.test(target.pathname)
       || target.pathname === '/functions/v1/pin-login'
       || /^\/rest\/v1\/rpc\/(mi_equipo_contexto|resolve_login_email|get_delegate_account|legacy_owner_claim_available)$/.test(target.pathname)
     );
