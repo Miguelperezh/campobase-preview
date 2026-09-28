@@ -1,0 +1,109 @@
+{
+  "id": "CAMPOBASE-TRANSICION-4V3-CONTRAATAQUE",
+  "nombre": "Transición 4v3 al contraataque",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Transición",
+    "que_se_trabaja": [
+      "Transición ofensiva",
+      "Superioridad 4v3",
+      "Toma de decisión",
+      "Repliegue defensivo",
+      "Finalización rápida"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "7 activos por acción (4 atacantes + 3 defensores) y 8 jugadores en colas de rotación"
+    },
+    "material": "1 portería + balones + petos de 2 colores + conos/marcadores para las posiciones de salida",
+    "series": [
+      {
+        "nombre": "Acciones consecutivas",
+        "instruccion": "Repetir la situación 4v3. Tras gol, palo o pérdida, salen los participantes de la acción y entra el siguiente grupo desde las colas."
+      }
+    ],
+    "explicacion_breve": "El entrenador pasa a uno de los cuatro atacantes y comienza un 4v3 hacia portería. Los atacantes deben finalizar antes de 8 segundos mientras los tres defensores intentan recuperar.",
+    "animacion": {
+      "gif": "CampoBase_Transicion_4v3_Contraataque.gif",
+      "leyenda": "Azul: atacante · Rojo: defensor · Negro: entrenador · Balón junto al poseedor · Cono: punto de salida · Azul discontinuo: pase del entrenador · Negro discontinuo: movimiento atacante · Rojo discontinuo: movimiento defensor · Azul continuo: tiro"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Velocidad de transición ofensiva.",
+      "Toma de decisión en superioridad numérica.",
+      "Repliegue defensivo organizado."
+    ],
+    "claves_entrenador": [
+      "Atacar con velocidad, pero realizar el último pase con la cabeza levantada.",
+      "Fijar al defensor antes de pasar al hombre libre.",
+      "Los defensores deben cerrar el centro y orientar el ataque hacia fuera."
+    ],
+    "montaje": [
+      "Utilizar medio campo y una portería.",
+      "Colocar 4 atacantes en línea sobre el medio campo.",
+      "Colocar 3 defensores 5 m por detrás de los atacantes.",
+      "El entrenador se sitúa con balones para iniciar cada acción.",
+      "Para trabajar con 15 jugadores, mantener 7 activos y organizar a los 8 restantes en colas de rotación."
+    ],
+    "desarrollo": [
+      "El entrenador pasa el balón a uno de los atacantes.",
+      "En ese momento comienza el ataque 4v3.",
+      "Los tres defensores salen a recuperar.",
+      "Los cuatro atacantes deben finalizar antes de 8 segundos.",
+      "Tras gol, palo o pérdida, terminan la acción y entra el siguiente grupo."
+    ],
+    "que_buscamos": [
+      "Aprovechar la superioridad numérica antes de que la defensa se organice.",
+      "Atacar con velocidad sin precipitar la última decisión.",
+      "Fijar defensores para liberar compañeros.",
+      "Defender cerrando primero el espacio central."
+    ],
+    "que_observar": [
+      "Si el ataque reconoce con rapidez dónde está el jugador libre.",
+      "Si el poseedor levanta la cabeza antes de decidir.",
+      "Si los defensores protegen el centro.",
+      "Si la acción termina dentro de los 8 segundos."
+    ],
+    "correcciones": [
+      "Ataca rápido.",
+      "Cabeza arriba.",
+      "Fija y suelta.",
+      "Busca al libre.",
+      "Cierra el centro.",
+      "Obliga fuera."
+    ],
+    "reglas": [
+      "La acción comienza con el pase del entrenador.",
+      "Se juega en superioridad 4v3.",
+      "El ataque debe finalizar antes de 8 segundos.",
+      "La acción termina con gol, palo o pérdida."
+    ],
+    "si_sale_mal": [
+      "Usar la variante 3v2 propuesta en la fuente para simplificar la toma de decisión."
+    ],
+    "si_sale_bien": [
+      "Usar la variante 5v3 propuesta en la fuente.",
+      "Añadir un defensor que salga desde la portería 3 segundos después.",
+      "Si un defensor recupera, permitir el contraataque hacia una miniportería situada en medio campo."
+    ],
+    "variantes": [
+      "3v2 o 5v3 según el nivel.",
+      "Añadir un defensor que arranca desde la portería tras 3 segundos.",
+      "Si el defensor recupera, contraataca hacia una portería pequeña en medio campo."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Transición 4v3 al contra-ataque",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 20 min, 8-14 participantes, medio campo y edades SUB-14 en adelante.",
+        "La adaptación para CampoBase organiza 15 jugadores mediante 7 activos y 8 en colas de rotación.",
+        "El GIF no impone combinaciones de pases entre atacantes porque la fuente no define una secuencia concreta.",
+        "La animación muestra únicamente el inicio con pase del entrenador, la salida del 4v3, el repliegue defensivo y una finalización simple."
+      ]
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "id": "CAMPOBASE-CALENTAMIENTO-ESCALERA-COORDINACION",
+  "nombre": "Calentamiento dinámico con escalera de coordinación",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Calentamiento / activación",
+    "que_se_trabaja": [
+      "Activación neuromuscular",
+      "Coordinación de pies y brazos",
+      "Preparación articular",
+      "Desplazamientos"
+    ],
+    "tiempo_estimado_15": "12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "Circuito continuo de 4 estaciones. Los 15 jugadores circulan de forma escalonada por las estaciones."
+    },
+    "material": "1 escalera de coordinación + 2 vallas bajas + conos suficientes para montar el zigzag y delimitar la salida. La fuente no fija un número exacto de conos.",
+    "series": [
+      {
+        "nombre": "Vuelta 1",
+        "instruccion": "Completar las cuatro estaciones a ritmo inicial controlado."
+      },
+      {
+        "nombre": "Vuelta 2",
+        "instruccion": "Repetir el circuito aumentando progresivamente el ritmo."
+      },
+      {
+        "nombre": "Vuelta 3",
+        "instruccion": "Completar la tercera vuelta al ritmo más alto de las tres, manteniendo buena ejecución."
+      }
+    ],
+    "explicacion_breve": "Circuito continuo de cuatro estaciones: trote suave, escalera de coordinación, dos vallas bajas y zigzag entre conos. Se realizan 3 vueltas a ritmo creciente.",
+    "animacion": {
+      "gif": "CampoBase_Calentamiento_Escalera_Coordinacion.gif",
+      "leyenda": "Azul: jugador · Q: jugador esperando · Naranja: cono · Blanco: escalera/valla · Azul discontinuo: desplazamiento"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Activación neuromuscular.",
+      "Coordinación de pies y brazos.",
+      "Preparación articular antes del entrenamiento."
+    ],
+    "claves_entrenador": [
+      "Pisar con la planta completa, no con los talones.",
+      "Mantener el tronco erguido y la mirada al frente.",
+      "Subir gradualmente la intensidad."
+    ],
+    "montaje": [
+      "Montar un circuito de 4 estaciones dentro de un espacio aproximado de 15 x 10 m.",
+      "Estación A: zona de trote suave.",
+      "Estación B: escalera de coordinación.",
+      "Estación C: 2 vallas bajas.",
+      "Estación D: zigzag entre conos.",
+      "La fuente no fija el número exacto de conos del zigzag."
+    ],
+    "desarrollo": [
+      "Estación A: trote suave durante 30 segundos.",
+      "Estación B: escalera con 1 paso por casilla, combinando cambio frontal y lateral.",
+      "Estación C: pasar 2 vallas bajas con desplazamiento lateral y skipping medio.",
+      "Estación D: realizar zigzag entre conos con desplazamientos cortos.",
+      "Completar 3 vueltas al circuito a ritmo creciente."
+    ],
+    "que_buscamos": [
+      "Activar progresivamente antes de la parte principal.",
+      "Coordinar pies y brazos sin perder postura.",
+      "Mejorar la calidad de los apoyos.",
+      "Aumentar el ritmo de manera gradual, no empezar a máxima intensidad."
+    ],
+    "que_observar": [
+      "Tipo de apoyo del pie.",
+      "Postura del tronco.",
+      "Mirada al frente.",
+      "Coordinación de brazos y piernas.",
+      "Progresión real de intensidad entre vueltas."
+    ],
+    "correcciones": [
+      "Planta completa.",
+      "Tronco arriba.",
+      "Mira al frente.",
+      "Coordina brazos.",
+      "Sube el ritmo poco a poco."
+    ],
+    "reglas": [
+      "Las 4 estaciones se realizan en serie continua.",
+      "Se completan 3 vueltas.",
+      "La intensidad aumenta progresivamente."
+    ],
+    "si_sale_mal": [
+      "Reducir el ritmo para recuperar calidad de apoyo y coordinación.",
+      "Separar más las salidas si se acumulan jugadores."
+    ],
+    "si_sale_bien": [
+      "Aplicar las variantes propuestas por la fuente sin alterar la estructura base."
+    ],
+    "variantes": [
+      "Añadir balón en la última estación con conducción suave.",
+      "Trabajar en parejas imitando el patrón del compañero.",
+      "Finalizar con sprints de 10 m al 80%."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Calentamiento dinámico con escalera de coordinación",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 12 min, 4-20 participantes, espacio 15 x 10 m y edades SUB-10 en adelante.",
+        "La fuente describe 10 minutos de circuito continuo dentro de una duración total de 12 minutos.",
+        "La distribución escalonada de 15 jugadores es una adaptación operativa para CampoBase.",
+        "El número de conos del zigzag no está especificado en la fuente; el GIF los representa de forma esquemática y el JSON no fija una cantidad inventada.",
+        "No se incluye balón en el GIF base porque aparece únicamente como variante."
+      ]
+    }
+  }
+}

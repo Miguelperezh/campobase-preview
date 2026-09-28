@@ -1,0 +1,85 @@
+/* Claude shell only. Screen content and existing theme settings remain owned by their modules. */
+:root { --cb-shell-width: 268px; --cb-shell-hero: #0a251b; --cb-shell-red: #c8102e; }
+#cb-claude-sidebar { display: none; }
+#cb-shell-view-title { display: none; }
+body.cb-redesign-active #cb-bottom-nav { background: #fff !important; box-shadow: none !important; }
+body.cb-redesign-active #cb-bottom-nav .cb-nav-tab { border-radius: 0 !important; color: #64748b !important; min-height: 54px !important; }
+body.cb-redesign-active #cb-bottom-nav .cb-nav-tab.active { color: var(--cb-shell-red) !important; background: transparent !important; }
+body.cb-redesign-active #cb-bottom-nav .cb-nav-tab.active::before { content: ''; position: absolute; top: 0; width: 22px; height: 3px; background: var(--cb-shell-red); border-radius: 999px; }
+body.cb-redesign-active #cb-bottom-nav .cb-nav-has-sub { display: none !important; }
+body.cb-redesign-active #cb-bottom-nav .cb-nav-tab[hidden],
+#cb-claude-sidebar [hidden] { display: none !important; }
+body.cb-redesign-active #cb-sub-nav { box-shadow: none !important; }
+body.cb-redesign-active #cb-sub-nav .cb-sub-pill { min-height: 44px; }
+body.cb-redesign-active #cb-sub-nav .cb-sub-pill.active { color: var(--cb-shell-red) !important; border-color: var(--cb-shell-red) !important; }
+#cb-claude-sidebar button:focus-visible, #cb-bottom-nav button:focus-visible, #cb-sub-nav button:focus-visible { outline: 3px solid #f59e0b !important; outline-offset: -3px; }
+
+@media screen and (min-width: 1100px) {
+  body.cb-redesign-active:not(.auth-locked):not(.delegate-mode.delegate-single-view) { padding-left: var(--cb-shell-width); padding-bottom: 0 !important; }
+  body.cb-redesign-active:not(.auth-locked):not(.delegate-mode.delegate-single-view) #cb-claude-sidebar {
+    position: fixed; inset: 0 auto 0 0; width: var(--cb-shell-width); z-index: 45;
+    display: flex; flex-direction: column; padding: 20px 12px;
+    background: var(--cb-shell-hero); color: #fff; overflow-y: auto;
+  }
+  .cb-shell-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 26px; }
+  .cb-shell-brand img { width: 46px; height: 46px; object-fit: contain; background: #fff; border-radius: 12px; flex-shrink: 0; }
+  .cb-shell-brand p { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: #a8bcb4; }
+  .cb-shell-brand strong { display: block; font: 800 17px/1.1 'Barlow Condensed', sans-serif; text-transform: uppercase; color: #fff; overflow-wrap: anywhere; }
+  .cb-shell-group { margin: 0 0 16px; }
+  #cb-claude-sidebar .cb-shell-group h2 { margin: 8px 12px; font-weight: 800; line-height: 1.4; font-family: inherit; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #81958d; }
+  #cb-claude-sidebar button { display: block; width: 100%; text-align: left; min-height: 42px; padding: 10px 12px; border: 0; border-left: 3px solid transparent; border-radius: 12px; background: transparent; color: #b9c6c0; font-size: 14px; font-weight: 700; box-shadow: none; cursor: pointer; }
+  #cb-claude-sidebar button:hover { color: #fff; background: #ffffff12; }
+  #cb-claude-sidebar button[aria-current="page"] { color: #fff; background: #ffffff24; border-left-color: var(--cb-shell-red); }
+  .cb-shell-role { margin-top: auto; padding: 16px 8px 0; border-top: 1px solid #ffffff20; color: #b9c6c0; font-size: 12px; }
+  body.cb-redesign-active #cb-bottom-nav,
+  body.cb-redesign-active #cb-sub-nav { display: none !important; }
+  body.cb-redesign-active > .topbar { min-height: 68px; padding: 12px 24px; border-bottom: 1px solid #e2e8f0; box-shadow: none; gap: 12px; }
+  body.cb-redesign-active > .topbar .club-crest,
+  body.cb-redesign-active > .topbar .eyebrow { display: none !important; }
+  body.cb-redesign-active > .topbar .topbar-brand { min-width: 0; }
+  body.cb-redesign-active > .topbar h1 { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  #cb-shell-view-title { display: block; margin: 2px 0 0; font-size: 17px; font-weight: 800; }
+  body.cb-redesign-active > #app { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px 28px; }
+  body.cb-redesign-active > .search-bar { margin-left: 0; width: 100%; padding: 10px 28px 0; }
+}
+
+@media screen and (max-width: 1099px) {
+  body.cb-redesign-active > .topbar { gap: 8px; padding: 10px 12px; }
+  body.cb-redesign-active > .topbar .status { flex-wrap: wrap; gap: 6px; min-width: 0; }
+  body.cb-redesign-active > .topbar .topbar-brand { min-width: 0; }
+  body.cb-redesign-active > #app { max-width: 100%; padding-inline: 12px; }
+  body.cb-redesign-active #cb-bottom-nav .cb-nav-label-wrap { font-size: 11px !important; }
+}
+
+body.auth-locked #cb-claude-sidebar,
+body.delegate-mode.delegate-single-view #cb-claude-sidebar,
+body.cb-is-printing #cb-claude-sidebar { display: none !important; }
+@media print { #cb-claude-sidebar, #cb-shell-view-title { display: none !important; } }
+
+/* Claude's default palette; explicit background choices remain controlled by Settings. */
+body.cb-redesign-active:not([data-theme-bg]) {
+  --cb-surface-bg: #f4f6f5 !important;
+  --cb-surface-card: #fff !important;
+  --cb-surface-nav: #fff !important;
+  --cb-surface-input: #fff !important;
+  --cb-slate-200: #e2e8f0 !important;
+  --paper: #f4f6f5 !important;
+  --card: #fff !important;
+  --line: #e2e8f0 !important;
+}
+/* The dark navigation surface keeps its own contrast, including custom text themes. */
+#cb-claude-sidebar .cb-shell-brand p { color: #a8bcb4 !important; }
+#cb-claude-sidebar .cb-shell-brand strong { color: #fff !important; }
+#cb-claude-sidebar .cb-shell-group h2 { color: #81958d !important; }
+body.cb-redesign-active > .topbar { background: var(--cb-surface-card, #fff); }
+@media screen and (max-width: 1099px) {
+  body.cb-redesign-active > .topbar { flex-wrap: wrap !important; padding: 10px 12px !important; gap: 8px !important; }
+  body.cb-redesign-active > .topbar .status { flex: 1 1 auto; flex-wrap: wrap !important; justify-content: flex-end; max-width: 100%; }
+  body.cb-redesign-active > .topbar .format-badge { max-width: 100% !important; white-space: normal !important; }
+}
+
+html:not([data-theme-bg]):has(body.cb-redesign-active) { background: #f4f6f5 !important; }
+body.cb-redesign-active:not([data-theme-bg]):not([data-has-custom-font-color="true"]) {
+  --cb-slate-900: #0f172a !important;
+  --ink: #0f172a !important;
+}

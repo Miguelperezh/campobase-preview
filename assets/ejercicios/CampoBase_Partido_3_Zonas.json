@@ -1,0 +1,122 @@
+{
+  "id": "CAMPOBASE-PARTIDO-3-ZONAS",
+  "nombre": "Partido condicionado en 3 zonas",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica colectiva",
+    "que_se_trabaja": [
+      "Progresión por zonas",
+      "Cambio de orientación",
+      "Búsqueda del hombre libre",
+      "Líneas de pase",
+      "Movilidad sin balón"
+    ],
+    "tiempo_estimado_15": "25 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "7v7 + 1 relevo rotativo"
+    },
+    "material": "Balones + 2 juegos de petos + conos para delimitar 40 x 30 m y dividir 3 zonas + 2 porterías",
+    "series": [
+      {
+        "nombre": "Serie 1",
+        "instruccion": "5 min de juego condicionado con la regla base."
+      },
+      {
+        "nombre": "Serie 2",
+        "instruccion": "5 min de juego condicionado con la misma regla base."
+      },
+      {
+        "nombre": "Serie 3",
+        "instruccion": "5 min de juego condicionado con la misma regla base."
+      },
+      {
+        "nombre": "Serie 4",
+        "instruccion": "5 min de juego condicionado con la misma regla base."
+      }
+    ],
+    "explicacion_breve": "Partido en un campo dividido en tres zonas. Para que el gol sea válido, el balón debe pasar por las tres y participar al menos un compañero distinto en cada zona.",
+    "animacion": {
+      "gif": "CampoBase_Partido_3_Zonas.gif",
+      "leyenda": "Azul: equipo con balón · Rojo: rival · Amarillo: relevo rotativo · Balón junto al poseedor · Negro: pase/progresión · Línea blanca: límite de zona"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Mantener la posesión mientras se progresa por zonas.",
+      "Mejorar los cambios de orientación.",
+      "Favorecer la búsqueda del hombre libre."
+    ],
+    "claves_entrenador": [
+      "Crear líneas de pase verticales y diagonales.",
+      "No saltarse zonas: progresión real con balón controlado.",
+      "Después de pasar, volver a ofrecer apoyo."
+    ],
+    "montaje": [
+      "Delimitar un campo de 40 x 30 m.",
+      "Dividirlo en tres zonas horizontales iguales con dos líneas interiores de conos.",
+      "Usar dos porterías, una en cada fondo.",
+      "Para 15 jugadores: organizar 7v7 y dejar 1 jugador como relevo rotativo."
+    ],
+    "desarrollo": [
+      "El equipo con balón inicia desde su zona defensiva.",
+      "Debe progresar hasta la zona intermedia y después hasta la zona ofensiva.",
+      "Para que el gol sea válido, el balón debe haber pasado por las tres zonas.",
+      "En cada zona debe intervenir al menos un compañero distinto.",
+      "Si cambia la posesión, la misma regla comienza para el otro equipo.",
+      "Realizar cuatro series de cinco minutos."
+    ],
+    "que_buscamos": [
+      "Que el equipo ocupe bien las tres zonas.",
+      "Que el poseedor tenga siempre varias líneas de pase.",
+      "Que se cambie de orientación cuando un lado está cerrado.",
+      "Que los jugadores se muevan después de pasar."
+    ],
+    "que_observar": [
+      "Distancias entre jugadores y líneas.",
+      "Líneas de pase verticales y diagonales.",
+      "Uso del hombre libre.",
+      "Capacidad para progresar sin saltarse zonas.",
+      "Reacción tras pérdida de posesión."
+    ],
+    "correcciones": [
+      "Abre.",
+      "Mira antes.",
+      "Cambia de lado.",
+      "Apoya otra vez.",
+      "No te saltes la zona."
+    ],
+    "reglas": [
+      "El gol solo es válido si el balón pasa por las tres zonas.",
+      "Debe tocar el balón al menos un compañero distinto en cada zona.",
+      "Al cambiar la posesión, la regla se reinicia para el nuevo equipo."
+    ],
+    "si_sale_mal": [
+      "Ampliar ligeramente el espacio.",
+      "Permitir más tiempo o más toques en la zona media.",
+      "Parar brevemente para recolocar distancias."
+    ],
+    "si_sale_bien": [
+      "Limitar a dos toques en la zona media.",
+      "Bonificar el gol tras cambio de orientación.",
+      "Reducir ligeramente el espacio."
+    ],
+    "variantes": [
+      "Bonificar gol por jugada que pase por banda exterior.",
+      "Limitar a 2 toques en zona media.",
+      "Permitir al portero jugar como hombre extra."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Fútbol - Controla Club",
+      "ejercicio_original": "Partido condicionado en 3 zonas",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente propone un partido 6v6 en 40 x 30 m dividido en tres zonas.",
+        "La fuente indica 4 series de 5 minutos con 1 minuto de descanso.",
+        "La organización 7v7 + 1 relevo rotativo es una adaptación operativa para trabajar siempre con 15 jugadores.",
+        "La secuencia que se ve en el GIF es solo una visualización de una progresión válida; no obliga a repetir esa jugada."
+      ]
+    }
+  }
+}

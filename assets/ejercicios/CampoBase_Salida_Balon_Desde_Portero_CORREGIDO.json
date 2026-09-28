@@ -1,0 +1,108 @@
+{
+  "id": "CAMPOBASE-SALIDA-BALON-DESDE-PORTERO",
+  "nombre": "Salida de balón jugada desde el portero",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Salida de balón",
+      "Construcción desde portero y centrales",
+      "Superar primera línea de presión",
+      "Mediocampista entre líneas",
+      "Decisión corto o largo"
+    ],
+    "tiempo_estimado_15": "25 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "Un único montaje: 6 jugadores activos (1 portero + 2 centrales + 1 mediocampista contra 2 presionadores) y 9 relevos rotativos fuera. La fuente no define cómo deben rotar los participantes adicionales."
+    },
+    "material": "1 portería real + 2 miniporterías + balones + petos + conos para delimitar medio campo",
+    "series": [
+      {
+        "nombre": "Acciones desde portero",
+        "instruccion": "Cada acción comienza con el portero jugando con los pies hacia uno de los centrales."
+      }
+    ],
+    "explicacion_breve": "El portero inicia con los pies hacia un central. Los dos centrales y el mediocampista intentan superar a los dos presionadores y marcar en una de las dos miniporterías situadas en mitad de campo.",
+    "animacion": {
+      "gif": "CampoBase_Salida_Balon_Desde_Portero_CORREGIDO.gif",
+      "leyenda": "Verde: portero · Rojo: equipo de salida · Azul: presionadores · Amarillo: relevos · Negro discontinuo: pase/progresión representativa"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Construir desde portero y centrales.",
+      "Romper la primera línea de presión rival.",
+      "Tomar decisiones entre jugar corto o más largo."
+    ],
+    "claves_entrenador": [
+      "Centrales con perfil abierto al campo.",
+      "El mediocampista crea una línea de pase entre líneas.",
+      "Decidir rápido: si el central recibe presión, buscar una solución hacia el mediocampista."
+    ],
+    "montaje": [
+      "Una portería real con portero.",
+      "Dos centrales abiertos a ambos lados.",
+      "Un mediocampista situado entre líneas.",
+      "Dos atacantes presionadores.",
+      "Dos miniporterías en la línea de mitad de campo, aproximadamente a 30 m.",
+      "Para 15 jugadores se mantiene un solo montaje y los 9 restantes esperan para rotar."
+    ],
+    "desarrollo": [
+      "El portero inicia la acción jugando con los pies hacia uno de los centrales.",
+      "Los dos presionadores intentan recuperar.",
+      "El equipo de salida intenta superar esa primera línea de presión.",
+      "El objetivo final es marcar en cualquiera de las dos miniporterías.",
+      "Si recuperan los presionadores, atacan inmediatamente la portería real."
+    ],
+    "que_buscamos": [
+      "Que los centrales den amplitud y reciban perfilados.",
+      "Que el mediocampista aparezca como línea de pase detrás de los presionadores.",
+      "Que el portador identifique si conviene progresar corto o buscar una solución más directa.",
+      "Que tras pérdida se proteja inmediatamente la portería real."
+    ],
+    "que_observar": [
+      "Perfil corporal de los centrales.",
+      "Posición del mediocampista respecto a los dos presionadores.",
+      "Calidad de la primera decisión tras recibir.",
+      "Si el equipo consigue superar realmente la línea de dos presionadores."
+    ],
+    "correcciones": [
+      "Centrales abiertos.",
+      "Recibe perfilado.",
+      "Mira al medio.",
+      "Decide antes de recibir.",
+      "Si perdemos, defendemos la portería."
+    ],
+    "reglas": [
+      "Inicio obligatorio desde el portero hacia un central.",
+      "Objetivo ofensivo: superar a los dos presionadores y marcar en una miniportería.",
+      "Si los presionadores recuperan, atacan la portería real."
+    ],
+    "si_sale_mal": [
+      "La fuente no aporta una regresión específica. No se añade una como contenido original."
+    ],
+    "si_sale_bien": [
+      "Aplicar una de las variantes propuestas por la fuente."
+    ],
+    "variantes": [
+      "Añadir un tercer presionador.",
+      "Bonificar el gol si la jugada pasa por el mediocampista.",
+      "El portero no puede pasar de mitad de campo con balón."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Salida de balón jugada desde el portero",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 25 min, 8-12 participantes, medio campo y edades SUB-14 en adelante.",
+        "La estructura activa descrita por la fuente es de 6 jugadores: portero, 2 centrales y 1 mediocampista contra 2 presionadores.",
+        "La fuente representa un único campo con 1 portería real y 2 miniporterías. La versión anterior de CampoBase duplicaba el montaje para encajar 15 jugadores y se ha corregido.",
+        "Para 15, CampoBase mantiene un único montaje y coloca 9 jugadores como relevos. La fuente no especifica el sistema de rotación de esos jugadores adicionales.",
+        "El GIF reproduce la secuencia representativa visible en el esquema de la fuente: portero → central izquierdo → mediocampista → miniportería izquierda. Esa secuencia ilustra el ejercicio, pero el objetivo general permite otras soluciones.",
+        "Por edad y nivel, la fuente lo clasifica como Avanzado y SUB-14+, por lo que no está planteado tal cual para Alevín / SUB-12."
+      ]
+    }
+  }
+}

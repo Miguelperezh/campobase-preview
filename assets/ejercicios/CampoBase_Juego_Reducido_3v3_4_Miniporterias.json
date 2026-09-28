@@ -1,0 +1,117 @@
+{
+  "id": "CAMPOBASE-JUEGO-REDUCIDO-3V3-4-MINIPORTERIAS",
+  "nombre": "Juego reducido 3v3 con 4 mini porterías",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Juego reducido",
+    "que_se_trabaja": [
+      "Cambio de orientación",
+      "Visión periférica",
+      "Toma de decisión",
+      "Cobertura defensiva"
+    ],
+    "tiempo_estimado_15": "15 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2 campos simultáneos de 3v3 (12 jugadores activos) + 3 relevos rotativos entre series"
+    },
+    "material": "8 miniporterías + balones + petos de 2 colores + conos para delimitar 2 campos de 25 x 20 m",
+    "series": [
+      {
+        "nombre": "Serie 1",
+        "instruccion": "4 min de 3v3 con la regla base. Después, 1 min para descanso y rotación."
+      },
+      {
+        "nombre": "Serie 2",
+        "instruccion": "4 min de 3v3 con la misma regla base. Después, 1 min para descanso y rotación."
+      },
+      {
+        "nombre": "Serie 3",
+        "instruccion": "4 min de 3v3 con la misma regla base."
+      }
+    ],
+    "explicacion_breve": "Dos equipos de 3 juegan sin portero. Cada equipo puede marcar en cualquiera de las dos miniporterías situadas en la línea de fondo rival.",
+    "animacion": {
+      "gif": "CampoBase_Juego_Reducido_3v3_4_Miniporterias.gif",
+      "leyenda": "Azul: un equipo · Rojo: rival · Amarillo: relevo rotativo · Balón junto al poseedor · Blanco: miniportería · Azul: tiro a una de las dos miniporterías rivales"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar el cambio de orientación y la visión periférica.",
+      "Tomar decisiones sobre qué portería rival atacar.",
+      "Defender manteniendo cobertura permanente."
+    ],
+    "claves_entrenador": [
+      "Buscar la portería menos defendida.",
+      "Defender formando triángulo y evitar quedar los tres jugadores en la misma línea.",
+      "Cambiar el juego rápido cuando se cierra una banda."
+    ],
+    "montaje": [
+      "Marcar un campo de 25 x 20 m.",
+      "Colocar 2 miniporterías en cada línea de fondo, separadas 10 m.",
+      "Formar dos equipos de 3 jugadores.",
+      "No utilizar porteros.",
+      "Para trabajar con 15 jugadores, montar 2 campos iguales simultáneamente y dejar 3 jugadores como relevos rotativos."
+    ],
+    "desarrollo": [
+      "Jugar un partido 3v3.",
+      "Cualquier miniportería de la línea de fondo rival es válida para marcar.",
+      "No hay porteros.",
+      "No se permiten saques largos.",
+      "Cuando el balón sale fuera, se reanuda con un pase rasante.",
+      "Realizar 3 series de 4 minutos con 1 minuto de descanso."
+    ],
+    "que_buscamos": [
+      "Identificar rápidamente cuál de las dos porterías está menos protegida.",
+      "Cambiar la orientación del ataque si un lado está cerrado.",
+      "Mantener amplitud y diferentes líneas de pase.",
+      "Que los defensores se den cobertura entre sí."
+    ],
+    "que_observar": [
+      "Si el poseedor levanta la cabeza antes de decidir.",
+      "Si el equipo cambia de objetivo cuando una miniportería queda bien defendida.",
+      "Si los tres defensores evitan colocarse en una sola línea.",
+      "Si los reinicios de banda se hacen mediante pase rasante."
+    ],
+    "correcciones": [
+      "Mira las dos porterías.",
+      "Cambia de lado.",
+      "No os pongáis en línea.",
+      "Da cobertura.",
+      "Saque rasante."
+    ],
+    "reglas": [
+      "Cualquier miniportería rival vale gol.",
+      "No hay porteros.",
+      "Balón fuera: entrada con pase rasante.",
+      "No realizar saques largos.",
+      "3 series de 4 minutos con 1 minuto de descanso."
+    ],
+    "si_sale_mal": [
+      "Mantener la estructura 3v3 y ampliar ligeramente el espacio entre jugadores dentro del mismo campo sin cambiar las reglas.",
+      "Recordar visualmente a los jugadores que disponen de dos objetivos de ataque."
+    ],
+    "si_sale_bien": [
+      "Aplicar una de las variantes propuestas por la fuente."
+    ],
+    "variantes": [
+      "4v4 con 4 miniporterías por equipo.",
+      "Añadir un comodín neutro que apoye al equipo en posesión.",
+      "Solo permitir gol después de 3 pases consecutivos."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Juego reducido 3v3 con 4 mini porterías",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 15 min, 6-12 participantes, espacio 25 x 20 m y edades SUB-8 a SUB-14.",
+        "La fuente utiliza un solo campo con 6 jugadores activos. Para 15 jugadores, CampoBase adapta la organización a dos campos simultáneos de 3v3 y tres relevos.",
+        "Esta adaptación duplica el material de campo: 8 miniporterías en total.",
+        "El GIF muestra únicamente una finalización representativa hacia una de las dos miniporterías rivales; no establece una combinación de pases obligatoria porque la fuente no define ninguna secuencia concreta.",
+        "Las tres series mantienen exactamente la misma regla base; el cambio visual de portería solo sirve para representar que cualquiera de las dos porterías rivales es válida."
+      ]
+    }
+  }
+}

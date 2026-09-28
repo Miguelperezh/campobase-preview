@@ -1,0 +1,47 @@
+:root{
+  --field-bg:#f7f5f0;
+  --field-card:#fff;
+  --field-nav:rgba(255,255,255,.96);
+  --field-input:#f8fafc;
+  --field-text:#1a1a1a;
+  --field-border:#e3e0d8;
+  --field-accent:#c8102e;
+  --field-accent-text:#fff;
+  --field-font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --field-font-weight:700;
+}
+html,body{background:var(--field-bg)!important;color:var(--field-text)!important;font-family:var(--field-font-family)!important}
+body,button,a,input,select,textarea{font-family:var(--field-font-family)!important}
+body,h1,h2,h3,h4,h5,h6,strong,b,button,.btn,.nav,.status,.pill,.kicker,.sync,.exit{font-weight:var(--field-font-weight)!important}
+.top{background:var(--field-nav)!important;border-color:var(--field-border)!important}
+.overlay-head{background:var(--field-card)!important;border-color:var(--field-border)!important}
+.campo-club-crest{width:56px;height:56px;object-fit:contain;border-radius:14px;background:#fff;border:1px solid var(--field-border);box-shadow:0 2px 8px rgba(0,0,0,.06);flex:0 0 auto}
+.brand small,.sync,.section-head span,.card p,.empty,.source-proof,.attendance-row-full label,.record-notes,.arrival-box{color:var(--field-text)!important;opacity:.72}
+.exit,.btn.primary,.btn.accent,.nav.active,.close-bottom,.status.today{background:var(--field-accent)!important;color:var(--field-accent-text)!important}
+.btn.secondary,.pill,.status.next,.status.done{background:var(--field-input)!important;color:var(--field-text)!important;border-color:var(--field-border)!important}
+.btn.ghost{background:var(--field-card)!important;color:var(--field-text)!important;border-color:var(--field-border)!important}
+.card,.fold,.attendance-row-full{background:var(--field-card)!important;border-color:var(--field-border)!important;color:var(--field-text)!important}
+.bottom{background:var(--field-nav)!important;border-color:var(--field-border)!important}
+.nav{color:var(--field-text)!important;opacity:.72}.nav.active{opacity:1}
+.overlay{background:var(--field-bg)!important}
+.attendance-row-full select,.attendance-row-full input,.record-notes textarea{background:var(--field-input)!important;color:var(--field-text)!important;border-color:var(--field-border)!important}
+.big-copy{color:var(--field-text)!important}
+.hero{background:var(--field-card)!important;color:var(--field-text)!important;border:2px solid var(--field-accent)!important;box-shadow:0 10px 30px rgba(0,0,0,.08)!important}
+.hero .btn.accent{background:var(--field-accent)!important;color:var(--field-accent-text)!important}
+.hero .btn.ghost{background:var(--field-input)!important}
+.brand h1{font-size:1.5rem!important}.brand small{font-size:.72rem!important}.sync{font-size:.8rem}
+.hero h2{font-size:clamp(2rem,6vw,3.4rem)!important}.hero p{font-size:1.08rem!important}.kicker{font-size:.75rem!important}
+.card h3{font-size:1.5rem!important}.btn{font-size:1rem!important}.btn.big{font-size:1.1rem!important}.section-head h2{font-size:1.9rem!important}.section-head h3{font-size:1.25rem!important}.field-title{font-size:clamp(2.1rem,8vw,3.9rem)!important}.nav strong{font-size:.75rem!important}.attendance-player-name strong{font-size:1.1rem!important}.live-score strong{font-size:1.1rem!important}.live-score span{font-size:3rem!important}.clock-big{font-size:clamp(2.6rem,8vw,4.5rem)!important}
+.campo-session-exercises{display:grid;gap:.45rem;margin:.8rem 0 0;padding:.85rem;border-radius:14px;background:var(--field-input);border:1px solid var(--field-border)}
+.campo-session-exercises>strong{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.campo-session-exercise{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:.55rem;padding:.35rem 0;border-top:1px solid var(--field-border)}
+.campo-session-exercise:first-of-type{border-top:0}.campo-session-exercise>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--field-accent);color:var(--field-accent-text);font-size:.78rem}.campo-session-exercise b{overflow-wrap:anywhere}.campo-session-exercise em{font-style:normal;opacity:.7;white-space:nowrap}
+.campo-exercise-detail{display:grid;gap:.85rem;margin:1rem 0}.campo-exercise-video,.campo-exercise-preview{width:100%;max-height:55vh;object-fit:contain;border-radius:18px;background:#000;border:1px solid var(--field-border)}.campo-exercise-quick{display:flex;flex-wrap:wrap;gap:.5rem}.campo-exercise-steps ol{padding-left:1.4rem;margin:.6rem 0 0}.campo-exercise-steps li{margin:.55rem 0;line-height:1.45}.campo-exercise-objective p{margin-bottom:0}
+@media(max-width:760px){
+  .campo-club-crest{width:48px;height:48px;border-radius:12px}
+  .brand h1{font-size:1.15rem!important;line-height:1.05}.brand small{font-size:.58rem!important}
+  .top{padding:max(10px,env(safe-area-inset-top)) 12px 10px!important}
+  .exit{font-size:.8rem!important;white-space:nowrap}
+  .card h3{font-size:1.35rem!important}.section-head h2{font-size:1.55rem!important}.nav strong{font-size:.62rem!important}
+  .campo-session-exercise{grid-template-columns:28px minmax(0,1fr);}.campo-session-exercise em{grid-column:2}
+}

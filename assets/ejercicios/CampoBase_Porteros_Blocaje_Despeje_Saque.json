@@ -1,0 +1,119 @@
+{
+  "id": "CAMPOBASE-PORTEROS-BLOCAJE-DESPEJE-SAQUE",
+  "nombre": "Porteros: blocaje, despeje y saque",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Blocaje",
+      "Despeje de puños",
+      "Saque de mano",
+      "Saque de volea",
+      "Juego con los pies"
+    ],
+    "tiempo_estimado_15": "120 min con 1 portería si los 15 deben completar íntegramente los 30 min en grupos de 2-4",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "La fuente está diseñada para 2-4 porteros. Para 15 jugadores y una sola portería serían 4 grupos (4+4+4+3) trabajando de forma sucesiva."
+    },
+    "material": "1 portería + balones. Para el bloque de juego con los pies se necesita al menos un compañero receptor y un jugador que ejerza presión. La fuente no especifica conos ni petos como material obligatorio.",
+    "series": [
+      {
+        "nombre": "Bloque 1 · Blocaje",
+        "instruccion": "8 min: blocaje frontal y lateral con balones rasos y a media altura."
+      },
+      {
+        "nombre": "Bloque 2 · Despeje",
+        "instruccion": "6 min: despeje con dos puños tras centro al área."
+      },
+      {
+        "nombre": "Bloque 3 · Saque",
+        "instruccion": "6 min: saque de mano rodante y tenso, y saque de volea."
+      },
+      {
+        "nombre": "Bloque 4 · Juego con los pies",
+        "instruccion": "10 min: salida del balón con los pies a un compañero presionado."
+      }
+    ],
+    "explicacion_breve": "Sesión específica de portero dividida en cuatro bloques: blocaje, despeje, saques y salida con los pies.",
+    "animacion": {
+      "gif": "CampoBase_Porteros_Blocaje_Despeje_Saque.gif",
+      "leyenda": "P: portero · S: servidor · C: compañero · D: jugador que presiona · Azul: envío/saque/pase · Rojo: despeje/volea · Rojo discontinuo: movimiento de presión"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Técnica de blocaje a media y baja altura.",
+      "Despeje de puños con dos manos.",
+      "Saque de mano y de volea."
+    ],
+    "claves_entrenador": [
+      "Manos en forma de W para el blocaje alto.",
+      "Apoyo perpendicular antes de despejar.",
+      "En el saque, balón firme y trayectoria tensa, no parabólica."
+    ],
+    "montaje": [
+      "Utilizar 1 portería y aproximadamente 25 m de profundidad.",
+      "Organizar entre 2 y 4 porteros, tal como indica la fuente.",
+      "Preparar balones para encadenar las acciones de los cuatro bloques.",
+      "En el bloque 4 se necesita un compañero que reciba bajo presión."
+    ],
+    "desarrollo": [
+      "Bloque 1 (8 min): realizar blocajes frontales y laterales con balones rasos y a media altura.",
+      "Bloque 2 (6 min): realizar despejes con dos puños tras centros al área.",
+      "Bloque 3 (6 min): practicar saque de mano rodante, saque de mano tenso y saque de volea.",
+      "Bloque 4 (10 min): trabajar la salida del balón con los pies hacia un compañero presionado."
+    ],
+    "que_buscamos": [
+      "Seguridad técnica en el blocaje.",
+      "Despeje firme y bien orientado.",
+      "Distribución precisa con mano y volea.",
+      "Tomar una decisión segura cuando se juega con los pies."
+    ],
+    "que_observar": [
+      "Forma de las manos en los blocajes.",
+      "Posición del apoyo antes del despeje.",
+      "Dirección y tensión de los saques.",
+      "Precisión de la salida con los pies hacia el compañero."
+    ],
+    "correcciones": [
+      "Manos en W.",
+      "Ataca el balón.",
+      "Apoyo antes de despejar.",
+      "Saque tenso.",
+      "Mira antes de jugar con el pie."
+    ],
+    "reglas": [
+      "Respetar la secuencia de los cuatro bloques.",
+      "Bloque 1: 8 min.",
+      "Bloque 2: 6 min.",
+      "Bloque 3: 6 min.",
+      "Bloque 4: 10 min."
+    ],
+    "si_sale_mal": [
+      "Reducir velocidad y dificultad del servicio para recuperar técnica correcta antes de progresar."
+    ],
+    "si_sale_bien": [
+      "Aplicar las variantes propuestas por la fuente: añadir disputa aérea, buscar zonas objetivo o combinar con un central."
+    ],
+    "variantes": [
+      "Añadir un atacante que dispute el balón aéreo.",
+      "Realizar el saque buscando una zona objetivo del campo.",
+      "Trabajo combinado con un central para iniciar la jugada."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Porteros: blocaje, despeje y saque",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 30 min, 2-4 participantes y 1 portería + 25 m.",
+        "Las edades indicadas son SUB-10 en adelante.",
+        "El cálculo para 15 jugadores mantiene el límite de 2-4 participantes de la fuente: cuatro grupos sucesivos equivalen a 120 min si todos completan la sesión íntegra.",
+        "El servidor del GIF es un rol operativo para visualizar los servicios de blocaje y los centros; la fuente no identifica quién los realiza.",
+        "El bloque 4 sí especifica un compañero presionado.",
+        "El GIF base no incorpora la variante de zona objetivo. En el bloque 3 solo representa las tres formas que sí aparecen en el desarrollo: saque de mano rodante, saque de mano tenso y saque de volea."
+      ]
+    }
+  }
+}

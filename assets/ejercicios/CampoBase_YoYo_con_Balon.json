@@ -1,0 +1,119 @@
+{
+  "id": "CAMPOBASE-YOYO-CON-BALON",
+  "nombre": "Trabajo intermitente tipo Yo-Yo (con balón)",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Preparación física con balón",
+    "que_se_trabaja": [
+      "Resistencia específica intermitente",
+      "Velocidad con balón",
+      "Conducción bajo fatiga",
+      "Frenado y cambio de sentido"
+    ],
+    "tiempo_estimado_15": "20 min según la duración global indicada por la fuente",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "15 jugadores con balón. Para representar el trabajo con claridad en CampoBase se muestran 5 pasillos visuales con 3 jugadores escalonados por pasillo."
+    },
+    "material": "15 balones + conos para marcar dos líneas separadas 40 m",
+    "series": [
+      {
+        "nombre": "Serie 1 · 14 s / 14 s",
+        "instruccion": "8 repeticiones. Ida y vuelta de 40 m con balón en 14 s y descanso de 14 s."
+      },
+      {
+        "nombre": "Serie 2 · 12 s / 12 s",
+        "instruccion": "6 repeticiones. Ida y vuelta de 40 m con balón en 12 s y descanso de 12 s."
+      },
+      {
+        "nombre": "Serie 3 · 10 s / 20 s",
+        "instruccion": "5 repeticiones. Ida y vuelta de 40 m con balón en 10 s y descanso de 20 s."
+      },
+      {
+        "nombre": "Cierre · Estiramientos",
+        "instruccion": "5 min de estiramientos pasivos."
+      }
+    ],
+    "explicacion_breve": "Cada jugador conduce su propio balón entre dos líneas separadas 40 m, realizando idas y vueltas cada vez más rápidas con pausas entre repeticiones.",
+    "animacion": {
+      "gif": "CampoBase_YoYo_con_Balon.gif",
+      "leyenda": "Azul: jugador · Balón junto al poseedor · Naranja: cono de línea · Azul discontinuo: conducción ida · Negro discontinuo: conducción vuelta"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la resistencia específica intermitente.",
+      "Mantener la toma de decisión bajo fatiga.",
+      "Trabajar velocidad con balón."
+    ],
+    "claves_entrenador": [
+      "No abandonar la técnica de conducción aunque aparezca fatiga.",
+      "Realizar un frenado controlado en cada cono.",
+      "Hidratarse en cada bloque."
+    ],
+    "montaje": [
+      "Marcar dos líneas separadas 40 m con conos.",
+      "Cada jugador parte con un balón.",
+      "Con 15 jugadores, disponer anchura suficiente para que puedan realizar el recorrido sin interferirse.",
+      "La representación en 5 pasillos de 3 jugadores es una adaptación visual de CampoBase; el PDF no define pasillos ni número de calles."
+    ],
+    "desarrollo": [
+      "Serie 1: realizar 8 repeticiones de ida y vuelta en 14 segundos, seguidas de 14 segundos de descanso.",
+      "Serie 2: realizar 6 repeticiones de ida y vuelta en 12 segundos, seguidas de 12 segundos de descanso.",
+      "Serie 3: realizar 5 repeticiones de ida y vuelta en 10 segundos, seguidas de 20 segundos de descanso.",
+      "Finalizar con 5 minutos de estiramientos pasivos."
+    ],
+    "que_buscamos": [
+      "Mantener el balón controlado aunque aumente la velocidad.",
+      "Acelerar progresivamente entre series.",
+      "Frenar con control al llegar a cada línea.",
+      "Conservar calidad técnica a pesar de la fatiga."
+    ],
+    "que_observar": [
+      "Distancia del balón respecto al jugador durante la conducción.",
+      "Control del frenado antes del cambio de sentido.",
+      "Si se mantiene la técnica cuando aumenta la fatiga.",
+      "Si cada jugador respeta los tiempos de trabajo y recuperación."
+    ],
+    "correcciones": [
+      "Balón cerca.",
+      "Frena antes de girar.",
+      "No sacrifiques técnica.",
+      "Respeta el tiempo.",
+      "Hidrátate entre bloques."
+    ],
+    "reglas": [
+      "Cada jugador trabaja con su propio balón.",
+      "Las líneas están separadas 40 m.",
+      "Serie 1: 8 repeticiones, 14 s de trabajo y 14 s de descanso.",
+      "Serie 2: 6 repeticiones, 12 s de trabajo y 12 s de descanso.",
+      "Serie 3: 5 repeticiones, 10 s de trabajo y 20 s de descanso.",
+      "Cierre con 5 min de estiramientos pasivos."
+    ],
+    "si_sale_mal": [
+      "La fuente no aporta una regresión específica. No se añade una que no esté documentada."
+    ],
+    "si_sale_bien": [
+      "Aplicar una de las variantes propuestas por la fuente."
+    ],
+    "variantes": [
+      "Realizar la última serie sin balón para aumentar la velocidad.",
+      "Finalizar con remate a portería en cada vuelta.",
+      "Trabajar por parejas: uno corre mientras el otro descansa."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Trabajo intermitente tipo Yo-Yo (con balón)",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente lo clasifica como Preparación física · Avanzado.",
+        "La fuente indica 20 min, 4-20 participantes, espacio lineal de 40 m y edades SUB-14, SUB-16, SUB-18 y adultos.",
+        "Por edad y exigencia, no está planteado por la fuente para Alevín / SUB-12.",
+        "La distribución visual en 5 pasillos de 3 jugadores se usa únicamente para que los 15 jugadores sean legibles en la animación; el PDF no define pasillos.",
+        "Existe una discrepancia interna en los tiempos: las repeticiones y descansos escritos, más 5 min de estiramientos, suman aproximadamente 13 min 38 s, mientras que la ficha declara una duración total de 20 min. CampoBase conserva ambos datos y no inventa el tiempo restante.",
+        "La fuente no indica que la vuelta sea trotando ni una recuperación: cada repetición se describe como ida y vuelta dentro del tiempo marcado, por lo que ambas direcciones forman parte del trabajo cronometrado con balón."
+      ]
+    }
+  }
+}

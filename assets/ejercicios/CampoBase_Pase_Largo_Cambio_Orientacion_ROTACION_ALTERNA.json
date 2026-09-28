@@ -1,0 +1,114 @@
+{
+  "id": "CAMPOBASE-PASE-LARGO-CAMBIO-ORIENTACION",
+  "nombre": "Pase largo y cambio de orientación",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Tecnificación",
+    "que_se_trabaja": [
+      "Pase largo",
+      "Control orientado",
+      "Cambio de orientación",
+      "Pase corto",
+      "Rotación por puestos"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 circuitos paralelos x 5 jugadores. En cada circuito: 2 en Banda A, 1 en el centro y 2 en Banda B."
+    },
+    "material": "Balones + conos para marcar las posiciones y organizar 3 circuitos dentro de un espacio aproximado de 40 x 25 m",
+    "series": [
+      {
+        "nombre": "Trabajo continuo",
+        "instruccion": "15 min de ejecución continua según la fuente, aplicando la rotación alterna definida para CampoBase."
+      }
+    ],
+    "explicacion_breve": "Sale un lado con pase largo a la banda opuesta. El receptor juega con el centro y el centro devuelve a la banda de origen. El iniciador pasa al centro. En la siguiente acción sale el lado contrario y el centro pasa a esa banda.",
+    "animacion": {
+      "gif": "CampoBase_Pase_Largo_Cambio_Orientacion_ROTACION_ALTERNA.gif",
+      "leyenda": "Azul: jugador · Balón junto al poseedor · Naranja: posición · Azul continuo: pase largo · Negro continuo: pase corto · Rojo discontinuo: rotación"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar el pase largo con precisión.",
+      "Mejorar el control orientado del receptor.",
+      "Dar continuidad al juego con pase corto y cambio de orientación.",
+      "Organizar una rotación clara y repetible para que el circuito no se pare."
+    ],
+    "claves_entrenador": [
+      "En el pase largo, utilizar el empeine interior y golpear por debajo del balón.",
+      "El receptor orienta su primer control hacia dentro.",
+      "Después del pase largo, el jugador que inicia pasa al centro.",
+      "La siguiente acción sale desde el lado contrario."
+    ],
+    "montaje": [
+      "Disponer dos filas en bandas opuestas separadas 40 m.",
+      "Situar un jugador central a 15 m, según la referencia de la fuente.",
+      "Para trabajar con 15 jugadores, montar 3 circuitos paralelos de 5 jugadores.",
+      "En cada circuito quedan 2 jugadores en Banda A, 1 central y 2 jugadores en Banda B."
+    ],
+    "desarrollo": [
+      "Acción 1: el jugador de Banda A realiza un pase largo a Banda B.",
+      "El receptor de Banda B controla orientado y juega un pase corto con el jugador central.",
+      "El central devuelve el balón a la Banda A, donde recibe el siguiente jugador de esa fila.",
+      "Después de su pase largo, el jugador que salió de Banda A pasa al puesto central.",
+      "Acción 2: ahora sale el jugador de Banda B con pase largo hacia Banda A.",
+      "El receptor de Banda A juega corto con el central.",
+      "El central devuelve el balón a la Banda B.",
+      "Después de esta segunda acción, el jugador que actuó como central pasa a la Banda B.",
+      "La secuencia sigue alternando de un lado a otro."
+    ],
+    "que_buscamos": [
+      "Que el pase largo llegue limpio a la banda opuesta.",
+      "Que el primer control prepare el siguiente pase.",
+      "Que el centro dé continuidad sin frenar el ritmo.",
+      "Que todos entiendan la rotación: sale un lado, va al centro, y en la siguiente acción el centro sale hacia la banda contraria."
+    ],
+    "que_observar": [
+      "Superficie de golpeo en el pase largo.",
+      "Orientación corporal antes del control.",
+      "Calidad del pase corto con el central.",
+      "Si la rotación se entiende sin parar el ejercicio."
+    ],
+    "correcciones": [
+      "Golpea por debajo del balón.",
+      "Controla hacia dentro.",
+      "Pase corto limpio.",
+      "Después de salir, ve al centro.",
+      "La siguiente sale del otro lado."
+    ],
+    "reglas": [
+      "La jugada alterna entre Banda A y Banda B.",
+      "Quien inicia la acción pasa al centro.",
+      "En la siguiente acción sale el lado contrario.",
+      "El jugador que estaba en el centro pasa a la banda desde la que acaba de salir la jugada."
+    ],
+    "si_sale_mal": [
+      "Parar solo al final de una serie corta y volver a explicar la rotación con un ejemplo sin balón.",
+      "Fijar verbalmente la secuencia: 'A sale, A va al centro, sale B, el centro va a B'."
+    ],
+    "si_sale_bien": [
+      "Aumentar ritmo de ejecución o exigir menos toques.",
+      "Pedir que el pase largo viaje más tenso y el control sea más orientado."
+    ],
+    "variantes": [
+      "Jugar a un toque después del control si el nivel lo permite.",
+      "Añadir un defensor pasivo en la zona central.",
+      "Terminar la secuencia con remate si se adapta el espacio."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Pase largo y cambio de orientación",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 20 min, 6-12 participantes, espacio 40 x 25 m y edades SUB-12 en adelante.",
+        "La fuente confirma: dos filas en bandas opuestas separadas 40 m, un jugador central a 15 m y que el jugador que inicia pasa después al centro.",
+        "La fuente no detalla la rotación completa de los otros puestos.",
+        "CampoBase fija como adaptación operativa una rotación alterna: sale Banda A y pasa al centro; en la siguiente acción sale Banda B; después el central pasa a Banda B. La secuencia continúa alternando de lado.",
+        "La ficha declara 20 min de duración, mientras que el desarrollo de la fuente habla de 15 min de trabajo continuo. CampoBase conserva ambos datos y no inventa los 5 min restantes."
+      ]
+    }
+  }
+}

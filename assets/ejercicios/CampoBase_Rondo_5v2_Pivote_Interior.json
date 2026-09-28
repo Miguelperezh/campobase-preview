@@ -1,0 +1,103 @@
+{
+  "id": "CAMPOBASE-RONDO-5V2-PIVOTE-INTERIOR",
+  "nombre": "Rondo 5v2 con pivote interior",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Posesión",
+    "que_se_trabaja": [
+      "Tercer hombre",
+      "Pivote",
+      "Pase entre líneas",
+      "Orientación corporal",
+      "Presión defensiva"
+    ],
+    "tiempo_estimado_15": "15 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2 rondos simultáneos de 7 jugadores (4 exteriores + 1 pivote + 2 defensores) = 14 activos + 1 relevo rotativo."
+    },
+    "material": "2 balones + conos para delimitar 2 cuadrados de 12 x 12 m + petos para defensores y pivotes",
+    "series": [
+      {
+        "nombre": "Trabajo continuo",
+        "instruccion": "Rotar el relevo, los defensores y el pivote durante el ejercicio."
+      }
+    ],
+    "explicacion_breve": "Cuatro jugadores exteriores y un pivote conservan el balón contra dos defensores. Cuando el pivote recibe y devuelve a un lado distinto, la acción vale 2 puntos.",
+    "animacion": {
+      "gif": "CampoBase_Rondo_5v2_Pivote_Interior.gif",
+      "leyenda": "Azul: exterior · Amarillo: pivote · Rojo: defensor · Morado: relevo · Azul: pase al pivote · Negro: pase normal"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Introducir el concepto de tercer hombre.",
+      "Usar el pivote como referencia.",
+      "Encontrar pases entre líneas."
+    ],
+    "claves_entrenador": [
+      "El pivote orienta el cuerpo según dónde quiere devolver.",
+      "Los dos defensores presionan como una cuña y no separados.",
+      "Buscar una línea de pase más profunda, no solo la opción fácil."
+    ],
+    "montaje": [
+      "Cuadrado de 12 x 12 m.",
+      "4 jugadores en los lados.",
+      "1 pivote en el centro.",
+      "2 defensores dentro.",
+      "Para 15: dos rondos simultáneos y un relevo."
+    ],
+    "desarrollo": [
+      "Los 5 jugadores de posesión intentan conservar el balón.",
+      "Los 2 defensores intentan recuperar.",
+      "Si el pivote toca y devuelve hacia un lado distinto, suma 2 puntos.",
+      "Cada 6 pases normales se suma 1 punto.",
+      "Cuando un defensor recupera, cambia con el jugador que perdió el balón."
+    ],
+    "que_buscamos": [
+      "Que el pivote reciba orientado.",
+      "Que los exteriores reconozcan cuándo jugar dentro.",
+      "Que el pase al pivote conecte con un tercer jugador.",
+      "Que los defensores trabajen juntos."
+    ],
+    "que_observar": [
+      "Orientación del pivote.",
+      "Velocidad de apoyo tras pase.",
+      "Distancia entre los dos defensores.",
+      "Uso real del tercer hombre."
+    ],
+    "correcciones": [
+      "Perfílate.",
+      "Mira el lado contrario.",
+      "No fuerces dentro.",
+      "Defensores juntos."
+    ],
+    "reglas": [
+      "Pivote toca y devuelve a lado distinto = 2 puntos.",
+      "6 pases normales = 1 punto.",
+      "Defensor que recupera cambia con quien perdió."
+    ],
+    "si_sale_mal": [
+      "La fuente no aporta una regresión específica; no se añade una como fuente."
+    ],
+    "si_sale_bien": [
+      "Aplicar una variante de la fuente."
+    ],
+    "variantes": [
+      "Exteriores a un toque.",
+      "Dos pivotes interiores.",
+      "Cambiar el pivote cada 30 segundos."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Rondo 5v2 con pivote interior",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 15 min, exactamente 7 participantes, espacio 12 x 12 m y edades SUB-12 en adelante.",
+        "Para 15 jugadores se montan dos rondos idénticos de 7 y queda 1 relevo rotativo.",
+        "El GIF muestra exterior → pivote → exterior distinto para visualizar la regla de 2 puntos; no es una combinación obligatoria de cada posesión."
+      ]
+    }
+  }
+}

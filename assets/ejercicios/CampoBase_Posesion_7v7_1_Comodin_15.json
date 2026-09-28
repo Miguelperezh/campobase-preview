@@ -1,0 +1,118 @@
+{
+  "id": "CAMPOBASE-POSESION-7V7-1-COMODIN-15",
+  "nombre": "Posesión 7v7+2 con comodines",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Posesión",
+    "que_se_trabaja": [
+      "Posesión bajo presión",
+      "Apoyos",
+      "Comodín",
+      "Cambio de orientación",
+      "Líneas de pase"
+    ],
+    "tiempo_estimado_15": "25 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "7v7 + 1 comodín neutral. Adaptación mínima del 7v7+2 original para poder trabajar exactamente con 15 jugadores."
+    },
+    "material": "Balones + petos para 2 equipos + 1 peto de color distinto para el comodín + conos para delimitar 40 x 30 m",
+    "series": [
+      {
+        "nombre": "Serie 1",
+        "instruccion": "6 min de posesión. 1 punto por 8 pases consecutivos."
+      },
+      {
+        "nombre": "Serie 2",
+        "instruccion": "6 min de posesión. Rotar quién actúa como comodín."
+      },
+      {
+        "nombre": "Serie 3",
+        "instruccion": "6 min de posesión. Nueva rotación del comodín."
+      }
+    ],
+    "explicacion_breve": "Dos equipos intentan conservar el balón. El comodín neutral juega siempre con el equipo que tiene la posesión. Cada 8 pases consecutivos se consigue 1 punto.",
+    "animacion": {
+      "gif": "CampoBase_Posesion_7v7_1_Comodin_15.gif",
+      "leyenda": "Azul: equipo A · Rojo: equipo B · Amarillo: comodín neutral que juega con quien tiene el balón · Balón junto al poseedor · Azul: pase"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Mantener la posesión bajo presión real.",
+      "Utilizar el comodín como apoyo.",
+      "Trabajar el cambio de orientación."
+    ],
+    "claves_entrenador": [
+      "Buscar triangulación constante y al menos 3 líneas de pase.",
+      "No jugar con el comodín por obligación: utilizarlo cuando aporta una ventaja.",
+      "Después de pasar, buscar un nuevo apoyo."
+    ],
+    "montaje": [
+      "Delimitar un espacio de 40 x 30 m.",
+      "En la fuente original se forman dos equipos de 7 jugadores y 2 comodines neutrales.",
+      "Para 15 jugadores, mantener los dos equipos de 7 y utilizar 1 comodín neutral.",
+      "El comodín lleva peto de color diferente."
+    ],
+    "desarrollo": [
+      "El equipo que tiene el balón intenta conservar la posesión.",
+      "El comodín neutral juega siempre con el equipo que está en posesión.",
+      "Cada 8 pases consecutivos sin pérdida suman 1 punto.",
+      "Si cambia la posesión, el contador comienza de nuevo para el otro equipo.",
+      "Realizar 3 bloques de 6 minutos.",
+      "Rotar el rol de comodín entre bloques."
+    ],
+    "que_buscamos": [
+      "Que el poseedor tenga varias líneas de pase.",
+      "Que los jugadores se muevan después de pasar.",
+      "Que el comodín sirva como apoyo para salir de presión o cambiar la orientación.",
+      "Que el equipo no fuerce el pase al comodín si existe una opción mejor."
+    ],
+    "que_observar": [
+      "Número y calidad de líneas de pase alrededor del poseedor.",
+      "Movilidad después de cada pase.",
+      "Uso útil del comodín.",
+      "Capacidad para cambiar la orientación.",
+      "Reacción inmediata al perder la posesión y reinicio del contador."
+    ],
+    "correcciones": [
+      "Da tres apoyos.",
+      "Muévete después de pasar.",
+      "No fuerces al comodín.",
+      "Cambia de lado.",
+      "Reinicia la cuenta tras pérdida."
+    ],
+    "reglas": [
+      "El comodín juega siempre con el equipo en posesión.",
+      "1 punto por 8 pases consecutivos.",
+      "Al perder el balón, el contador pasa a cero para el nuevo equipo.",
+      "3 bloques de 6 minutos con rotación del comodín."
+    ],
+    "si_sale_mal": [
+      "La fuente no aporta una regresión específica. No se añade una no documentada."
+    ],
+    "si_sale_bien": [
+      "Aplicar una de las variantes propuestas por la fuente."
+    ],
+    "variantes": [
+      "Colocar los comodines en el exterior del campo.",
+      "Dar un punto extra si un cambio de orientación incluye al comodín.",
+      "Limitar a 2 toques en la zona central."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Posesión 7v7+2 con comodines",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 25 min, 14-18 participantes, espacio 40 x 30 m y edades SUB-14 en adelante.",
+        "La estructura original es 7v7 + 2 comodines, es decir, 16 jugadores activos.",
+        "Para trabajar exactamente con 15, CampoBase mantiene los dos equipos de 7 y reduce los comodines de 2 a 1.",
+        "Esta adaptación cambia únicamente el número de comodines; el resto de reglas se conserva.",
+        "Por edad y nivel, la fuente no plantea este ejercicio para Alevín / SUB-12.",
+        "La fuente fija 3 bloques de 6 min, que suman 18 min, pero la ficha declara una duración total de 25 min. No se inventan los 7 min restantes.",
+        "El GIF alterna visualmente la posesión entre ambos equipos para mostrar que el comodín apoya siempre al equipo que tiene el balón. Las secuencias de pases son ilustrativas, no combinaciones obligatorias."
+      ]
+    }
+  }
+}

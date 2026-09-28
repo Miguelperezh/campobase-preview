@@ -1,0 +1,100 @@
+{
+  "id": "CAMPOBASE-MINI-FUTBOL-EQUIPOS-ROTATIVOS",
+  "nombre": "Mini fútbol con 3 equipos rotativos",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Juego reducido",
+    "que_se_trabaja": [
+      "Juego colectivo",
+      "Transición rápida",
+      "Pase",
+      "Adaptación a cambio de rol"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "5 equipos de 3. Juegan 2 equipos (3v3) y 3 esperan en cola. Tras gol, sale el equipo que recibe y entra el siguiente equipo de la cola."
+    },
+    "material": "2 miniporterías + balón + 5 juegos/colores de petos + conos para delimitar 20 x 15 m",
+    "series": [
+      {
+        "nombre": "Juego continuo",
+        "instruccion": "Rotación tras cada gol. La fuente original utiliza 3 equipos de 3; con 15 se amplía a una cola de 5 equipos de 3."
+      }
+    ],
+    "explicacion_breve": "Dos equipos juegan 3v3. Cuando uno recibe gol, sale del campo y entra el siguiente equipo que está esperando.",
+    "animacion": {
+      "gif": "CampoBase_Mini_Futbol_Equipos_Rotativos.gif",
+      "leyenda": "Colores: equipos · Balón junto al poseedor · Azul: ataque/tiro · Flecha discontinua: salida/entrada tras gol"
+    }
+  },
+  "detalle": {
+    "objetivos": [
+      "Diversión y participación.",
+      "Iniciación al juego colectivo.",
+      "Adaptación rápida a roles cambiantes."
+    ],
+    "claves_entrenador": [
+      "Estimular la transición rápida entre defensa y ataque.",
+      "Buscar el pase más que la conducción larga.",
+      "Valorar la asistencia tanto como el gol."
+    ],
+    "montaje": [
+      "Campo de 20 x 15 m con dos miniporterías.",
+      "La fuente forma 3 equipos de 3.",
+      "Para 15 jugadores se forman 5 equipos de 3 y se mantiene siempre un 3v3."
+    ],
+    "desarrollo": [
+      "Empiezan dos equipos dentro.",
+      "Los demás esperan en orden.",
+      "Cuando un equipo recibe gol, sale.",
+      "Entra inmediatamente el siguiente equipo de la cola.",
+      "El equipo que sale pasa al final de la cola.",
+      "Se mantiene el juego durante el tiempo previsto."
+    ],
+    "que_buscamos": [
+      "Entradas y salidas rápidas.",
+      "Que los jugadores identifiquen de inmediato si atacan o defienden.",
+      "Priorizar pase sobre conducción larga."
+    ],
+    "que_observar": [
+      "Rapidez de la rotación.",
+      "Participación de los tres jugadores.",
+      "Uso del pase.",
+      "Reacción tras entrar al campo."
+    ],
+    "correcciones": [
+      "Entra rápido.",
+      "Busca pase.",
+      "Abre el campo.",
+      "Defiende nada más entrar."
+    ],
+    "reglas": [
+      "3v3 sin porteros.",
+      "Equipo que recibe gol sale.",
+      "Siguiente equipo de la cola entra."
+    ],
+    "si_sale_mal": [
+      "Reducir el tiempo entre gol y entrada del siguiente equipo explicando previamente el orden de la cola."
+    ],
+    "si_sale_bien": [
+      "Aplicar una variante de la fuente."
+    ],
+    "variantes": [
+      "Rey de la pista: el ganador permanece.",
+      "Permitir balón aéreo solo después de un pase.",
+      "Añadir comodín neutral."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Mini fútbol con 3 equipos rotativos",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 20 min, 9-15 participantes, espacio 20 x 15 m y edades SUB-6, SUB-8 y SUB-10.",
+        "La mecánica descrita por la fuente es 3 equipos de 3; para utilizar exactamente 15, CampoBase amplía la cola a 5 equipos de 3 manteniendo intacto el 3v3.",
+        "La fuente dice que gana quien más goles marque al final de 15 min, aunque la ficha declara 20 min. No se inventan los 5 min restantes."
+      ]
+    }
+  }
+}

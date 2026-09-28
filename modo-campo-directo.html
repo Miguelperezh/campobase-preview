@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<script src="js/preview-readonly.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#c8102e" id="campo-theme-color">
+  <title>Modo Campo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./modo-campo-directo.css?v=4">
+  <link rel="stylesheet" href="./modo-campo-theme.css?v=3">
+  <link rel="stylesheet" href="./modo-campo-flow.css?v=1">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <img id="campo-club-crest" class="campo-club-crest" src="./icons/escudo.png" alt="Escudo del equipo">
+      <div><small>Modo Campo</small><h1 id="campo-team-name">Equipo</h1></div>
+    </div>
+    <div class="top-actions"><span id="sync" class="sync">Actualizando…</span><a class="exit" href="./index.html">Salir Modo Campo</a></div>
+  </header>
+
+  <main class="shell">
+    <section id="hoy" class="view active"></section>
+    <section id="entrenos" class="view"></section>
+    <section id="partidos" class="view"></section>
+    <section id="delegado" class="view"></section>
+    <section id="vivo" class="view"></section>
+  </main>
+
+  <nav class="bottom" aria-label="Modo Campo">
+    <button class="nav active" data-nav="hoy"><span>⌂</span><strong>Hoy</strong></button>
+    <button class="nav" data-nav="entrenos"><span>⚽</span><strong>Entrenos</strong></button>
+    <button class="nav" data-nav="partidos"><span>🏟</span><strong>Partidos</strong></button>
+    <button class="nav" data-nav="delegado"><span>👤</span><strong>Delegado</strong></button>
+    <button class="nav" data-nav="vivo"><span>⏱</span><strong>En vivo</strong></button>
+  </nav>
+
+  <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-head"><strong>Modo Campo</strong><button class="btn secondary" data-close-overlay>Volver</button></div>
+    <div id="overlay-body" class="overlay-body"></div>
+    <button class="close-bottom" data-close-overlay>Cerrar</button>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="./vendor/supabase.js"></script>
+  <script>
+    (() => {
+      try {
+        const raw = localStorage.getItem('campobase.directFieldCache');
+        if (raw) window.__CAMPOBASE_CACHE__ = JSON.parse(raw);
+      } catch {}
+
+      if (typeof indexedDB === 'undefined') return;
+
+      const tryReadDb = (name) => new Promise((resolve) => {
+        try {
+          const req = indexedDB.open(name);
+          req.onsuccess = () => {
+            const db = req.result;
+            const stores = ['players', 'callups', 'matches', 'trainings', 'settings'];
+            if (!stores.every((s) => db.objectStoreNames.contains(s))) {
+              db.close();
+              return resolve(null);
+            }
+            const tx = db.transaction(stores, 'readonly');
+            const data = {};
+            let count = 0;
+            stores.forEach((s) => {
+              const r = tx.objectStore(s).getAll();
+              r.onsuccess = () => {
+                data[s === 'trainings' ? 'attendance' : s] = r.result || [];
+                count++;
+                if (count === stores.length) {
+                  db.close();
+                  resolve(data.players && data.players.length > 0 ? data : null);
+                }
+              };
+              r.onerror = () => { count++; if (count === stores.length) { db.close(); resolve(null); } };
+            });
+          };
+          req.onerror = () => resolve(null);
+        } catch {
+          resolve(null);
+        }
+      });
+
+      const loadFromStorage = async () => {
+        const boundUser = (() => { try { return localStorage.getItem('campobase.saasUserId'); } catch { return ''; } })();
+        const names = [boundUser ? `campobase_${boundUser}` : '', 'campobase'].filter(Boolean);
+        for (const name of names) {
+          const result = await tryReadDb(name);
+          if (result && result.players && result.players.length > 0) {
+            window.__CAMPOBASE_CACHE__ = result;
+            try { localStorage.setItem('campobase.directFieldCache', JSON.stringify(result)); } catch {}
+            window.dispatchEvent(new CustomEvent('campobase:cache-ready', { detail: result }));
+            break;
+          }
+        }
+      };
+
+      loadFromStorage();
+    })();
+  </script>
+  <script src="./js/modo-campo-directo.js?v=4"></script>
+  <script src="./js/modo-campo-identity-exercises.js?v=2"></script>
+  <script src="./js/modo-campo-theme-parity.js?v=1"></script>
+  <script src="./js/modo-campo-actions.js?v=2"></script>
+  <script>
+    (() => {
+      const REMOVE = new Set(['Grande, directo y sin menús innecesarios', 'Lo esencial a golpe de vista']);
+      let queued = false;
+      const cleanCopy = () => {
+        queued = false;
+        document.querySelectorAll('#hoy h2, #entrenos h2').forEach((heading) => {
+          if (REMOVE.has(heading.textContent.trim())) heading.remove();
+        });
+      };
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(cleanCopy);
+      };
+      schedule();
+      new MutationObserver(schedule).observe(document.querySelector('.shell'), { childList: true, subtree: true });
+    })();
+  </script>
+</body>
+</html>
