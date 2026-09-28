@@ -16,7 +16,7 @@ import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
-import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-correccion-1';
+import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-plantilla-2';
 import { renderTodayDashboard } from './today-dashboard.js?v=2457';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
@@ -1165,7 +1165,7 @@ function renderSquadLeaderboards() {
       <div class="squad-leaderboards-body">
         ${tabsMarkup}
         ${tableContent}
-        ${state.players.length > 5 ? `<button type="button" class="cbx-leaders-more" data-lb-expand="1">${state.leaderboardExpanded ? 'Mostrar cinco primeros' : 'Ver clasificación completa'}</button>` : ''}
+        ${state.players.length > 5 ? `<button type="button" class="cbx-leaders-more" data-lb-expand="1" aria-expanded="${state.leaderboardExpanded ? 'true' : 'false'}">${state.leaderboardExpanded ? 'Mostrar cinco primeros' : 'Ver clasificación completa'}</button>` : ''}
       </div>
     </details>
   `;
@@ -7001,9 +7001,16 @@ function wireEvents() {
       return;
     }
 
-    if (event.target.closest('[data-lb-expand]')) {
+    const expandButton = event.target.closest('[data-lb-expand]');
+    if (expandButton) {
+      event.preventDefault();
       state.leaderboardExpanded = !state.leaderboardExpanded;
-      renderSquadLeaderboards();
+      const card = expandButton.closest('.squad-leaderboards-card');
+      card?.classList.toggle('cbx-leaders-all', state.leaderboardExpanded);
+      if (card) card.open = true;
+      state.isLeaderboardsOpen = true;
+      expandButton.textContent = state.leaderboardExpanded ? 'Mostrar cinco primeros' : 'Ver clasificación completa';
+      expandButton.setAttribute('aria-expanded', state.leaderboardExpanded ? 'true' : 'false');
       return;
     }
   });

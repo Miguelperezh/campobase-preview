@@ -44,15 +44,14 @@ body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-bar {
   box-shadow: var(--cbx-shadow-hero);
 }
 body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-head { border: 0; padding: 0; margin: 0 0 10px; }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-title { color: #fff; font: 800 15px var(--cbx-disp); }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-title { font-family: var(--cbx-disp) !important; }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-count-pill { color: #fff; background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.25); }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-scroll { gap: 8px; padding: 0; }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-card { min-width: 0; width: 23%; max-width: none; padding: 8px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.17); border-radius: 10px; }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-name { color: #fff; font: 800 12px var(--cbx-ui); }
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-role-badge { color: #d4e4db; background: transparent; border: 0; padding: 0; font: 600 11px var(--cbx-ui); text-transform: none; }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-title { color: #fff !important; font: 800 12px var(--cbx-ui) !important; letter-spacing: .1em; }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-manage { min-height: 32px; padding: 0 11px; border: 1px solid rgba(255,255,255,.35); border-radius: 9px; background: rgba(255,255,255,.1); color: #fff !important; font: 700 12px var(--cbx-ui) !important; box-shadow: none; }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-scroll { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,200px),1fr)); gap: 8px; padding: 0; overflow: visible; }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-card { min-width: 0; max-width: none; width: auto; flex-shrink: initial; padding: 10px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-name { color: #fff !important; font: 800 14px var(--cbx-ui); }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-role-badge { display: block; max-width: none; margin: 2px 0 0; overflow: visible; white-space: normal; color: rgba(255,255,255,.75) !important; background: transparent; border: 0; padding: 0; font: 600 12px var(--cbx-ui); text-transform: none; }
 body.cb-redesign-active #plantilla .cbx-plantilla-staff .staff-avatar-img,
-body.cb-redesign-active #plantilla .cbx-plantilla-staff .staff-avatar-initials { width: 36px; height: 36px; border-radius: 10px; background: #fff; color: var(--cbx-hero); font: 800 13px var(--cbx-ui); }
+body.cb-redesign-active #plantilla .cbx-plantilla-staff .staff-avatar-initials { width: 36px; height: 36px; border-radius: 10px; background: #fff !important; color: var(--cbx-hero) !important; font: 800 13px var(--cbx-ui); }
 
 body.cb-redesign-active #plantilla .cbx-plantilla-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin: 0 0 12px; }
 body.cb-redesign-active #plantilla .cbx-plantilla-stats .stat {
@@ -130,7 +129,7 @@ body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-pe
   body.cb-redesign-active #plantilla .cbx-banner { align-items: flex-start; flex-direction: column; gap: 12px; }
   body.cb-redesign-active #plantilla .cbx-banner .button-row { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
   body.cb-redesign-active #plantilla .cbx-banner button { min-width: 0; padding: 0 8px; white-space: normal; }
-  body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-card { min-width: 155px; width: 155px; }
+  body.cb-redesign-active #plantilla .cbx-plantilla-staff .plantilla-staff-scroll { grid-template-columns: 1fr; }
   body.cb-redesign-active #plantilla .cbx-plantilla-stats { gap: 6px; }
   body.cb-redesign-active #plantilla .cbx-plantilla-stats .stat { min-height: 72px; padding: 10px 8px; }
   body.cb-redesign-active #plantilla .cbx-plantilla-stats .stat strong { font-size: 24px; }
