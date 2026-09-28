@@ -758,7 +758,6 @@ function renderPlayers() {
         ${playerCardPhoto(player)}
         <div class="player-name">
           <h3>${escapeHtml(player.name)}</h3>
-          <span class="player-subhead-pill">Dorsal ${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span>
         </div>
       </div>
       <div class="player-head-right">

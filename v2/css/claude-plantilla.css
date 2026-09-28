@@ -110,6 +110,8 @@ body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-da
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-data span:nth-child(2) { min-height: 34px; padding: 7px 10px; background: var(--cbx-green-soft); border-color: #e2eee7; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-data small { color: var(--cbx-muted); font: 800 10px var(--cbx-ui); }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-data strong { color: var(--cbx-ink); font: 800 12px var(--cbx-ui); }
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-data span:first-child strong { font-size: 20px !important; line-height: 1.1; }
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-data span:first-child small { font-size: 11px !important; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-card-actions-bar { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin: 8px 0 0; padding: 0; border: 0; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-card-actions-bar button { min-height: 38px; border-radius: 999px; padding: 0 8px; background: #fff; border: 1px solid var(--cbx-line); color: var(--cbx-ink); font: 800 12px var(--cbx-ui); box-shadow: none; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-card-actions-bar .open-whatsapp-player { background: #22d26a; border-color: #22d26a; color: #073b21; }
