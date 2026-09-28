@@ -796,20 +796,25 @@ function renderSquadSpecialistsBar() {
   if (!container) return;
   const setPieces = state.settings?.setPieces || {};
 
-  const getPlayerLabel = (id) => {
-    if (!id) return null;
-    const p = state.players.find((item) => item.id === id);
-    if (!p) return null;
-    const num = cleanPlayerNumber(p.number) ? `${cleanPlayerNumber(p.number)} · ` : '';
-    return num + p.name;
-  };
-
-  const penaltyNames = [getPlayerLabel(setPieces.penalties?.primary), getPlayerLabel(setPieces.penalties?.secondary)].filter(Boolean).join(', ');
-  const fkLeftNames = [getPlayerLabel(setPieces.freeKicksLeft?.primary), getPlayerLabel(setPieces.freeKicksLeft?.secondary)].filter(Boolean).join(', ');
-  const fkRightNames = [getPlayerLabel(setPieces.freeKicksRight?.primary), getPlayerLabel(setPieces.freeKicksRight?.secondary)].filter(Boolean).join(', ');
-  const cornerLeftNames = [getPlayerLabel(setPieces.cornersLeft?.primary), getPlayerLabel(setPieces.cornersLeft?.secondary)].filter(Boolean).join(', ');
-  const cornerRightNames = [getPlayerLabel(setPieces.cornersRight?.primary), getPlayerLabel(setPieces.cornersRight?.secondary)].filter(Boolean).join(', ');
-  const captainNames = [getPlayerLabel(setPieces.captains?.primary), getPlayerLabel(setPieces.captains?.secondary), getPlayerLabel(setPieces.captains?.third)].filter(Boolean).join(', ');
+  const playersById = new Map(state.players.map((player) => [player.id, player]));
+  const specialistCard = (title, icon, assignments, isCaptain = false) => `
+    <section class="specialist-item" aria-label="${escapeHtml(title)}">
+      <div class="specialist-item-head"><span class="sp-icon" aria-hidden="true">${icon}</span><h4>${escapeHtml(title)}</h4></div>
+      <div class="specialist-rank-list">
+        ${assignments.map((id, index) => {
+          const player = playersById.get(id);
+          const rank = isCaptain
+            ? ['1.er capitán', '2.º capitán', '3.er capitán'][index]
+            : ['1.er lanzador', '2.º lanzador'][index];
+          const number = player ? cleanPlayerNumber(player.number) : '';
+          return `<div class="specialist-rank-row${player ? '' : ' unassigned'}">
+            <span class="specialist-rank">${rank}</span>
+            <strong>${player ? escapeHtml(player.name) : 'Sin asignar'}</strong>
+            ${number ? `<span class="specialist-number" aria-label="Dorsal ${escapeHtml(number)}">${escapeHtml(number)}</span>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </section>`;
 
   container.innerHTML = `
     <div class="specialists-summary-card">
@@ -824,12 +829,12 @@ function renderSquadSpecialistsBar() {
         </div>
       </div>
       <div class="specialists-quick-grid">
-        <div class="specialist-item"><span class="sp-icon">PB</span><div><small>Penaltis</small><strong>${escapeHtml(penaltyNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">FI</span><div><small>Faltas Izq. (diestro)</small><strong>${escapeHtml(fkLeftNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">FD</span><div><small>Faltas Der. (zurdo)</small><strong>${escapeHtml(fkRightNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">CI</span><div><small>Córners Izquierda</small><strong>${escapeHtml(cornerLeftNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">CD</span><div><small>Córners Derecha</small><strong>${escapeHtml(cornerRightNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">CA</span><div><small>Capitanes</small><strong>${escapeHtml(captainNames || 'Sin asignar')}</strong></div></div>
+        ${specialistCard('Penaltis', '🎯', [setPieces.penalties?.primary, setPieces.penalties?.secondary])}
+        ${specialistCard('Faltas izquierda · diestro', '⚡', [setPieces.freeKicksLeft?.primary, setPieces.freeKicksLeft?.secondary])}
+        ${specialistCard('Faltas derecha · zurdo', '⚡', [setPieces.freeKicksRight?.primary, setPieces.freeKicksRight?.secondary])}
+        ${specialistCard('Córners izquierda', '↖', [setPieces.cornersLeft?.primary, setPieces.cornersLeft?.secondary])}
+        ${specialistCard('Córners derecha', '↗', [setPieces.cornersRight?.primary, setPieces.cornersRight?.secondary])}
+        ${specialistCard('Capitanes', '©', [setPieces.captains?.primary, setPieces.captains?.secondary, setPieces.captains?.third], true)}
       </div>
     </div>
   `;

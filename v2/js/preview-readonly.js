@@ -99,7 +99,7 @@
       return;
     }
     if (!button || !button.closest('#app')) return;
-    const isReadAction = button.matches('[data-today-view], [data-today-match], [class*="open-whatsapp"], .open-whistle-session, .match-detail, .view-exercise, [data-target-view], .lb-tab-btn[data-lb-tab], .lb-scope-btn[data-lb-scope], [data-lb-expand]');
+    const isReadAction = button.matches('[data-today-view], [data-today-match], [class*="open-whatsapp"], .open-whistle-session, .match-detail, .view-exercise, [data-target-view], .lb-tab-btn[data-lb-tab], .lb-scope-btn[data-lb-scope], [data-lb-expand], #open-set-pieces-btn, .open-set-pieces-trigger');
     if (!isReadAction) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   document.addEventListener('DOMContentLoaded', () => {
