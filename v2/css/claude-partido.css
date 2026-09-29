@@ -192,6 +192,32 @@ body.cb-redesign-active #delegado .cbx-live-plan { margin: 12px 0; padding: 12px
 body.cb-redesign-active #delegado .cbx-live-plan summary { cursor: pointer; display: flex; justify-content: space-between; color: var(--cbx-ink); }
 body.cb-redesign-active #delegado .cbx-live-plan summary span { display: grid; }
 body.cb-redesign-active #delegado .cbx-live-plan-list { padding-top: 10px; }
+body.cb-redesign-active .cbx-live-action-dialog { width: min(540px,calc(100vw - 24px)); max-height: min(88dvh,760px); padding: 0; border: 0; border-radius: 18px; color: var(--cbx-ink); background: var(--card); box-shadow: 0 24px 90px #001a11aa; }
+body.cb-redesign-active .cbx-live-action-dialog::backdrop { background: #001b12a8; }
+body.cb-redesign-active .cbx-la-head { display: flex; justify-content: space-between; align-items: start; gap: 10px; padding: 18px 20px; color: #fff; background: var(--cbx-hero); }
+body.cb-redesign-active .cbx-la-head small { color: #c9d9d0; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+body.cb-redesign-active .cbx-la-head h3 { margin: 3px 0 0; color: #fff; font: 900 27px var(--cbx-disp); text-transform: uppercase; }
+body.cb-redesign-active .cbx-la-head button { min-width: 32px; min-height: 32px; border: 1px solid #ffffff66; border-radius: 8px; color: #fff; background: transparent; }
+body.cb-redesign-active .cbx-la-content { display: grid; gap: 13px; max-height: 60dvh; overflow-y: auto; padding: 18px 20px; }
+body.cb-redesign-active .cbx-la-content > p { margin: 0; color: var(--cbx-ink); font-weight: 850; }
+body.cb-redesign-active .cbx-la-types { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+body.cb-redesign-active .cbx-la-tile { min-height: 50px; padding: 9px; border: 1px solid var(--cbx-line); border-radius: 11px; color: var(--cbx-ink); background: #f8fafc; font-weight: 800; }
+body.cb-redesign-active .cbx-la-tile.is-selected { border-color: #10b981; background: #dcfce7; }
+body.cb-redesign-active .cbx-la-players { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+body.cb-redesign-active .cbx-la-player { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 6px; border: 1px solid var(--cbx-line); border-radius: 10px; color: var(--cbx-ink); background: #fff; text-align: left; font-size: 12px; font-weight: 800; }
+body.cb-redesign-active .cbx-la-player b { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 8px; color: #fff; background: var(--cbx-hero); }
+body.cb-redesign-active .cbx-la-summary { padding: 13px; border-radius: 10px; background: #f0f7f3; color: var(--cbx-ink); }
+body.cb-redesign-active .cbx-la-content label { display: grid; gap: 5px; color: var(--cbx-ink); font-size: 12px; font-weight: 800; }
+body.cb-redesign-active .cbx-la-content select,body.cb-redesign-active .cbx-la-content input { width: 100%; min-height: 40px; }
+body.cb-redesign-active .cbx-la-confirm { min-height: 48px; border-radius: 10px; background: #10b981; color: #fff; font-weight: 900; }
+body.cb-redesign-active .cbx-live-action-dialog footer { display: flex; justify-content: space-between; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--cbx-line); }
+body.cb-redesign-active .cbx-live-action-dialog footer button { min-height: 34px; padding: 6px 11px; border-radius: 8px; }
+body.cb-redesign-active .cbx-live-celebration { position: fixed; z-index: 9999; inset: 0; display: grid; place-content: center; gap: 10px; pointer-events: none; text-align: center; background: #052c20dc; color: #fff; animation: cbx-celebrate 2.6s forwards; }
+body.cb-redesign-active .cbx-live-celebration strong { font: 900 clamp(54px,19vw,150px)/1 var(--cbx-disp); text-shadow: 0 8px 28px #0007; }
+body.cb-redesign-active .cbx-live-celebration span { font-size: clamp(20px,4vw,34px); font-weight: 850; }
+body.cb-redesign-active .cbx-live-celebration.is-save { background: #7c4a00df; }
+@keyframes cbx-celebrate { 0%,75% { opacity: 1; } 100% { opacity: 0; } }
+@media(max-width:500px){body.cb-redesign-active .cbx-la-players { grid-template-columns: 1fr; }}
 @media(max-width:600px){body.cb-redesign-active #preparacion .cbx-moments-head { flex-direction: column; }body.cb-redesign-active #preparacion .cbx-moment-minutes div { grid-template-columns: 1fr 1fr; }}
 body.cb-redesign-active #partido .cbx-live-main > * { min-width: 0; margin: 0 !important; }
 body.cb-redesign-active #partido .cbx-live-main #live-tactics,body.cb-redesign-active #partido .cbx-live-changes,body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { padding: 14px !important; border: 1px solid var(--cbx-line) !important; border-radius: 16px !important; background: var(--card) !important; box-shadow: var(--cbx-shadow) !important; color: var(--cbx-ink) !important; }
