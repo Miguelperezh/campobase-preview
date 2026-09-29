@@ -3588,8 +3588,11 @@ function capturePrepMoment() {
 function momentLines(before, after) {
   const diff = describeMoment(before, after);
   const lines = [];
-  diff.outIds.forEach((id) => lines.push(`SALE · ${playerName(id)}`));
-  diff.inIds.forEach((id) => lines.push(`ENTRA · ${playerName(id)}`));
+  diff.pairs.forEach(({ inId, outId }) => lines.push(outId
+    ? `ENTRA ${playerName(inId)} POR ${playerName(outId)}`
+    : `ENTRA ${playerName(inId)}`));
+  diff.outIds.filter((id) => !diff.pairs.some((pair) => pair.outId === id))
+    .forEach((id) => lines.push(`SALE ${playerName(id)}`));
   diff.moved.forEach(({ playerId, position }) => lines.push(`PUESTO · ${playerName(playerId)} → ${position}`));
   if (diff.keeperId) lines.push(`PORTERO · ${playerName(diff.keeperId)}`);
   if (diff.formation) lines.push(`SISTEMA · ${diff.formation}`);
@@ -3603,7 +3606,12 @@ function savedPlanMarkup(prep) {
   const deferred = new Set(state.timer?.planDeferred || []);
   const now = Math.floor(timerSeconds() / 60);
   const summary = moments.slice(1).map((moment) => `${moment.minute}′`).join(' · ');
-  return `<details class="cbx-live-plan"><summary><span><strong>Plan de partido</strong><small>${moments.length - 1} momentos de cambio${summary ? ` · ${escapeHtml(summary)}` : ''}</small></span><b>Ver</b></summary><div class="cbx-live-plan-list"><section><strong>Inicio · ${escapeHtml(moments[0].formation)}</strong><p>${moments[0].team.map((slot) => `${escapeHtml(slot.pos)}: ${escapeHtml(playerName(slot.playerId))}`).join(' · ')}</p></section>${moments.slice(1).map((moment, index) => {
+  const count = moments.length - 1;
+  const starters = moments[0].team.map((slot) => {
+    const number = playerById(state.players, slot.playerId)?.number;
+    return `<div class="cbx-live-plan-starter"><small>${escapeHtml(slot.pos)}</small><strong>${number ? `<b>${escapeHtml(number)}</b>` : ''}${escapeHtml(playerName(slot.playerId))}</strong></div>`;
+  }).join('');
+  return `<details class="cbx-live-plan"><summary><span><strong>Plan de partido</strong><small>${count} ${count === 1 ? 'momento' : 'momentos'} de cambio${summary ? ` · ${escapeHtml(summary)}` : ''}</small></span><b>Ver</b></summary><div class="cbx-live-plan-list"><section class="cbx-live-plan-start"><strong>Inicio · ${escapeHtml(moments[0].formation)}</strong><div class="cbx-live-plan-starters">${starters}</div></section>${moments.slice(1).map((moment, index) => {
     const status = done.has(moment.id) ? 'Hecho ✓' : deferred.has(moment.id) ? 'Aplazado' : now >= moment.minute ? 'Toca ahora' : now === moment.minute - 1 ? 'En 1′' : 'Previsto';
     const lines = momentLines(moments[index], moment);
     return `<section class="cbx-live-plan-moment"><header><strong>${moment.minute}′ · ${escapeHtml(moment.formation)}</strong><span>${status}</span></header><ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('') || '<li>Sin cambios.</li>'}</ul>${done.has(moment.id) || state.timer?.phase === 'ready' ? '' : `<button type="button" class="cbx-plan-apply primary" data-moment-id="${escapeHtml(moment.id)}">Hacer estos cambios ahora</button><button type="button" class="cbx-plan-defer secondary" data-moment-id="${escapeHtml(moment.id)}">Ahora no</button>`}</section>`;

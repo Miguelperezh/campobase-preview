@@ -15,12 +15,28 @@ export function describeMoment(before, after) {
   const newIds = new Set(lineupIds(after.team));
   const outIds = [...oldIds].filter((id) => !newIds.has(id));
   const inIds = [...newIds].filter((id) => !oldIds.has(id));
+  const pairedOut = new Set();
+  const pairs = inIds.map((inId) => {
+    let slot = after.team.findIndex((player) => player.playerId === inId);
+    const visited = new Set();
+    let outId = '';
+    while (slot >= 0 && !visited.has(slot)) {
+      visited.add(slot);
+      const displacedId = before.team[slot]?.playerId;
+      if (!displacedId) break;
+      if (!newIds.has(displacedId)) { outId = displacedId; break; }
+      slot = after.team.findIndex((player) => player.playerId === displacedId);
+    }
+    if (!outId || pairedOut.has(outId)) outId = outIds.find((id) => !pairedOut.has(id)) || '';
+    if (outId) pairedOut.add(outId);
+    return { inId, outId };
+  });
   const moved = after.team.filter((slot) => oldIds.has(slot.playerId)
     && before.team.find((old) => old.playerId === slot.playerId)?.pos !== slot.pos)
     .map((slot) => ({ playerId: slot.playerId, position: slot.pos }));
   const oldKeeper = before.team.find((slot) => slot.pos === 'Portero')?.playerId || '';
   const newKeeper = after.team.find((slot) => slot.pos === 'Portero')?.playerId || '';
-  return { outIds, inIds, moved, keeperId: oldKeeper !== newKeeper ? newKeeper : '',
+  return { outIds, inIds, pairs, moved, keeperId: oldKeeper !== newKeeper ? newKeeper : '',
     formation: before.formation !== after.formation ? after.formation : '' };
 }
 
