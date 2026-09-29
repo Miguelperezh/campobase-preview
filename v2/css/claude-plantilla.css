@@ -202,13 +202,13 @@ body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .delete-staff-btn { flex
 /* Equipo · Asistencia */
 body.cb-redesign-active #asistencia.cbx-equipo-asistencia.active { display: flex; flex-direction: column; gap: 12px; font-family: var(--cbx-ui); }
 body.cb-redesign-active #asistencia.cbx-equipo-asistencia * { font-family: var(--cbx-ui) !important; }
-body.cb-redesign-active #asistencia .cbx-banner { order: 0; min-height: 106px; margin: 0; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); align-items: center; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #asistencia .cbx-banner { order: 0; min-height: 106px; margin: 0; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); align-items: center; background: linear-gradient(120deg,var(--cbx-hero),color-mix(in srgb,var(--cbx-hero) 75%,#297053)) !important; box-shadow: var(--cbx-shadow-hero); }
 body.cb-redesign-active #asistencia .cbx-banner .cbx-eyebrow { color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
 body.cb-redesign-active #asistencia .cbx-banner h2 { color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; margin: 4px 0 0; }
-body.cb-redesign-active #asistencia #new-training { min-height: 44px; padding: 0 16px; border: 0 !important; border-radius: 12px; color: #fff !important; background: var(--cbx-acc) !important; font: 800 14px var(--cbx-ui); }
-body.cb-redesign-active #asistencia #training-builder { order: 1; margin: 0; }
-body.cb-redesign-active #asistencia #attendance-stats { order: 2; margin: 0; }
-body.cb-redesign-active #asistencia #attendance-source-panel { order: 3; margin: 0; }
+body.cb-redesign-active #asistencia #new-training { display: none; }
+body.cb-redesign-active #asistencia #attendance-source-panel { order: 1; margin: 0; }
+body.cb-redesign-active #asistencia #training-builder { order: 2; margin: 0; }
+body.cb-redesign-active #asistencia #attendance-stats { order: 3; margin: 0; }
 body.cb-redesign-active #asistencia #trainings-list { order: 4; margin: 0; }
 body.cb-redesign-active #asistencia #training-builder:has([data-visual-attendance="1"]) { border: 0; padding: 0; background: transparent; box-shadow: none; }
 body.cb-redesign-active #asistencia #training-form[data-visual-attendance="1"] { display: grid; gap: 0; padding: 16px 18px; border: 1px solid var(--cbx-line); border-radius: 18px; background: #fff; box-shadow: var(--cbx-shadow); }
@@ -216,11 +216,13 @@ body.cb-redesign-active #asistencia .attendance-editor-head { display: flex; fle
 body.cb-redesign-active #asistencia .attendance-editor-head h3 { margin: 0; color: var(--cbx-ink); font: 800 20px var(--cbx-disp); font-family: var(--cbx-disp) !important; text-transform: uppercase; }
 body.cb-redesign-active #asistencia .attendance-editor-head .meta { margin: 4px 0 0; color: var(--cbx-muted); font: 600 12px var(--cbx-ui); }
 body.cb-redesign-active #asistencia .attendance-all-present { min-height: 36px; padding: 0 10px; background: #fff; color: var(--cbx-green-ink); border: 1px solid var(--cbx-line); border-radius: 10px; font: 700 12px var(--cbx-ui); }
-body.cb-redesign-active #asistencia .attendance-editor-summary { margin: 10px 0 2px; gap: 5px; }
+body.cb-redesign-active #asistencia .attendance-editor-summary { width: fit-content; max-width: 100%; margin: 10px 0 2px; padding: 4px 7px; gap: 0; border-radius: 999px; background: var(--cbx-green-soft); }
 body.cb-redesign-active #asistencia .attendance-editor-summary span { padding: 5px 9px; border-radius: 999px; font: 800 11px var(--cbx-ui); }
-body.cb-redesign-active #asistencia .attendance-editor-summary .present { background: #e2f5e9; color: #166534; }
-body.cb-redesign-active #asistencia .attendance-editor-summary .late { background: #fff4d8; color: #92400e; }
-body.cb-redesign-active #asistencia .attendance-editor-summary .absent { background: #fdf2f4; color: #b91c1c; }
+body.cb-redesign-active #asistencia .attendance-editor-summary .present,
+body.cb-redesign-active #asistencia .attendance-editor-summary .late,
+body.cb-redesign-active #asistencia .attendance-editor-summary .absent { background: transparent; border: 0; color: var(--cbx-green-ink); }
+body.cb-redesign-active #asistencia .attendance-editor-summary span + span { padding-left: 0; }
+body.cb-redesign-active #asistencia .attendance-editor-summary span + span::before { content: '·'; margin-right: 7px; }
 body.cb-redesign-active #asistencia .attendance-player-list { display: grid; gap: 0; }
 body.cb-redesign-active #asistencia .attendance-player-row { display: grid; grid-template-columns: minmax(130px,.7fr) minmax(220px,1fr); gap: 8px; align-items: center; padding: 10px 0; margin: 0; border: 0; border-bottom: 1px solid #eef2f4; border-radius: 0; background: #fff; box-shadow: none; }
 body.cb-redesign-active #asistencia .attendance-player-ident { gap: 8px; }
@@ -233,6 +235,10 @@ body.cb-redesign-active #asistencia .attendance-choice.present.selected { color:
 body.cb-redesign-active #asistencia .attendance-choice.late.selected { color: #fff; background: #d38b0c; }
 body.cb-redesign-active #asistencia .attendance-choice.absent.selected { color: #fff; background: var(--cbx-red); }
 body.cb-redesign-active #asistencia .attendance-row-extra { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+body.cb-redesign-active #asistencia .attendance-reasons { display: flex; flex: 1 0 100%; flex-wrap: wrap; gap: 6px; }
+body.cb-redesign-active #asistencia .attendance-reasons.hidden { display: none; }
+body.cb-redesign-active #asistencia .attendance-reason { min-height: 28px; padding: 4px 9px; border: 1px solid var(--cbx-line); border-radius: 999px; background: #fff; color: var(--cbx-muted); font: 700 11px var(--cbx-ui); box-shadow: none; }
+body.cb-redesign-active #asistencia .attendance-reason.selected { background: #fdf2f4; color: var(--cbx-red); border-color: #fecdd3; }
 body.cb-redesign-active #asistencia .cbx-attendance-note { margin-left: auto; }
 body.cb-redesign-active #asistencia .cbx-attendance-note > summary { color: var(--cbx-muted); font: 700 11px var(--cbx-ui); cursor: pointer; }
 body.cb-redesign-active #asistencia .cbx-attendance-note[open] { width: 100%; }
@@ -246,6 +252,18 @@ body.cb-redesign-active #asistencia .attendance-overview-head .meta { color: var
 body.cb-redesign-active #asistencia .attendance-activity-card,
 body.cb-redesign-active #asistencia .attendance-completed-group,
 body.cb-redesign-active #asistencia .attendance-player { border: 1px solid var(--cbx-line); border-radius: 16px; background: #fff; box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #asistencia .attendance-ranking { padding: 16px 18px; border: 1px solid var(--cbx-line); border-radius: 18px; background: #fff; box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #asistencia .attendance-ranking h3 { margin: 0 0 12px; color: var(--cbx-ink); font: 800 18px var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #asistencia .attendance-ranking-list { display: grid; gap: 9px; }
+body.cb-redesign-active #asistencia .attendance-ranking-row { display: grid; grid-template-columns: minmax(115px,1fr) minmax(50px,1.2fr) 42px; gap: 10px; align-items: center; min-width: 0; }
+body.cb-redesign-active #asistencia .attendance-ranking-row strong { display: block; color: var(--cbx-ink); font: 800 12px var(--cbx-ui); overflow-wrap: anywhere; }
+body.cb-redesign-active #asistencia .attendance-ranking-row small { display: block; color: var(--cbx-muted); font: 600 10px var(--cbx-ui); }
+body.cb-redesign-active #asistencia .attendance-ranking-row b { color: var(--cbx-ink); font: 800 12px var(--cbx-ui); text-align: right; }
+body.cb-redesign-active #asistencia .attendance-ranking-track { height: 7px; overflow: hidden; border-radius: 999px; background: #e8eef0; }
+body.cb-redesign-active #asistencia .attendance-ranking-track span { display: block; height: 100%; border-radius: inherit; background: #10b981; }
+body.cb-redesign-active #asistencia .attendance-stat-details { margin-top: 10px; padding: 10px 14px; border: 1px solid var(--cbx-line); border-radius: 12px; background: #fff; }
+body.cb-redesign-active #asistencia .attendance-stat-details > summary { color: var(--cbx-green-ink); font: 800 12px var(--cbx-ui); cursor: pointer; }
+body.cb-redesign-active #asistencia .attendance-stat-details .attendance-grid { margin-top: 12px; }
 @media(max-width:700px) {
   body.cb-redesign-active #asistencia .cbx-banner { min-height: 96px; padding: 18px 20px; }
   body.cb-redesign-active #asistencia #training-form[data-visual-attendance="1"] { padding: 14px 16px; }

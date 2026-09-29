@@ -3739,10 +3739,16 @@ async function saveTraining(event) {
 function renderTrainings() {
   const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente' };
   const stats = state.players.map((player) => ({ player, stats: calculateAttendanceStats(player.id, state.trainings) }));
-  $('#attendance-stats').innerHTML = stats.length ? `<div class="attendance-grid">${stats.map(({ player, stats: item }) => {
+  const ranking = stats.filter(({ stats: item }) => item.totalRecords > 0).map(({ player, stats: item }) => ({
+    player,
+    stats: item,
+    percent: Math.round(100 * Math.max(0, item.totalRecords - item.totalAbsences - item.lateCount) / item.totalRecords),
+  })).sort((a, b) => b.percent - a.percent || a.stats.totalAbsences - b.stats.totalAbsences || a.player.name.localeCompare(b.player.name, 'es'));
+  const wasStatsOpen = $('#attendance-stat-details')?.open ?? false;
+  $('#attendance-stats').innerHTML = stats.length ? `<section class="attendance-ranking panel" aria-labelledby="attendance-ranking-title"><h3 id="attendance-ranking-title">Ranking de asistencia</h3>${ranking.length ? `<div class="attendance-ranking-list">${ranking.map(({ player, stats: item, percent }) => `<div class="attendance-ranking-row"><div><strong>${escapeHtml(player.name)}</strong><small>${item.lateCount} tarde · ${item.totalAbsences} ausencias</small></div><div class="attendance-ranking-track" role="meter" aria-label="Asistencia puntual de ${escapeHtml(player.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div><b>${percent}%</b></div>`).join('')}</div>` : '<p class="meta">El ranking aparecerá al registrar la primera asistencia.</p>'}</section><details class="attendance-stat-details" id="attendance-stat-details"${wasStatsOpen ? ' open' : ''}><summary>Ver estadísticas detalladas de jugadores</summary><div class="attendance-grid">${stats.map(({ player, stats: item }) => {
     const history = sortAttendanceRecords(state.trainings).map((record) => ({ record, entry: record.attendance?.find(({ playerId }) => playerId === player.id) })).filter(({ entry }) => entry);
     return `<article class="panel attendance-player"><h3>${escapeHtml(player.name)}</h3><div class="mini-stats"><span><strong>${item.totalAbsences}</strong> ausencias</span><span><strong>${item.currentTrainingAbsenceStreak}</strong> racha actual</span><span><strong>${item.longestTrainingAbsenceStreak}</strong> racha máxima</span><span class="${item.oftenLate ? 'alert' : ''}"><strong>${item.lateCount}</strong> tardanzas${item.oftenLate ? ' · frecuente' : ''}</span></div><details><summary>Historial (${item.totalRecords})</summary><table class="minute-table"><tr><th>Fecha</th><th>Actividad</th><th>Estado</th></tr>${history.map(({ record, entry }) => `<tr><td>${escapeHtml(localDate(record.date))}</td><td>${record.kind === 'match' ? `Partido · ${escapeHtml(state.matches.find(({ id }) => id === record.matchId)?.opponent ?? 'eliminado')}` : 'Entrenamiento'}</td><td>${labels[entry.status]}${entry.arrivalTime ? ` · ${escapeHtml(entry.arrivalTime)}` : ''}${entry.note ? ` · ${escapeHtml(entry.note)}` : ''}</td></tr>`).join('')}</table></details></article>`;
-  }).join('')}</div>` : empty('Añade jugadores para calcular estadísticas de asistencia.');
+  }).join('')}</div></details>` : empty('Añade jugadores para calcular estadísticas de asistencia.');
   const list = sortAttendanceRecords(state.trainings);
   const wasAttendanceHistoryOpen = $('#attendance-history-collapsible')?.open ?? false;
   $('#trainings-list').innerHTML = list.length ? `

@@ -1,3 +1,3 @@
 # CampoBase preview
 
-Alojamiento aislado de la rama implement/claude-hoy-real, commit f21aeb84. Esta versión usa /v2/ y no modifica main ni Supabase de producción.
+Alojamiento aislado de la rama implement/claude-hoy-real, commit 9c11841e. Esta versión usa /v2/ y no modifica main de CampoBase ni Supabase de producción.
