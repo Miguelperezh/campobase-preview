@@ -152,14 +152,14 @@ body.cb-redesign-active #cuerpo-tecnico.cbx-equipo-tecnicos { font-family: var(-
 body.cb-redesign-active #cuerpo-tecnico.cbx-equipo-tecnicos * { font-family: var(--cbx-ui) !important; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner {
   min-height: 106px; margin: 0 0 18px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero);
-  align-items: center; box-shadow: var(--cbx-shadow-hero);
+  align-items: center; background: linear-gradient(120deg,#092b21,#116847) !important; box-shadow: var(--cbx-shadow-hero);
 }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner .cbx-eyebrow { color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2 { color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; text-transform: uppercase; margin: 4px 0 0; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2 { font-family: var(--cbx-disp) !important; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner .button-row { margin: 0; align-items: center; gap: 8px; }
 body.cb-redesign-active #cuerpo-tecnico .staff-count-badge { color: var(--cbx-hero) !important; background: #e4f3eb !important; border: 0 !important; border-radius: 999px; padding: 7px 12px; font: 800 13px var(--cbx-ui); }
-body.cb-redesign-active #cuerpo-tecnico #new-staff-btn { min-height: 44px; padding: 0 16px; color: #fff !important; background: var(--cbx-acc) !important; border: 0 !important; border-radius: 12px; font: 800 14px var(--cbx-ui); }
+body.cb-redesign-active #cuerpo-tecnico #new-staff-btn { min-height: 44px; padding: 0 16px; color: #fff !important; background: #10b981 !important; border: 0 !important; border-radius: 12px; font: 800 14px var(--cbx-ui); }
 body.cb-redesign-active #cuerpo-tecnico .staff-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 16px; margin: 0; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card {
   position: relative; min-height: 230px; overflow: hidden; padding: 106px 16px 16px; border: 1px solid var(--cbx-line);
@@ -171,6 +171,7 @@ body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card::before {
 }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-card-header { display: block !important; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-wrapper { position: absolute; top: 38px; left: 16px; z-index: 1; }
+body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-edit-btn { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; min-width: 22px; min-height: 22px; display: grid; place-items: center; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #10b981; color: #fff !important; box-shadow: none; font: 900 15px/1 var(--cbx-ui); cursor: pointer; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-img,
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-initials {
   width: 62px; height: 62px; border: 0; border-radius: 15px; background: #fff !important; color: var(--cbx-hero) !important;
@@ -181,12 +182,12 @@ body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-badge {
   padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.17) !important; color: #fff !important;
   box-shadow: none; text-transform: uppercase; letter-spacing: .06em; font: 800 11px var(--cbx-ui);
 }
-body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-name { color: var(--cbx-ink); margin: 0 0 2px; font: 800 18px var(--cbx-ui); }
-body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-role-title { color: var(--cbx-green-ink); margin: 0; font: 800 13px var(--cbx-ui); }
+body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-name { color: var(--cbx-ink) !important; margin: 0 0 2px; font: 800 18px var(--cbx-ui); }
+body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-role-title { color: var(--cbx-green-ink) !important; margin: 0; font: 800 13px var(--cbx-ui); }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-card-body { margin: 7px 0 0; padding: 0; border: 0; gap: 2px; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-contact-label { display: none; }
-body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-phone-link,
-body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-notes { color: var(--cbx-muted); background: none; margin: 0; padding: 0; font: 600 13px var(--cbx-ui); }
+body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-contact-summary { margin: 0; color: var(--cbx-muted) !important; font: 600 13px/1.4 var(--cbx-ui); overflow-wrap: anywhere; }
+body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-phone-link { color: inherit !important; background: none; padding: 0; text-decoration: none; font: inherit; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-card-actions { display: flex; gap: 6px; margin: auto 0 0; padding: 8px 0 0; border: 0; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-card-actions > * { min-height: 36px; flex: 1; display: grid; place-items: center; padding: 0 8px; border-radius: 999px; font: 800 12px var(--cbx-ui); text-decoration: none; box-shadow: none; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-wa-btn { color: var(--cbx-hero) !important; background: #20d266; border: 0; }

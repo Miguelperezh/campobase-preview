@@ -150,6 +150,7 @@ export function renderStaffList(members, container) {
             <div class="staff-card-header">
               <div class="staff-avatar-wrapper">
                 ${staffAvatarHtml(member)}
+                <button type="button" class="staff-avatar-edit-btn" data-id="${member.id}" aria-label="Cambiar foto de ${escapeHtml(member.name)}">+</button>
               </div>
               <span class="staff-badge staff-role-${member.color || 'zinc'}">
                   ${escapeHtml(({ head_coach: 'Principal', assistant_coach: 'Segundo', goalkeeper_coach: 'Preparador', team_delegate: 'Delegado' })[member.role] || member.badgeText || member.roleTitle)}
@@ -162,15 +163,11 @@ export function renderStaffList(members, container) {
 
             ${member.phone || member.notes ? `
               <div class="staff-card-body">
-                ${member.phone ? `
-                  <div class="staff-contact-row">
-                    <span class="staff-contact-label">📞 Teléfono:</span>
-                    <a href="tel:${phoneFormatted}" class="staff-phone-link">${phoneFormatted}</a>
-                  </div>
-                ` : ''}
-                ${member.notes ? `
-                  <p class="staff-notes">${escapeHtml(member.notes)}</p>
-                ` : ''}
+                <p class="staff-contact-summary">
+                  ${member.notes ? `<span>${escapeHtml(member.notes)}</span>` : ''}
+                  ${member.notes && member.phone ? '<span aria-hidden="true"> · </span>' : ''}
+                  ${member.phone ? `<a href="tel:${phoneFormatted}" class="staff-phone-link">${phoneFormatted}</a>` : ''}
+                </p>
               </div>
             ` : ''}
 
@@ -189,7 +186,7 @@ export function renderStaffList(members, container) {
     </div>
   `;
 
-  container.querySelectorAll('.edit-staff-btn').forEach((btn) => {
+  container.querySelectorAll('.edit-staff-btn, .staff-avatar-edit-btn').forEach((btn) => {
     btn.addEventListener('click', () => openStaffDialog(btn.dataset.id));
   });
 

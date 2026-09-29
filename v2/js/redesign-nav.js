@@ -6,7 +6,7 @@
 // ==========================================================================
 
 import { renderTodayDashboard } from './today-dashboard.js?v=claude-hoy-real-2';
-import { refreshStaffView, initStaffManagement } from './staff-management.js?v=claude-plantilla-2';
+import { refreshStaffView, initStaffManagement } from './staff-management.js?v=claude-tecnicos-1';
 import './pwa-install-manager.js?v=1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
