@@ -303,9 +303,9 @@ export function cargarFormacion(team, players, availableIds, formation, format =
 
 // Opciones de asignación para una posición: titulares primero (arriba), suplentes
 // después (abajo), solo convocados. Los no convocados quedan fuera.
-export function opcionesPosicion(players, availableIds, team, pos, currentId = '') {
+export function opcionesPosicion(players, availableIds, team, pos, currentId = '', allowKeepersOutfield = false) {
   const titulares = new Set(team.map((p) => p.playerId).filter(Boolean));
-  const convocados = players.filter((pl) => availableIds.includes(pl.id) && (pos === 'Portero' ? true : !isKeeper(pl)));
+  const convocados = players.filter((pl) => availableIds.includes(pl.id) && (pos === 'Portero' || allowKeepersOutfield || !isKeeper(pl)));
   const orden = [...convocados].sort((a, b) => {
     const aMatch = Array.isArray(a.positions) && a.positions.includes(pos) ? 0 : 1;
     const bMatch = Array.isArray(b.positions) && b.positions.includes(pos) ? 0 : 1;
@@ -323,4 +323,3 @@ export function suplentes(players, availableIds, team) {
   const titulares = new Set(team.map((p) => p.playerId).filter(Boolean));
   return players.filter((pl) => availableIds.includes(pl.id) && !titulares.has(pl.id));
 }
-

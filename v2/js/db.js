@@ -175,13 +175,12 @@ export async function getOne(store, id) {
 }
 
 export async function put(store, value) {
-  if (isReadOnlyPreview()) return value;
   if (isDemoDatabase()) {
     demoStores[store].set(value.id, structuredClone(value));
     notifyDataChanged(store, 'upsert');
     return value;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const existing = store === 'players' && value?.id ? await localGetOne(store, value.id) : null;
   const genericRecord = mergeLocalRecordForWrite(store, existing, value);
   const recordToStore = store === 'players' && existing
@@ -192,13 +191,12 @@ export async function put(store, value) {
   transaction.objectStore(store).put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
-  if (canUseCloud()) await flushSyncQueue();
+  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
   notifyDataChanged(store, 'upsert');
   return recordToStore;
 }
 
 export async function putPlayerProfile(value) {
-  if (isReadOnlyPreview()) return value;
   if (!value?.id) throw new TypeError('La ficha del jugador necesita un identificador.');
   const recordToStore = { ...structuredClone(value), profileUpdatedAt: Date.now() };
   if (isDemoDatabase()) {
@@ -206,19 +204,18 @@ export async function putPlayerProfile(value) {
     notifyDataChanged('players', 'profile-upsert');
     return recordToStore;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const db = await openDatabase();
   const transaction = db.transaction(['players', SYNC_QUEUE], 'readwrite');
   transaction.objectStore('players').put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation('players', 'upsert', recordToStore));
   await transactionDone(transaction);
-  if (canUseCloud()) await flushSyncQueue();
+  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
   notifyDataChanged('players', 'profile-upsert');
   return recordToStore;
 }
 
 export async function putBatch(recordsByStore) {
-  if (isReadOnlyPreview()) return;
   const storeNames = Object.keys(recordsByStore);
   if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) {
     throw new TypeError('La operación contiene almacenes no válidos.');
@@ -231,7 +228,7 @@ export async function putBatch(recordsByStore) {
     notifyDataChanged(storeNames, 'batch');
     return;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const normalizedRecordsByStore = {};
   for (const [storeName, records] of Object.entries(recordsByStore)) {
     if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
@@ -255,29 +252,28 @@ export async function putBatch(recordsByStore) {
     }
   }
   await transactionDone(transaction);
-  if (canUseCloud()) await flushSyncQueue();
+  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
   notifyDataChanged(storeNames, 'batch');
 }
 
 export async function remove(store, id) {
-  if (isReadOnlyPreview()) return;
   if (isDemoDatabase()) {
     demoStores[store].delete(id);
     notifyDataChanged(store, 'delete');
     return;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).delete(id);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
-  if (canUseCloud()) await flushSyncQueue();
+  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
   notifyDataChanged(store, 'delete');
 }
 
 export async function flushSyncQueue() {
-  if (isDemoDatabase()) return false;
+  if (isDemoDatabase() || isReadOnlyPreview()) return false;
   if (!canUseCloud()) return false;
   // Verifica y vincula primero la sesión remota. Es crítico hacerlo ANTES de
   // abrir/leer syncQueue para que una cola de la base legado nunca pueda

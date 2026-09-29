@@ -110,9 +110,15 @@ body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board { display: bloc
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-field { fill: #205f43; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player circle { fill: #fff; stroke: #cbd5e1; stroke-width: .6; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player .num { fill: #0b2d20; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details { max-width: 420px; margin: 8px auto 0; color: var(--cbx-muted); font-size: 11px; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details > summary { cursor: pointer; font-weight: 800; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details { margin: 0; padding: 10px 12px; border: 1px solid var(--cbx-line); border-radius: 10px; background: #f8fafc; color: var(--cbx-muted); font-size: 11px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details > summary { cursor: pointer; color: var(--cbx-ink); font-weight: 850; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details > p { margin: 7px 0 0; line-height: 1.4; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .live-tactics-slots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; margin-top: 9px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot { min-width: 0; padding: 7px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot .pos { font-size: 10px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot select { min-width: 0; width: 100%; font-size: 11px; }
 @media(max-width:900px){body.cb-redesign-active #preparacion .cbx-prep-editor-layout { grid-template-columns: 1fr; }body.cb-redesign-active #preparacion #preparacion-list { grid-template-columns: 1fr; }}
+@media(max-width:540px){body.cb-redesign-active #preparacion .cbx-prep-slots-details .live-tactics-slots { grid-template-columns: 1fr; }}
 @media(max-width:620px){body.cb-redesign-active #preparacion .keeper-selectors { grid-template-columns: repeat(2,minmax(0,1fr)); }body.cb-redesign-active #preparacion #preparacion-editor { padding: 14px 12px; }body.cb-redesign-active #preparacion #preparacion-editor > .section-head { flex-wrap: wrap; }}
 
 /* Partido en vivo: disposición de Claude sobre el reloj, marcador y controles actuales. */

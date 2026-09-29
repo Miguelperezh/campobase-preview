@@ -1,9 +1,13 @@
-// Deployment boundary only. The application keeps its original Auth, stores and sync.
+// Deployment boundary only. Auth and cloud reads remain available; edits stay in this preview's browser database.
 // Never embed account data or tokens in a preview build.
 (() => {
   const enabled = location.hostname === 'miguelperezh.github.io' && location.pathname.startsWith('/campobase-preview/');
   if (!enabled) return;
   window.__CAMPOBASE_READONLY_PREVIEW = true;
+  document.documentElement.classList.add('cb-preview-isolated');
+  const previewStyle = document.createElement('style');
+  previewStyle.textContent = 'html.cb-preview-isolated #cb-pwa-install-banner { display: none !important; }';
+  document.head.append(previewStyle);
   // GitHub Pages serves both repositories from the same origin. Give this
   // document its own browser stores before Auth or the application loads.
   const namespace = 'campobase.preview.v2:';
@@ -86,11 +90,6 @@
   XMLHttpRequest.prototype.send = function(...args) { if (!this.__previewAllowed) throw new Error('Preview: escritura a producción bloqueada.'); return send.apply(this,args); };
   const beacon = navigator.sendBeacon.bind(navigator);
   navigator.sendBeacon = (url, data) => allowed(url, 'POST') && beacon(url,data);
-  document.addEventListener('submit', event => {
-    if (/^(auth-|saas-)/.test(event.target.id || '')) return;
-    event.preventDefault(); event.stopImmediatePropagation();
-    alert('Vista previa: los cambios están bloqueados para proteger los datos reales.');
-  }, true);
   document.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (button?.id === 'manual-refresh') {
@@ -98,12 +97,9 @@
       window.__campobase?.synchronizeCloud?.().then(() => window.__campobase?.refresh?.(true));
       return;
     }
-    if (!button || !button.closest('#app')) return;
-    const isReadAction = button.matches('[data-today-view], [data-today-match], [class*="open-whatsapp"], .open-whistle-session, .match-detail, .view-exercise, [data-target-view], .lb-tab-btn[data-lb-tab], .lb-scope-btn[data-lb-scope], [data-lb-expand], #open-set-pieces-btn, .open-set-pieces-trigger, #new-staff-btn, #add-first-staff-btn, .edit-staff-btn, .staff-avatar-edit-btn, #new-training, [data-attendance-filter], [data-attendance-source][data-source-id], .edit-attendance, .attendance-all-present, .attendance-reason, .cancel-training, #new-callup, .edit-callup, .callup-open-prep, [data-callup-plan-mode], .cancel-builder, .prep-open, .prep-view-tactic, #prep-back, #prep-gif, [data-prep-formation], [data-calendar-move], [data-calendar-now], [data-calendar-day], [data-cbx-live-kind], [data-cbx-live-change], [data-cbx-live-rival-goal]');
-    if (!isReadAction) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   document.addEventListener('DOMContentLoaded', () => {
-    const note = document.createElement('p'); note.id = 'cb-preview-readonly-note'; note.textContent = 'Vista previa · No guarda cambios en producción';
+    const note = document.createElement('p'); note.id = 'cb-preview-readonly-note'; note.textContent = 'Prueba aislada · Los cambios se guardan solo en este navegador';
     note.style.cssText = 'margin:0;padding:5px 12px;background:#fff8eb;color:#704600;font:600 12px system-ui;text-align:center';
     document.querySelector('.topbar')?.after(note);
   });

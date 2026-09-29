@@ -409,6 +409,7 @@ function restoreNormalNavUi() {
 }
 
 function showView(viewId) {
+  const previousViewId = document.querySelector('.view.active')?.id;
   if (state.role === 'demo' && viewId === 'ajustes') return;
   if (state.role === 'delegate' || state.delegateMode) {
     const perms = getDelegatePermissions();
@@ -432,6 +433,7 @@ function showView(viewId) {
   } catch {}
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  if (previousViewId !== viewId) window.scrollTo({ top: 0, behavior: 'instant' });
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
   applyGlobalSearch();
@@ -1525,6 +1527,13 @@ async function saveCallup(event) {
   renderLive();
   renderDelegate();
   renderPreparaciones();
+  if (pendingPrepAfterCallupMatchId === match.id) {
+    pendingPrepAfterCallupMatchId = '';
+    showView('preparacion');
+    openPreparacionEditor(match.id);
+    toast('Convocatoria guardada. Ya puedes preparar la alineación.');
+    return;
+  }
   showView('convocatorias');
   toast(existing ? 'Convocatoria actualizada.' : 'Convocatoria guardada.');
 }
@@ -1540,6 +1549,7 @@ async function synchronizeRotationCounters() {
 }
 
 const callupPlanModes = new Map();
+let pendingPrepAfterCallupMatchId = '';
 
 function renderClaudeCallup(callup) {
   const available = new Set(callup.availableIds || []);
@@ -3421,12 +3431,14 @@ function prepForMatch(matchId) {
 function renderPreparaciones() {
   const root = $('#preparacion-list');
   if (!root) return;
-  const matches = preparableMatches();
+  const matches = state.matches.filter((match) => match.status !== 'finished').sort((a, b) => a.date.localeCompare(b.date));
   if (!matches.length) {
-    root.innerHTML = empty('No hay partidos convocados pendientes. Crea una convocatoria en la pestaña Convocatoria.');
+    root.innerHTML = empty('No hay partidos pendientes. Añade uno en Calendario para preparar su alineación.');
     return;
   }
   root.innerHTML = matches.map((match) => {
+    const callup = callupForMatch(match);
+    if (!callup) return `<article class="panel cbx-prep-card is-pending"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div><span class="pill">Necesita convocatoria</span></div><p class="meta">Elige los convocados y después asigna los jugadores a los puestos de la pizarra.</p><div class="button-row"><button type="button" class="prep-create-callup primary" data-id="${escapeHtml(match.id)}">Convocar y preparar</button></div></article>`;
     const prep = prepForMatch(match.id);
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
@@ -3495,9 +3507,10 @@ function arrangeClaudePrepEditor() {
   const slots = live.querySelector('#prep-slots');
   const details = document.createElement('details');
   details.className = 'cbx-prep-slots-details';
-  details.innerHTML = '<summary>Asignar jugadores por lista y ver opciones de la pizarra</summary>';
-  slots.before(details);
-  details.append(slots, live.querySelector('.keeper-note'), live.querySelector('.live-tactics-legend'));
+  details.innerHTML = '<summary>Elegir jugadores y cambiar posiciones</summary><p>Puedes colocar a cualquier convocado en otro puesto, también si su ficha indica otra posición. Si ya está alineado, se intercambia con el jugador de ese puesto.</p>';
+  details.open = prepDraft.some((position) => !position.playerId);
+  controls.insertBefore(details, hint);
+  details.append(slots);
   const select = $('#prep-formacion');
   const pills = document.createElement('div');
   pills.className = 'cbx-formation-pills';
@@ -3546,7 +3559,7 @@ function openPreparacionEditor(matchId) {
     </div>
     <div class="panel" style="margin-top:1rem"><p class="eyebrow" style="margin-bottom:.4rem">Convocados (desde Convocatoria)</p><div class="suplente-list">${convocados || '<span class="meta">Sin convocados.</span>'}</div></div>
     <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
-    <p class="meta" id="prep-hint">${prep ? 'Preparación guardada. Puedes editarla y volver a guardar.' : 'Completa los 7 titulares (portero incluido) y guarda.'}</p>
+    <p class="meta" id="prep-hint">Toca una ficha de la pizarra o usa «Elegir jugadores y cambiar posiciones». Completa los 7 titulares y guarda la preparación.</p>
     <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>
     <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
@@ -3597,7 +3610,7 @@ function renderPrepSlots() {
   const suplentesList = suplentes(state.players, availableIds, prepDraft);
   const filas = prepDraft.map((p, i) => {
     const pl = playerById(state.players, p.playerId);
-    const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId);
+    const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId, true);
     const opts = ['<option value="">— Sin asignar —</option>'];
     for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
     if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
@@ -3609,7 +3622,7 @@ function renderPrepSlots() {
     sel.addEventListener('change', () => {
       const idx = Number(sel.dataset.idx);
       const slot = prepDraft[idx];
-      if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, sel.value)) return renderPrepSlots();
+      if (sel.value && !availableIds.includes(sel.value)) return renderPrepSlots();
       prepDraft = asignarJugador(prepDraft, idx, sel.value);
       if (slot.pos === 'Portero') $('#prep-keeper1').value = sel.value;
       renderPrepSlots(); renderPrepBoard();
@@ -3624,7 +3637,7 @@ function prepOpenPopup(idx, clientX, clientY) {
   if (!popup || !select || !title || !prepDraft) return;
   const p = prepDraft[idx];
   const availableIds = prepAvailableIds(prepMatchId);
-  const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId);
+  const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId, true);
   const opts = ['<option value="">— Sin asignar —</option>'];
   for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
   if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
@@ -3668,7 +3681,7 @@ function wirePrepEditor() {
     const idx = Number(popup.dataset.idx);
     popup.classList.remove('open');
     const slot = prepDraft[idx];
-    if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, popupSelect.value)) return;
+    if (popupSelect.value && !prepAvailableIds(prepMatchId).includes(popupSelect.value)) return;
     prepDraft = asignarJugador(prepDraft, idx, popupSelect.value);
     if (slot.pos === 'Portero') $('#prep-keeper1').value = popupSelect.value;
     renderPrepSlots(); renderPrepBoard();
@@ -7844,7 +7857,7 @@ function wireEvents() {
     const waPlayerBtn = target.closest('.open-whatsapp-player');
     if (waPlayerBtn) openWhatsAppDialog({ mode: 'callup', playerId: waPlayerBtn.dataset.id });
     if (target.matches('.open-whistle-session')) openWhistleDialog(target.dataset.id);
-    if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
+    if (target.matches('.cancel-builder')) { $('#callup-builder').classList.add('hidden'); pendingPrepAfterCallupMatchId = ''; }
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');
     if (target.matches('.cancel-tactic')) $('#tactic-builder').classList.add('hidden');
@@ -7880,6 +7893,7 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-create-callup')) { pendingPrepAfterCallupMatchId = target.dataset.id; showView('convocatorias'); callupBuilder(target.dataset.id); }
     if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id); $('#prep-gif')?.click(); }
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
