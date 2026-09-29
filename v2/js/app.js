@@ -14,6 +14,7 @@ import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-intera
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
+import { buildAutoPlan } from './reparto-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
@@ -1538,8 +1539,57 @@ async function synchronizeRotationCounters() {
   }
 }
 
+const callupPlanModes = new Map();
+
+function renderClaudeCallup(callup) {
+  const available = new Set(callup.availableIds || []);
+  const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
+  const exclusionByPlayer = new Map(exclusions.map((item) => [item.playerId, item]));
+  const players = sortPlayersBySquadNumber(state.players);
+  const knownPlayerIds = new Set(players.map((player) => player.id));
+  const missingPlayerCount = [...available].filter((id) => !knownPlayerIds.has(id)).length;
+  const keeperIds = players.filter((player) => available.has(player.id) && normalizePositions(player).includes('Portero')).map((player) => player.id);
+  const format = String(callup.format || state.format).toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const mode = callupPlanModes.get(callup.id) || 'escalonado';
+  let plan;
+  try {
+    if (missingPlayerCount || !keeperIds.length) throw new Error('La convocatoria histórica no permite reconstruir el plan completo.');
+    plan = buildAutoPlan({ format, playerIds: [...available], keeperIds, planMode: mode, playerNumbers: Object.fromEntries(players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
+  } catch { plan = null; }
+  const fieldCount = available.size - keeperIds.length;
+  const match = state.matches.find((item) => item.id === callup.matchId || item.callupId === callup.id);
+  const matchId = match?.id || '';
+  const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(callup.date || ''))?.[1];
+  const roster = players.map((player) => {
+    const isCalled = available.has(player.id);
+    const exclusion = exclusionByPlayer.get(player.id);
+    const note = exclusion ? exclusionReasonLabel(exclusion) : 'Fuera de la convocatoria';
+    return `<li class="cbx-callup-player${isCalled ? '' : ' is-out'}"><span class="cbx-callup-number">${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span><span class="cbx-callup-person"><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(playerPositions(player))}</small></span><span class="cbx-callup-status ${isCalled ? 'is-called' : 'is-excluded'}">${escapeHtml(isCalled ? 'Convocado' : note)}</span></li>`;
+  }).join('');
+  const bars = plan ? [...keeperIds, ...plan.field].map((id) => {
+    const segments = keeperIds.includes(id) ? plan.gkPlan.filter((item) => item.id === id) : (plan.segs[id] || []);
+    return `<div class="cbx-plan-row"><span>${escapeHtml(playerName(id))}</span><div class="cbx-plan-track" aria-label="${escapeHtml(playerName(id))}: ${Math.round(plan.planned[id] || 0)} minutos previstos">${segments.map((segment) => `<i class="${keeperIds.includes(id) ? 'keeper' : ''}" style="left:${Math.max(0, segment.from / plan.D * 100)}%;width:${Math.max(0, (segment.to - segment.from) / plan.D * 100)}%"></i>`).join('')}</div><b>${Math.round(plan.planned[id] || 0)}′</b></div>`;
+  }).join('') : '';
+  const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
+  return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
+    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span>${available.size} convocados</span><span>${exclusions.length} fuera</span></div></header>
+      <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
+      <ul class="cbx-callup-roster">${roster}</ul>
+      <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
+    </section>
+    <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" aria-label="Modo del plan de cambios"><button type="button" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes || '<p class="meta">No hay cambios previstos.</p>'}</div>` : '<p class="meta">No se puede calcular un plan fiable para este registro histórico.</p>'}</section>
+    </div>
+  </article>`;
+}
+
 function renderCallups() {
   const list = [...state.callups].sort((a,b)=>b.date.localeCompare(a.date));
+  if (document.body.classList.contains('cb-redesign-active')) {
+    $('#callups-list').innerHTML = list.length ? list.map(renderClaudeCallup).join('') : empty('Todavía no hay convocatorias.');
+    return;
+  }
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
     const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
     const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
@@ -1674,6 +1724,80 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort((a, b) => (a.second - b.second) || String(a.text).localeCompare(String(b.text))).map((ev) => `<li class="live-event-row"><span>${escapeHtml(ev.text)}</span><button type="button" class="remove-live-event-btn" data-prefix="${prefix}" data-id="${ev.id}" title="Anular esta incidencia">✕ Anular</button></li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
+function arrangeClaudeLive(phase, logWasOpen, callup) {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const root = $('#live-match');
+  const log = root?.querySelector(':scope > .match-log');
+  const clock = root?.querySelector(':scope > .live-clock');
+  if (!log || !clock) return;
+  const score = log.querySelector('.stadium-score');
+  const venue = log.querySelector('.match-venue');
+  if (!score) return;
+  score.querySelector('.score-separator').textContent = ':';
+  const hero = document.createElement('section');
+  hero.className = 'cbx-live-hero';
+  hero.innerHTML = `<div class="cbx-live-hero-head"><span class="cbx-live-status">● ${escapeHtml(phase === 'ready' ? 'Preparado' : phase === 'halftime' ? 'Descanso' : 'En juego')}</span><span>${escapeHtml(venue?.textContent || '')}</span></div>`;
+  hero.append(score, clock);
+  const targets = clock.querySelector('.live-target-card');
+  let targetDetails = null;
+  if (targets) {
+    targetDetails = document.createElement('details');
+    targetDetails.className = 'cbx-live-targets';
+    targetDetails.innerHTML = '<summary>Ver minutos objetivo de todos los convocados</summary>';
+    targetDetails.append(targets);
+  }
+  const quick = document.createElement('div');
+  quick.className = 'cbx-live-quick-actions';
+  quick.innerHTML = '<button type="button" data-cbx-live-kind="goal">Gol nuestro</button><button type="button" data-cbx-live-rival-goal="1">Gol rival</button><button type="button" data-cbx-live-kind="penalty_goal">Penalti</button><button type="button" data-cbx-live-change="1">Cambio</button><button type="button" data-cbx-live-kind="yellow">Tarjeta</button><button type="button" data-cbx-live-kind="injury">Lesión</button><button type="button" data-cbx-live-kind="incident">Incidencia</button>';
+  hero.append(quick);
+  root.prepend(hero);
+  venue.remove();
+  log.querySelector('summary').textContent = 'Registrar incidencias y ver cronología';
+  log.open = logWasOpen;
+  const tactics = root.querySelector(':scope > #live-tactics');
+  const dashboard = root.querySelector(':scope > .live-reparto-visual-dashboard');
+  const grid = root.querySelector(':scope > .live-grid');
+  const actionRow = root.querySelector(':scope > .button-row');
+  const actionHelp = actionRow?.nextElementSibling;
+  const setPieces = root.querySelector(':scope > .match-set-pieces-quick-card');
+  const main = document.createElement('div');
+  main.className = 'cbx-live-main';
+  const changes = document.createElement('section');
+  changes.className = 'cbx-live-changes panel';
+  changes.innerHTML = '<h3>Cambios</h3>';
+  if (grid) changes.append(grid);
+  if (actionRow) changes.append(actionRow);
+  if (actionHelp?.matches('p.meta')) changes.append(actionHelp);
+  if (tactics) main.append(tactics);
+  main.append(changes);
+  if (dashboard) main.append(dashboard);
+  if (setPieces) root.append(setPieces);
+  const plan = document.createElement('details');
+  plan.className = 'cbx-live-plan';
+  const keepers = (callup.availableIds || []).filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  try {
+    const known = new Set(state.players.map((player) => player.id));
+    if (!keepers.length || (callup.availableIds || []).some((id) => !known.has(id))) throw new Error('incomplete');
+    const baseline = buildAutoPlan({ format: callup.format || state.format, playerIds: callup.availableIds, keeperIds: keepers, planMode: 'escalonado' });
+    const moments = baseline.groups.map((group) => `${group.m}′`).join(' · ');
+    plan.innerHTML = `<summary><span><strong>Plan inicial de convocatoria</strong><small>${escapeHtml(moments || 'Sin cambios programados')} · Orientativo; no sustituye los cambios registrados en vivo</small></span><b>Ver</b></summary><div class="cbx-live-plan-list">${baseline.groups.map((group) => `<p><strong>${group.m}′</strong> ${group.list.map((change) => `${escapeHtml(playerName(change.out))} → ${escapeHtml(playerName(change.inn))}`).join(' · ')}</p>`).join('') || '<p>Sin cambios previstos.</p>'}</div>`;
+    root.append(plan);
+  } catch { /* Una convocatoria histórica incompleta no genera un plan ficticio. */ }
+  if (targetDetails) root.append(targetDetails);
+  root.append(main, log);
+  quick.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    if (button.dataset.cbxLiveChange) return changes.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (button.dataset.cbxLiveRivalGoal) return score.querySelector('.score-team:last-child .score-step.primary')?.focus();
+    log.open = true;
+    const kind = log.querySelector('#owner-event-kind');
+    if (kind && button.dataset.cbxLiveKind) kind.value = button.dataset.cbxLiveKind;
+    log.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    log.querySelector('#owner-event-player')?.focus({ preventScroll: true });
+  });
+}
+
 function renderLive() {
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
@@ -1736,12 +1860,14 @@ function renderLive() {
   const unlockBtn = roleCanUseOwnerFeatures(state.role)
     ? `<button id="unlock-delegate" class="secondary" title="Permite que el delegado vea este partido antes de los 20 min">${state.timer.delegateUnlocked ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>`
     : '';
+  const logWasOpen = root.querySelector('.match-log')?.open ?? false;
   root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   ${setPiecesQuickBanner()}
   ${renderLiveRepartoDashboard(fieldIds, callup.availableIds.filter((id) => !fieldIds.includes(id)), livePlayedSeconds(), liveTargets(), config, false)}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
+  arrangeClaudeLive(state.timer.phase, logWasOpen, callup);
   renderLiveTactics();
   startTicks();
 }
@@ -3187,10 +3313,58 @@ function renderMatchCard(match) {
   const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const date = new Date(`${String(match.date).slice(0, 10)}T12:00:00`);
+    const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
+    const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+    const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(match.date || ''))?.[1] || '';
+    const score = hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente');
+    const resultClass = hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending';
+    return `<article class="cbx-calendar-match panel match-card" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></details></article>`;
+  }
   return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
 }
 
+let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+function renderClaudeCalendar() {
+  const year = claudeCalendarMonth.getFullYear();
+  const month = claudeCalendarMonth.getMonth();
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const matchDays = new Set(state.matches.map((item) => String(item.date || '').slice(0, 10)));
+  const trainingDays = new Set([...state.trainingSessions, ...state.trainings.filter((item) => item.kind !== 'match')].map((item) => String(item.date || '').slice(0, 10)));
+  const dateKey = (day) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const cells = Array.from({ length: firstWeekday }, () => '<span class="cbx-calendar-spacer"></span>').concat(Array.from({ length: days }, (_, index) => {
+    const day = index + 1;
+    const key = dateKey(day);
+    const isToday = key === new Date().toLocaleDateString('en-CA');
+    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${matchDays.has(key) ? ', partido' : ''}${trainingDays.has(key) ? ', entrenamiento' : ''}"><span>${day}</span><i class="${matchDays.has(key) ? 'has-match' : trainingDays.has(key) ? 'has-training' : ''}"></i></button>`;
+  })).join('');
+  return `<section class="cbx-calendar-month panel"><header><h3>${new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(claudeCalendarMonth)}</h3><div><span>● Partido</span><span>● Entreno</span></div></header><div class="cbx-calendar-weekdays">${['L','M','X','J','V','S','D'].map((item) => `<b>${item}</b>`).join('')}</div><div class="cbx-calendar-days">${cells}</div><footer><button type="button" data-calendar-move="-1" aria-label="Mes anterior">←</button><button type="button" data-calendar-now="1">Hoy</button><button type="button" data-calendar-move="1" aria-label="Mes siguiente">→</button></footer></section>`;
+}
+
 function renderMatches() {
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const root = $('#matches-list');
+    const { upcoming, played } = partitionAndSortMatches(state.matches);
+    const league = played.filter((item) => !isPreseasonMatch(item));
+    const preseason = played.filter(isPreseasonMatch);
+    const group = (title, matches) => matches.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${matches.map(renderMatchCard).join('')}</div></section>` : '';
+    const wasOpen = root.querySelector('#played-matches-collapsible')?.open ?? true;
+    root.innerHTML = `${renderClaudeCalendar()}${group('Próximos', upcoming)}<details class="played-matches-accordion cbx-calendar-played" id="played-matches-collapsible"${wasOpen ? ' open' : ''}><summary>Jugados (${played.length})</summary>${group('Liga · Jugados', league)}${group('Pretemporada', preseason)}</details>${state.matches.length ? '' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>'}`;
+    if (!root.dataset.claudeCalendarBound) {
+      root.dataset.claudeCalendarBound = '1';
+      root.addEventListener('click', (event) => {
+        const move = event.target.closest('[data-calendar-move]');
+        if (move) { claudeCalendarMonth = new Date(claudeCalendarMonth.getFullYear(), claudeCalendarMonth.getMonth() + Number(move.dataset.calendarMove), 1); renderMatches(); return; }
+        if (event.target.closest('[data-calendar-now]')) { claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderMatches(); return; }
+        const day = event.target.closest('[data-calendar-day]');
+        if (day) { root.querySelectorAll('.cbx-calendar-day').forEach((button) => button.classList.toggle('is-selected', button === day)); root.querySelector(`.cbx-calendar-match[data-match-day="${day.dataset.calendarDay}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      });
+    }
+    return;
+  }
   if (!state.matches.length) {
     $('#matches-list').innerHTML = empty('Añade el calendario de partidos manualmente.');
     return;
@@ -3257,7 +3431,7 @@ function renderPreparaciones() {
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${match.id}">${prep.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button><button type="button" class="prep-delete secondary danger" data-id="${match.id}">Borrar</button>` : ''}</div></div></article>`;
+    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Editar preparación' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
 }
 
@@ -3294,6 +3468,52 @@ function prepCargarFormacion(team, formation, keeperId) {
   return cargarFormacion(team, state.players, prepAvailableIds(prepMatchId), formation, 'F7');
 }
 
+function arrangeClaudePrepEditor() {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const editor = $('#preparacion-editor');
+  const live = editor?.querySelector('.live-tactics');
+  const head = editor?.querySelector('.section-head');
+  if (!editor || !live || !head) return;
+  const keepers = editor.querySelector('.keeper-selectors');
+  const keeperHelp = keepers?.nextElementSibling;
+  const formationRow = live.querySelector('.formacion-row');
+  const squad = live.nextElementSibling;
+  const actions = squad?.nextElementSibling;
+  const hint = editor.querySelector('#prep-hint');
+  const layout = document.createElement('div');
+  layout.className = 'cbx-prep-editor-layout';
+  const controls = document.createElement('div');
+  controls.className = 'cbx-prep-controls';
+  const pitch = document.createElement('div');
+  pitch.className = 'cbx-prep-pitch';
+  layout.append(controls, pitch);
+  head.after(layout);
+  controls.append(keepers, keeperHelp, formationRow, squad, hint, actions);
+  const back = head.querySelector('#prep-back');
+  if (back) actions.insertBefore(back, actions.children[1] || null);
+  pitch.append(live);
+  const slots = live.querySelector('#prep-slots');
+  const details = document.createElement('details');
+  details.className = 'cbx-prep-slots-details';
+  details.innerHTML = '<summary>Asignar jugadores por lista y ver opciones de la pizarra</summary>';
+  slots.before(details);
+  details.append(slots, live.querySelector('.keeper-note'), live.querySelector('.live-tactics-legend'));
+  const select = $('#prep-formacion');
+  const pills = document.createElement('div');
+  pills.className = 'cbx-formation-pills';
+  pills.setAttribute('role', 'group');
+  pills.setAttribute('aria-label', 'Formación');
+  pills.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-prep-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('');
+  select.after(pills);
+  pills.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-prep-formation]');
+    if (!button) return;
+    select.value = button.dataset.prepFormation;
+    pills.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
 function openPreparacionEditor(matchId) {
   prepMatchId = matchId;
   const match = state.matches.find(({ id }) => id === matchId);
@@ -3314,7 +3534,7 @@ function openPreparacionEditor(matchId) {
     .map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`)
     .join('');
   $('#preparacion-editor').innerHTML = `
-    <div class="section-head"><div><p class="eyebrow">Preparando</p><h3>${escapeHtml(match.opponent)} · ${escapeHtml(localDate(match.date))}</h3></div><button type="button" id="prep-back" class="secondary">← Volver</button></div>
+    <div class="section-head"><div><p class="eyebrow">Preparando · ${escapeHtml(localDate(match.date))}</p><h3>${match.round ? `J${escapeHtml(match.round)} · ` : ''}${escapeHtml(match.opponent)}</h3></div><button type="button" id="prep-back" class="secondary">← Volver al plan</button></div>
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
@@ -3331,8 +3551,9 @@ function openPreparacionEditor(matchId) {
     <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
   $('#prep-keeper2').value = secondKeeper;
-  $('#preparacion-list').classList.add('hidden');
+  if (!document.body.classList.contains('cb-redesign-active')) $('#preparacion-list').classList.add('hidden');
   $('#preparacion-editor').classList.remove('hidden');
+  arrangeClaudePrepEditor();
   renderPrepBoard();
   renderPrepSlots();
   wirePrepEditor();
@@ -3341,26 +3562,31 @@ function openPreparacionEditor(matchId) {
 function renderPrepBoard() {
   const svg = $('#prep-board');
   if (!svg || !prepDraft) return;
+  const portrait = document.body.classList.contains('cb-redesign-active');
+  svg.setAttribute('viewBox', portrait ? '0 0 100 130' : '0 0 100 100');
+  const y = (value) => portrait ? 4 + value * 1.22 : value;
   const parts = [];
-  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
-  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
-  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
-  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
-  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
+  parts.push(`<rect class="tac-field" x="4" y="4" width="92" height="${portrait ? 122 : 92}" rx="3"/>`);
+  parts.push(`<path class="tac-line" d="M50 4v${portrait ? 122 : 92} M4 ${y(50)}h92"/>`);
+  parts.push(`<circle class="tac-line" cx="50" cy="${y(50)}" r="9"/>`);
+  parts.push(`<rect class="tac-area" x="4" y="4" width="92" height="${portrait ? 21 : 16}"/>`);
+  parts.push(`<rect class="tac-area" x="4" y="${portrait ? 105 : 80}" width="92" height="${portrait ? 21 : 16}"/>`);
   parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
-  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
+  parts.push(`<rect class="tac-goal" x="40" y="${portrait ? 122 : 92}" width="20" height="4"/>`);
   prepDraft.forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
     const dorsal = pl ? pl.number : '';
     const label = pl ? nombreCorto(pl.name) : '';
     const labelW = label ? label.length * 1.6 + 1.6 : 0;
-    const rectX = p.x - labelW / 2, rectY = p.y + 2.1, rectH = 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    const rectX = p.x - labelW / 2, rectY = y(p.y) + 2.1, rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${y(p.y)}" r="4.2"/><text x="${p.x}" y="${y(p.y) - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${y(p.y) + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  // Rival (mitad superior).
-  const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
-  OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
-  parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
+  if (!portrait) {
+    // La pizarra original conserva su rival y balón; Claude muestra solo nuestra alineación.
+    const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
+    OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
+    parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
+  }
   svg.innerHTML = parts.join('');
 }
 
@@ -7639,6 +7865,8 @@ function wireEvents() {
     if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
     const deletePlayerBtn = target.closest('.delete-player');
     if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(true); renderPlayers(); }
+    if (target.matches('[data-callup-plan-mode]')) { callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
+    if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
@@ -7652,6 +7880,7 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id); $('#prep-gif')?.click(); }
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }

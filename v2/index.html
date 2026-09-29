@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/claude-shell.css?v=claude-correccion-1">
   <link rel="stylesheet" href="css/claude-hoy.css?v=claude-correccion-1">
   <link rel="stylesheet" href="css/claude-plantilla.css?v=claude-asistencia-3">
+  <link rel="stylesheet" href="css/claude-partido.css?v=claude-partido-1">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -129,12 +130,12 @@
       <div id="staff-list-container" class="staff-container"></div>
     </section>
 
-    <section id="convocatorias" class="view" aria-labelledby="title-callups">
-      <div class="section-head"><div><p class="eyebrow">Rotación justa</p><h2 id="title-callups">Convocatorias</h2></div><button id="new-callup" class="primary">+ Convocatoria</button></div>
+    <section id="convocatorias" class="view cbx-partido-convocatorias" aria-labelledby="title-callups">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Rotación justa</p><h2 id="title-callups">Convocatorias</h2></div><button id="new-callup" class="primary">+ Convocatoria</button></div>
       <div id="callup-builder" class="panel hidden"></div><div id="callups-list" class="stack"></div>
     </section>
 
-    <section id="partido" class="view" aria-labelledby="title-live">
+    <section id="partido" class="view cbx-partido-vivo" aria-labelledby="title-live">
       <div class="section-head"><div><p class="eyebrow">Calculadora en tiempo real</p><h2 id="title-live">Partido en vivo</h2></div></div>
       <div id="live-match" class="panel"></div>
     </section>
@@ -143,14 +144,14 @@
       <div id="delegate-match"></div>
     </section>
 
-    <section id="preparacion" class="view" aria-labelledby="title-preparacion">
-      <div class="section-head"><div><p class="eyebrow">Alineación previa</p><h2 id="title-preparacion">Preparación de partido</h2></div></div>
+    <section id="preparacion" class="view cbx-partido-preparacion" aria-labelledby="title-preparacion">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Alineación previa</p><h2 id="title-preparacion">Preparación de partido</h2></div></div>
       <div id="preparacion-list" class="stack"></div>
       <div id="preparacion-editor" class="panel hidden"></div>
     </section>
 
-    <section id="calendario" class="view" aria-labelledby="title-calendar">
-      <div class="section-head"><div><p class="eyebrow">Temporada</p><h2 id="title-calendar">Calendario y resultados</h2></div><button data-dialog="match-dialog" class="primary">+ Partido</button></div>
+    <section id="calendario" class="view cbx-partido-calendario" aria-labelledby="title-calendar">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Temporada</p><h2 id="title-calendar">Calendario y resultados</h2></div><button data-dialog="match-dialog" class="primary">+ Partido</button></div>
       <div id="matches-list" class="stack"></div>
     </section>
 
@@ -786,7 +787,7 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=claude-asistencia-3"></script>
+  <script type="module" src="js/app.js?v=claude-partido-1"></script>
   <script type="module" src="js/redesign-nav.js?v=claude-tecnicos-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.

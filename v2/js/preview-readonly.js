@@ -99,7 +99,7 @@
       return;
     }
     if (!button || !button.closest('#app')) return;
-    const isReadAction = button.matches('[data-today-view], [data-today-match], [class*="open-whatsapp"], .open-whistle-session, .match-detail, .view-exercise, [data-target-view], .lb-tab-btn[data-lb-tab], .lb-scope-btn[data-lb-scope], [data-lb-expand], #open-set-pieces-btn, .open-set-pieces-trigger, #new-staff-btn, #add-first-staff-btn, .edit-staff-btn, .staff-avatar-edit-btn, #new-training, [data-attendance-filter], [data-attendance-source][data-source-id], .edit-attendance, .attendance-all-present, .attendance-reason, .cancel-training');
+    const isReadAction = button.matches('[data-today-view], [data-today-match], [class*="open-whatsapp"], .open-whistle-session, .match-detail, .view-exercise, [data-target-view], .lb-tab-btn[data-lb-tab], .lb-scope-btn[data-lb-scope], [data-lb-expand], #open-set-pieces-btn, .open-set-pieces-trigger, #new-staff-btn, #add-first-staff-btn, .edit-staff-btn, .staff-avatar-edit-btn, #new-training, [data-attendance-filter], [data-attendance-source][data-source-id], .edit-attendance, .attendance-all-present, .attendance-reason, .cancel-training, #new-callup, .edit-callup, .callup-open-prep, [data-callup-plan-mode], .cancel-builder, .prep-open, .prep-view-tactic, #prep-back, #prep-gif, [data-prep-formation], [data-calendar-move], [data-calendar-now], [data-calendar-day], [data-cbx-live-kind], [data-cbx-live-change], [data-cbx-live-rival-goal]');
     if (!isReadAction) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   document.addEventListener('DOMContentLoaded', () => {
