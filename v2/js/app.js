@@ -15,7 +15,7 @@ import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox 
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 
-import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
+import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
 import { renderTodayDashboard } from './today-dashboard.js?v=2457';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
