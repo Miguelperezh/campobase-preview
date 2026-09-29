@@ -81,6 +81,26 @@ body.cb-redesign-active #preparacion #preparacion-editor { margin: 0; padding: 1
 body.cb-redesign-active #preparacion #preparacion-editor > .section-head { display: flex; justify-content: space-between; align-items: start; gap: 10px; margin: 0 0 12px; }
 body.cb-redesign-active #preparacion #preparacion-editor > .section-head .eyebrow { margin: 0; color: var(--cbx-muted); font-size: 11px; font-weight: 850; text-transform: uppercase; }
 body.cb-redesign-active #preparacion #preparacion-editor > .section-head h3 { margin: 3px 0 0; color: var(--cbx-ink); font: 900 21px var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #preparacion .cbx-prep-moments { display: grid; gap: 12px; margin: 0 0 16px; padding: 14px; border: 1px solid var(--cbx-line); border-radius: 15px; background: #fff; }
+body.cb-redesign-active #preparacion .cbx-moments-head { display: flex; justify-content: space-between; gap: 14px; align-items: start; }
+body.cb-redesign-active #preparacion .cbx-moments-head h4 { margin: 2px 0 3px; color: var(--cbx-ink); font: 900 19px var(--cbx-disp); text-transform: uppercase; }
+body.cb-redesign-active #preparacion .cbx-moments-head p { margin: 0; color: var(--cbx-muted); font-size: 11px; }
+body.cb-redesign-active #preparacion .cbx-plan-switch { display: flex; gap: 7px; align-items: center; max-width: 220px; color: var(--cbx-ink); font-size: 11px; font-weight: 800; }
+body.cb-redesign-active #preparacion .cbx-moment-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+body.cb-redesign-active #preparacion .cbx-moment-tabs button { display: grid; flex: 0 0 auto; gap: 2px; min-width: 70px; padding: 8px 10px; border: 1px solid var(--cbx-line); border-radius: 11px; color: var(--cbx-ink); background: #f1f5f9; font: 900 18px var(--cbx-disp); }
+body.cb-redesign-active #preparacion .cbx-moment-tabs button[aria-selected="true"] { color: #fff; background: var(--cbx-hero); border-color: var(--cbx-hero); }
+body.cb-redesign-active #preparacion .cbx-moment-tabs small { font: 750 10px var(--cbx-ui); }
+body.cb-redesign-active #preparacion .cbx-moment-adjust { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 11px; border: 1px solid var(--cbx-line); border-radius: 11px; }
+body.cb-redesign-active #preparacion .cbx-moment-adjust strong { color: var(--cbx-ink); font: 900 17px var(--cbx-disp); text-transform: uppercase; }
+body.cb-redesign-active #preparacion .cbx-moment-adjust div { display: flex; gap: 5px; }
+body.cb-redesign-active #preparacion .cbx-moment-adjust button { min-width: 34px; min-height: 31px; border-radius: 8px; }
+body.cb-redesign-active #preparacion .cbx-moment-summary { padding: 10px; border-radius: 11px; background: #f0f7f3; color: var(--cbx-ink); font-size: 11px; }
+body.cb-redesign-active #preparacion .cbx-moment-summary ul { display: flex; flex-wrap: wrap; gap: 5px; margin: 7px 0 0; padding: 0; list-style: none; }
+body.cb-redesign-active #preparacion .cbx-moment-summary li { padding: 4px 7px; border-radius: 6px; background: #fff; font-weight: 750; }
+body.cb-redesign-active #preparacion .cbx-moment-minutes summary { cursor: pointer; color: var(--cbx-ink); font-weight: 800; }
+body.cb-redesign-active #preparacion .cbx-moment-minutes div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; margin-top: 8px; }
+body.cb-redesign-active #preparacion .cbx-moment-minutes span { display: flex; justify-content: space-between; gap: 5px; padding: 6px; border-radius: 7px; background: #f1f5f9; color: var(--cbx-ink); font-size: 10px; }
+body.cb-redesign-active #preparacion #prep-copy-auto { justify-self: start; min-height: 34px; }
 body.cb-redesign-active #preparacion .cbx-prep-editor-layout { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,.95fr); gap: 20px; align-items: start; }
 body.cb-redesign-active #preparacion .cbx-prep-controls { display: grid; gap: 11px; min-width: 0; }
 body.cb-redesign-active #preparacion .keeper-selectors { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 0; }
@@ -117,7 +137,7 @@ body.cb-redesign-active #preparacion .cbx-prep-slots-details .live-tactics-slots
 body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot { min-width: 0; padding: 7px; }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot .pos { font-size: 10px; }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot select { min-width: 0; width: 100%; font-size: 11px; }
-@media(max-width:900px){body.cb-redesign-active #preparacion .cbx-prep-editor-layout { grid-template-columns: 1fr; }body.cb-redesign-active #preparacion #preparacion-list { grid-template-columns: 1fr; }}
+@media(max-width:900px){body.cb-redesign-active #preparacion .cbx-prep-editor-layout { grid-template-columns: 1fr; }body.cb-redesign-active #preparacion .cbx-prep-pitch { grid-row: 1; }body.cb-redesign-active #preparacion .cbx-prep-controls { grid-row: 2; }body.cb-redesign-active #preparacion #preparacion-list { grid-template-columns: 1fr; }}
 @media(max-width:540px){body.cb-redesign-active #preparacion .cbx-prep-slots-details .live-tactics-slots { grid-template-columns: 1fr; }}
 @media(max-width:620px){body.cb-redesign-active #preparacion .keeper-selectors { grid-template-columns: repeat(2,minmax(0,1fr)); }body.cb-redesign-active #preparacion #preparacion-editor { padding: 14px 12px; }body.cb-redesign-active #preparacion #preparacion-editor > .section-head { flex-wrap: wrap; }}
 
@@ -132,6 +152,9 @@ body.cb-redesign-active #partido .cbx-live-hero-head { display: flex; justify-co
 body.cb-redesign-active #partido .cbx-live-status { padding: 6px 11px; border-radius: 999px; background: var(--cbx-acc); color: #fff !important; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
 body.cb-redesign-active #partido .cbx-live-hero .stadium-score { width: 100%; max-width: 900px !important; margin: 7px auto 0; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; overflow: visible !important; }
 body.cb-redesign-active #partido .cbx-live-hero .score-team > span { color: #fff !important; font-size: clamp(12px,1.4vw,17px) !important; }
+body.cb-redesign-active #partido .cbx-live-hero .cbx-score-crest { display: grid; place-items: center; width: 42px; height: 42px; margin: 0 auto 4px; border-radius: 10px; object-fit: contain; color: var(--cbx-hero); background: #fff; font: 900 14px var(--cbx-disp); }
+body.cb-redesign-active #partido .cbx-live-hero .score-team { min-width: 0; }
+body.cb-redesign-active #partido .cbx-live-hero .score-team > span { display: block; max-width: 140px; margin-inline: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 body.cb-redesign-active #partido .cbx-live-hero .score-team > strong { color: #fff !important; font: 900 clamp(48px,6vw,88px)/.9 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
 body.cb-redesign-active #partido .cbx-live-hero .score-separator { color: #a8bfb3 !important; font-size: clamp(30px,5vw,60px) !important; }
 body.cb-redesign-active #partido .cbx-live-hero .score-step.primary { color: #fff !important; background: #ffffff36 !important; }
@@ -157,9 +180,34 @@ body.cb-redesign-active #partido .cbx-live-plan > summary b { padding: 7px 12px;
 body.cb-redesign-active #partido .cbx-live-plan-list { display: grid; gap: 5px; margin-top: 11px; border-top: 1px solid var(--cbx-line); padding-top: 10px; }
 body.cb-redesign-active #partido .cbx-live-plan-list p { margin: 0; color: var(--cbx-ink); font-size: 12px; }
 body.cb-redesign-active #partido .cbx-live-plan-list p strong { margin-right: 8px; color: #079668; }
+body.cb-redesign-active #partido .cbx-live-plan-list section,body.cb-redesign-active #delegado .cbx-live-plan-list section { padding: 10px 0; border-bottom: 1px solid var(--cbx-line); }
+body.cb-redesign-active .cbx-live-plan-moment header { display: flex; justify-content: space-between; gap: 8px; color: var(--cbx-ink); }
+body.cb-redesign-active .cbx-live-plan-moment header span { color: #078a62; font-size: 11px; font-weight: 800; }
+body.cb-redesign-active .cbx-live-plan-moment ul,body.cb-redesign-active .cbx-plan-alert ul { display: flex; flex-wrap: wrap; gap: 5px; padding: 0; list-style: none; }
+body.cb-redesign-active .cbx-live-plan-moment li,body.cb-redesign-active .cbx-plan-alert li { padding: 5px 8px; border-radius: 7px; background: #f0f7f3; color: var(--cbx-ink); font-size: 11px; font-weight: 750; }
+body.cb-redesign-active .cbx-live-plan-moment button,body.cb-redesign-active .cbx-plan-alert button { min-height: 34px; margin: 3px 5px 0 0; border-radius: 8px; font-size: 11px; font-weight: 800; }
+body.cb-redesign-active .cbx-plan-alert { padding: 12px 15px; border: 1px solid #83c9ae; border-radius: 13px; background: #f0f8f3; color: var(--cbx-ink); }
+body.cb-redesign-active .cbx-plan-alert > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+body.cb-redesign-active #delegado .cbx-live-plan { margin: 12px 0; padding: 12px; border: 1px solid var(--cbx-line); border-radius: 12px; background: var(--card); }
+body.cb-redesign-active #delegado .cbx-live-plan summary { cursor: pointer; display: flex; justify-content: space-between; color: var(--cbx-ink); }
+body.cb-redesign-active #delegado .cbx-live-plan summary span { display: grid; }
+body.cb-redesign-active #delegado .cbx-live-plan-list { padding-top: 10px; }
+@media(max-width:600px){body.cb-redesign-active #preparacion .cbx-moments-head { flex-direction: column; }body.cb-redesign-active #preparacion .cbx-moment-minutes div { grid-template-columns: 1fr 1fr; }}
 body.cb-redesign-active #partido .cbx-live-main > * { min-width: 0; margin: 0 !important; }
 body.cb-redesign-active #partido .cbx-live-main #live-tactics,body.cb-redesign-active #partido .cbx-live-changes,body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { padding: 14px !important; border: 1px solid var(--cbx-line) !important; border-radius: 16px !important; background: var(--card) !important; box-shadow: var(--cbx-shadow) !important; color: var(--cbx-ink) !important; }
 body.cb-redesign-active #partido .cbx-live-main h3 { margin: 0 0 10px !important; color: var(--cbx-ink) !important; font: 900 19px/1.1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #partido #live-tactics .live-tactics > .formacion-row,body.cb-redesign-active #delegado #delegate-tactics .live-tactics > .formacion-row { display: grid; gap: 5px; }
+body.cb-redesign-active #partido #live-tactics .formacion-row > select,body.cb-redesign-active #delegado #delegate-tactics .formacion-row > select { position: absolute; width: 1px; height: 1px; opacity: 0; }
+body.cb-redesign-active .cbx-live-formation-chips { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; }
+body.cb-redesign-active .cbx-live-formation-chips button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--cbx-line); border-radius: 999px; background: #fff; color: var(--cbx-ink); font-size: 11px; font-weight: 850; }
+body.cb-redesign-active .cbx-live-formation-chips button[aria-pressed="true"] { background: var(--cbx-hero); color: #fff; }
+body.cb-redesign-active #partido #live-tactics .board-wrap,body.cb-redesign-active #delegado #delegate-tactics .board-wrap { width: 100%; max-width: 470px; margin: 8px auto; padding: 5px; border-radius: 14px; background: #205f43; }
+body.cb-redesign-active #partido #live-tactics .board-wrap svg,body.cb-redesign-active #delegado #delegate-tactics .board-wrap svg { display: block; width: 100%; height: auto; aspect-ratio: 100/130; }
+body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player circle,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player circle { fill: #fff; stroke: #10b981; stroke-width: .7; }
+body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player .num,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player .num { fill: #0b2d20; }
+body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player .name,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player .name { fill: #fff; font-size: 3.2px; font-weight: 850; }
+body.cb-redesign-active .cbx-live-board-options { margin: 9px 0; padding: 10px; border: 1px solid var(--cbx-line); border-radius: 10px; background: #f8fafc; }
+body.cb-redesign-active .cbx-live-board-options > summary { cursor: pointer; color: var(--cbx-ink); font-size: 11px; font-weight: 850; }
 body.cb-redesign-active #partido .cbx-live-changes .live-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin: 0; }
 body.cb-redesign-active #partido .cbx-live-changes .on-field,body.cb-redesign-active #partido .cbx-live-changes .bench { min-width: 0; padding: 7px; border: 0; border-top: 3px solid #10b981; border-radius: 9px; box-shadow: none; }
 body.cb-redesign-active #partido .cbx-live-changes .bench { border-top-color: #f59e0b; }

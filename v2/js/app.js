@@ -15,6 +15,7 @@ import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox 
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 import { buildAutoPlan } from './reparto-plan.js';
+import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
@@ -94,6 +95,8 @@ let liveTactic = null; // estado de la pizarra táctica en vivo (Fase A)
 let liveTacticsDocBound = false; // evita acumular el listener global de cierre de popup
 let prepDraft = null; // borrador de la pizarra de preparación de partido
 let prepMatchId = null; // partido que se está preparando
+let prepMomentsDraft = [];
+let prepMomentIndex = 0;
 let playerCropper = null;
 let realtimeCloudStore = null;
 let realtimeSubscriptionStarting = false;
@@ -1730,7 +1733,13 @@ function liveDetailsMarkup(prefix, availableIds, match) {
     }),
   ];
   const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
-  const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
+  const scoreTeam = (name, score, team) => {
+    const mine = team === 'for';
+    const badge = mine
+      ? `<img class="cbx-score-crest" src="${escapeHtml(state.settings?.clubCrest || 'icons/escudo.png')}" alt="Escudo de ${escapeHtml(name)}">`
+      : `<b class="cbx-score-crest cbx-score-rival">${escapeHtml(String(name).split(/\s+/).map((word) => word[0] || '').slice(0, 2).join('').toUpperCase())}</b>`;
+    return `<section class="score-team">${badge}<span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
+  };
   return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort((a, b) => (a.second - b.second) || String(a.text).localeCompare(String(b.text))).map((ev) => `<li class="live-event-row"><span>${escapeHtml(ev.text)}</span><button type="button" class="remove-live-event-btn" data-prefix="${prefix}" data-id="${ev.id}" title="Anular esta incidencia">✕ Anular</button></li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
@@ -1782,17 +1791,19 @@ function arrangeClaudeLive(phase, logWasOpen, callup) {
   main.append(changes);
   if (dashboard) main.append(dashboard);
   if (setPieces) root.append(setPieces);
-  const plan = document.createElement('details');
-  plan.className = 'cbx-live-plan';
-  const keepers = (callup.availableIds || []).filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
-  try {
-    const known = new Set(state.players.map((player) => player.id));
-    if (!keepers.length || (callup.availableIds || []).some((id) => !known.has(id))) throw new Error('incomplete');
-    const baseline = buildAutoPlan({ format: callup.format || state.format, playerIds: callup.availableIds, keeperIds: keepers, planMode: 'escalonado' });
-    const moments = baseline.groups.map((group) => `${group.m}′`).join(' · ');
-    plan.innerHTML = `<summary><span><strong>Plan inicial de convocatoria</strong><small>${escapeHtml(moments || 'Sin cambios programados')} · Orientativo; no sustituye los cambios registrados en vivo</small></span><b>Ver</b></summary><div class="cbx-live-plan-list">${baseline.groups.map((group) => `<p><strong>${group.m}′</strong> ${group.list.map((change) => `${escapeHtml(playerName(change.out))} → ${escapeHtml(playerName(change.inn))}`).join(' · ')}</p>`).join('') || '<p>Sin cambios previstos.</p>'}</div>`;
-    root.append(plan);
-  } catch { /* Una convocatoria histórica incompleta no genera un plan ficticio. */ }
+  const preparedPlan = prepForMatch(state.timer.matchId);
+  const savedPlan = savedPlanMarkup(preparedPlan);
+  if (savedPlan) root.insertAdjacentHTML('beforeend', savedPlan);
+  else if (!preparedPlan) {
+    const keepers = (callup.availableIds || []).filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+    try {
+      const known = new Set(state.players.map((player) => player.id));
+      if (!keepers.length || (callup.availableIds || []).some((id) => !known.has(id))) throw new Error('incomplete');
+      const baseline = buildAutoPlan({ format: callup.format || state.format, playerIds: callup.availableIds, keeperIds: keepers, planMode: 'escalonado' });
+      const times = baseline.groups.map((group) => `${group.m}′`).join(' · ');
+      root.insertAdjacentHTML('beforeend', `<details class="cbx-live-plan"><summary><span><strong>Plan inicial de convocatoria</strong><small>${escapeHtml(times || 'Sin cambios programados')} · Orientativo</small></span><b>Ver</b></summary><div class="cbx-live-plan-list">${baseline.groups.map((group) => `<p><strong>${group.m}′</strong> ${group.list.map((change) => `${escapeHtml(playerName(change.out))} → ${escapeHtml(playerName(change.inn))}`).join(' · ')}</p>`).join('') || '<p>Sin cambios previstos.</p>'}</div></details>`);
+    } catch { /* Una convocatoria histórica incompleta no genera un plan ficticio. */ }
+  }
   if (targetDetails) root.append(targetDetails);
   root.append(main, log);
   quick.addEventListener('click', (event) => {
@@ -1863,6 +1874,8 @@ function renderLive() {
   if (state.timer.phase === 'ready' && liveTactic) {
     syncLiveTacticFromTimer();
     syncTimerFromLiveTactic();
+  } else if (liveTactic) {
+    syncLiveTacticFromTimer();
   }
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
@@ -1879,6 +1892,7 @@ function renderLive() {
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
   arrangeClaudeLive(state.timer.phase, logWasOpen, callup);
   renderLiveTactics();
+  updateLivePlanAlerts();
   startTicks();
 }
 
@@ -2149,6 +2163,32 @@ function renderTacticsBoard(which) {
   bindTacticsBoard(sc, sc.board());
   bindTacticsBoard(sc, sc.boardFull());
   wireTacticsBoard(sc);
+  arrangeClaudeLiveBoard(sc);
+}
+
+function arrangeClaudeLiveBoard(sc) {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const root = sc.root()?.querySelector('.live-tactics');
+  const select = sc.formacion();
+  if (!root || !select) return;
+  const chips = document.createElement('div');
+  chips.className = 'cbx-live-formation-chips';
+  chips.setAttribute('role', 'group');
+  chips.setAttribute('aria-label', 'Sistema táctico');
+  chips.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-live-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('');
+  select.after(chips);
+  chips.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-live-formation]');
+    if (!button) return;
+    select.value = button.dataset.liveFormation;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    chips.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+  });
+  const details = document.createElement('details');
+  details.className = 'cbx-live-board-options';
+  details.innerHTML = '<summary>Herramientas y asignación por puestos</summary>';
+  details.append(sc.tools(), sc.slots(), root.querySelector('.keeper-note'), root.querySelector('.live-tactics-legend'));
+  root.append(details);
 }
 
 function renderTacticsTools(sc) {
@@ -2165,30 +2205,33 @@ function renderTacticsBoardSvg(sc, target) {
   const t = sc.state();
   const svg = target || sc.board();
   if (!svg || !t) return;
+  const portrait = document.body.classList.contains('cb-redesign-active') && !target;
+  const y = (value) => portrait ? 4 + value * 1.22 : value;
+  svg.setAttribute('viewBox', portrait ? '0 0 100 130' : '0 0 100 100');
   const markerId = `arrow-${svg.id}`;
   const parts = [renderTacticArrowDefs(markerId)];
-  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
-  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
-  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
-  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
-  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
+  parts.push(`<rect class="tac-field" x="4" y="4" width="92" height="${portrait ? 122 : 92}" rx="3"/>`);
+  parts.push(`<path class="tac-line" d="M50 4v${portrait ? 122 : 92} M4 ${y(50)}h92"/>`);
+  parts.push(`<circle class="tac-line" cx="50" cy="${y(50)}" r="9"/>`);
+  parts.push(`<rect class="tac-area" x="4" y="4" width="92" height="${portrait ? 21 : 16}"/>`);
+  parts.push(`<rect class="tac-area" x="4" y="${portrait ? 105 : 80}" width="92" height="${portrait ? 21 : 16}"/>`);
   parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
-  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
-  t.moves.forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
+  parts.push(`<rect class="tac-goal" x="40" y="${portrait ? 122 : 92}" width="20" height="4"/>`);
+  if (!portrait) t.moves.forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
   t.team.forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
     const dorsal = pl ? pl.number : p.n;
-    const label = pl ? nombreCorto(pl.name) : '';
-    const labelW = label ? label.length * 1.6 + 1.6 : 0;
+    const label = pl ? (portrait ? String(pl.name).split(' ')[0] : nombreCorto(pl.name)) : '';
+    const labelW = label ? label.length * (portrait ? 2.1 : 1.6) + 2 : 0;
     const rectX = p.x - labelW / 2;
-    const rectY = p.y + 2.1;
-    const rectH = 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    const rectY = y(p.y) + (portrait ? 4.4 : 2.1);
+    const rectH = portrait ? 4.4 : 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${y(p.y)}" r="${portrait ? 5 : 4.2}"/><text x="${p.x}" y="${y(p.y) - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="1" fill="#0b2d20"/><text x="${p.x}" y="${y(p.y) + (portrait ? 7.7 : 3.6)}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  t.opponent.forEach((p, i) => {
+  if (!portrait) t.opponent.forEach((p, i) => {
     parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`);
   });
-  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${t.ball.x}" cy="${t.ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
+  if (!portrait) parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${t.ball.x}" cy="${t.ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
   svg.innerHTML = parts.join('');
 }
 
@@ -2231,7 +2274,8 @@ function renderTacticsSlots(sc) {
 function tacticsBoardPoint(svg, e) {
   const rect = svg.getBoundingClientRect();
   const x = ((e.clientX - rect.left) / rect.width) * 100;
-  const y = ((e.clientY - rect.top) / rect.height) * 100;
+  const portrait = document.body.classList.contains('cb-redesign-active') && !svg.id.endsWith('-board-full');
+  const y = portrait ? ((((e.clientY - rect.top) / rect.height) * 130) - 4) / 1.22 : ((e.clientY - rect.top) / rect.height) * 100;
   return { x: Math.max(4, Math.min(96, x)), y: Math.max(4, Math.min(96, y)) };
 }
 
@@ -2792,7 +2836,10 @@ function renderDelegate() {
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
   root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  const savedPlan = savedPlanMarkup(prepForMatch(state.timer.matchId));
+  if (savedPlan) root.querySelector('#delegate-tactics')?.insertAdjacentHTML('beforebegin', savedPlan);
   renderDelegateTactics();
+  updateLivePlanAlerts();
 }
 
 function enterDelegateMode() {
@@ -2869,6 +2916,58 @@ async function executeLiveSubstitution(outIds, inIds, source = '') {
   await persistTimer();
   renderLive(); renderDelegate();
   toast(source === 'delegate' ? 'Cambio del delegado registrado.' : 'Cambio registrado.');
+}
+
+async function applySavedPlanMoment(momentId) {
+  if (!state.timer) return;
+  if (state.timer.phase === 'ready') return toast('Inicia el partido antes de aplicar un momento del plan.');
+  const prep = prepForMatch(state.timer.matchId);
+  if (!prep) return;
+  const moment = normalizeMoments(prep).find((item) => item.id === momentId);
+  const callup = liveCallup();
+  if (!moment || !callup || !validLineup(moment.team, callup.availableIds || [])) return toast('Este momento necesita una alineación completa de convocados.');
+  const nextIds = lineupIds(moment.team);
+  const oldIds = state.timer.onField || [];
+  const outIds = oldIds.filter((id) => !nextIds.includes(id));
+  const inIds = nextIds.filter((id) => !oldIds.includes(id));
+  const oldTeam = ensureLiveTactic()?.team || [];
+  const changes = describeMoment({ team: oldTeam, formation: liveTactic?.formacion }, moment);
+  state.timer.events.push({ second: timerSeconds(), outIds, inIds, source: 'plan', momentId,
+    positions: changes.moved, formation: changes.formation, keeperId: changes.keeperId });
+  state.timer.onField = nextIds;
+  state.timer.planDone = [...new Set([...(state.timer.planDone || []), momentId])];
+  state.timer.planDeferred = (state.timer.planDeferred || []).filter((id) => id !== momentId);
+  liveTactic = { ...ensureLiveTactic(), formacion: moment.formation, team: moment.team.map((slot) => ({ ...slot })) };
+  const keeper = moment.team.find((slot) => slot.pos === 'Portero')?.playerId;
+  if (keeper) {
+    if (state.timer.phase === 'second_half') state.timer.secondKeeper = keeper;
+    else state.timer.firstKeeper = keeper;
+  }
+  await persistTimer();
+  renderLive(); renderDelegate();
+  toast(`Plan del ${moment.minute}′ aplicado.`);
+}
+
+function updateLivePlanAlerts() {
+  if (!state.timer) return;
+  const prep = prepForMatch(state.timer.matchId);
+  if (!prep || prep.showPlanInLive === false) return;
+  const moments = normalizeMoments(prep);
+  const now = Math.floor(timerSeconds() / 60);
+  const closed = new Set(state.timer.planAlertClosed || []);
+  const done = new Set(state.timer.planDone || []);
+  const moment = moments.slice(1).find((item) => !closed.has(item.id) && (done.has(item.id) || now >= item.minute - 1));
+  for (const root of [$('#live-match'), $('#delegate-match')]) {
+    if (!root?.querySelector('.cbx-live-plan')) continue;
+    root.querySelector('.cbx-plan-alert')?.remove();
+    if (!moment) continue;
+    const index = moments.findIndex((item) => item.id === moment.id);
+    const lines = momentLines(moments[index - 1], moment);
+    const alert = document.createElement('section');
+    alert.className = 'cbx-plan-alert';
+    alert.innerHTML = `<div><strong>Qué pasa en el ${moment.minute}′ · ${done.has(moment.id) ? 'Hecho ✓' : 'Cambio previsto'}</strong><button type="button" class="cbx-plan-close secondary" data-moment-id="${escapeHtml(moment.id)}">Cerrar aviso</button></div><ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>${done.has(moment.id) ? '' : `<button type="button" class="cbx-plan-apply primary" data-moment-id="${escapeHtml(moment.id)}">Hacer los cambios</button><button type="button" class="cbx-plan-defer secondary" data-moment-id="${escapeHtml(moment.id)}">Ahora no</button>`}`;
+    root.querySelector('.cbx-live-plan').after(alert);
+  }
 }
 
 async function registerDelegateSubstitution(outIds, inIds) {
@@ -3050,6 +3149,7 @@ function startTicks() {
     maybeShowUrgentSubstitution(played, seconds);
     maybeShowMinuteAlert(played, seconds);
     maybeShowRepartoAlert(seconds);
+    if (seconds % 60 < 2) updateLivePlanAlerts();
   }, 1000);
 }
 
@@ -3443,7 +3543,7 @@ function renderPreparaciones() {
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Editar preparación' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
+    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
 }
 
@@ -3480,6 +3580,89 @@ function prepCargarFormacion(team, formation, keeperId) {
   return cargarFormacion(team, state.players, prepAvailableIds(prepMatchId), formation, 'F7');
 }
 
+function capturePrepMoment() {
+  if (!prepDraft || !prepMomentsDraft[prepMomentIndex]) return;
+  prepMomentsDraft[prepMomentIndex].team = prepDraft.map((slot) => ({ ...slot }));
+  prepMomentsDraft[prepMomentIndex].formation = $('#prep-formacion')?.value || '1-3-2-1';
+}
+
+function momentLines(before, after) {
+  const diff = describeMoment(before, after);
+  const lines = [];
+  diff.outIds.forEach((id) => lines.push(`SALE · ${playerName(id)}`));
+  diff.inIds.forEach((id) => lines.push(`ENTRA · ${playerName(id)}`));
+  diff.moved.forEach(({ playerId, position }) => lines.push(`PUESTO · ${playerName(playerId)} → ${position}`));
+  if (diff.keeperId) lines.push(`PORTERO · ${playerName(diff.keeperId)}`);
+  if (diff.formation) lines.push(`SISTEMA · ${diff.formation}`);
+  return lines;
+}
+
+function savedPlanMarkup(prep) {
+  if (!prep?.team?.length || prep.showPlanInLive === false) return '';
+  const moments = normalizeMoments(prep);
+  const done = new Set(state.timer?.planDone || []);
+  const deferred = new Set(state.timer?.planDeferred || []);
+  const now = Math.floor(timerSeconds() / 60);
+  const summary = moments.slice(1).map((moment) => `${moment.minute}′`).join(' · ');
+  return `<details class="cbx-live-plan"><summary><span><strong>Plan de partido</strong><small>${moments.length - 1} momentos de cambio${summary ? ` · ${escapeHtml(summary)}` : ''}</small></span><b>Ver</b></summary><div class="cbx-live-plan-list"><section><strong>Inicio · ${escapeHtml(moments[0].formation)}</strong><p>${moments[0].team.map((slot) => `${escapeHtml(slot.pos)}: ${escapeHtml(playerName(slot.playerId))}`).join(' · ')}</p></section>${moments.slice(1).map((moment, index) => {
+    const status = done.has(moment.id) ? 'Hecho ✓' : deferred.has(moment.id) ? 'Aplazado' : now >= moment.minute ? 'Toca ahora' : now === moment.minute - 1 ? 'En 1′' : 'Previsto';
+    const lines = momentLines(moments[index], moment);
+    return `<section class="cbx-live-plan-moment"><header><strong>${moment.minute}′ · ${escapeHtml(moment.formation)}</strong><span>${status}</span></header><ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('') || '<li>Sin cambios.</li>'}</ul>${done.has(moment.id) || state.timer?.phase === 'ready' ? '' : `<button type="button" class="cbx-plan-apply primary" data-moment-id="${escapeHtml(moment.id)}">Hacer estos cambios ahora</button><button type="button" class="cbx-plan-defer secondary" data-moment-id="${escapeHtml(moment.id)}">Ahora no</button>`}</section>`;
+  }).join('')}</div></details>`;
+}
+
+function renderPrepMoments() {
+  const panel = $('#prep-moments');
+  if (!panel || !prepMomentsDraft.length) return;
+  const selected = prepMomentsDraft[prepMomentIndex];
+  const minutes = plannedMinutes(prepMomentsDraft);
+  const names = Object.entries(minutes).sort((a, b) => Number(playerById(state.players, a[0])?.number || 999) - Number(playerById(state.players, b[0])?.number || 999));
+  panel.innerHTML = `<div class="cbx-moments-head"><div><p class="eyebrow">Preparar · Plan de cambios</p><h4>Cada momento es una alineación completa</h4><p>Entra X por Y; puedes mover a Z a otro puesto en el mismo momento.</p></div><label class="cbx-plan-switch"><input type="checkbox" id="prep-show-plan" ${panel.dataset.showPlan !== 'false' ? 'checked' : ''}> Mostrar este plan en Partido en vivo</label></div>
+    <div class="cbx-moment-tabs" role="tablist" aria-label="Momentos del partido">${prepMomentsDraft.map((moment, index) => `<button type="button" role="tab" data-prep-moment="${index}" aria-selected="${index === prepMomentIndex}">${index ? `${moment.minute}′` : 'Inicio'}<small>${index ? `${momentLines(prepMomentsDraft[index - 1], moment).length} acciones` : 'Titulares'}</small></button>`).join('')}<button type="button" id="prep-add-moment">+ Cambio</button></div>
+    <div class="cbx-moment-adjust"><strong>${prepMomentIndex ? `Minuto ${selected.minute}` : 'Alineación inicial'}</strong>${prepMomentIndex ? `<div><button type="button" data-prep-minute="-1" aria-label="Adelantar un minuto">−</button><button type="button" data-prep-minute="1" aria-label="Retrasar un minuto">+</button><button type="button" id="prep-remove-moment">Quitar</button></div>` : '<span>Elige a los siete titulares en la pizarra.</span>'}</div>
+    <div class="cbx-moment-summary"><strong>${prepMomentIndex ? `Qué pasa en el ${selected.minute}′` : 'Inicio'}</strong>${prepMomentIndex ? `<ul>${(momentLines(prepMomentsDraft[prepMomentIndex - 1], selected).map((line) => `<li>${escapeHtml(line)}</li>`).join('')) || '<li>Sin cambios respecto al momento anterior.</li>'}</ul>` : '<p>Los titulares serán la base de todos los cambios posteriores.</p>'}</div>
+    <details class="cbx-moment-minutes"><summary>Minutos con este plan</summary><div>${names.map(([id, value]) => `<span>${escapeHtml(playerName(id))}<b>${value}′</b></span>`).join('')}</div></details>
+    <button type="button" id="prep-copy-auto" class="secondary">Copiar cambios del reparto automático</button>`;
+  panel.querySelector('#prep-show-plan').addEventListener('change', (event) => { panel.dataset.showPlan = String(event.target.checked); });
+}
+
+function selectPrepMoment(index, shouldCapture = true) {
+  if (shouldCapture) capturePrepMoment();
+  if (!prepMomentsDraft[index]) return;
+  prepMomentIndex = index;
+  const moment = prepMomentsDraft[index];
+  prepDraft = moment.team.map((slot) => ({ ...slot }));
+  $('#prep-formacion').value = moment.formation;
+  $$('.cbx-formation-pills button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.prepFormation === moment.formation)));
+  renderPrepBoard(); renderPrepSlots(); renderPrepMoments();
+}
+
+function copyAutoPrepMoments() {
+  capturePrepMoment();
+  const callup = callupForMatch(state.matches.find(({ id }) => id === prepMatchId));
+  const availableIds = callup?.availableIds || [];
+  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  if (!keeperIds.length) keeperIds.push($('#prep-keeper1')?.value);
+  let auto;
+  try { auto = buildAutoPlan({ format: callup.format || 'F7', playerIds: availableIds, keeperIds, planMode: 'escalonado' }); }
+  catch { return toast('Completa la convocatoria para calcular los cambios automáticos.'); }
+  const moments = [prepMomentsDraft[0]];
+  for (const group of auto.groups) {
+    let team = moments.at(-1).team.map((slot) => ({ ...slot }));
+    for (const change of group.list) {
+      const index = team.findIndex((slot) => slot.playerId === change.out);
+      if (index >= 0 && availableIds.includes(change.inn)) team = asignarJugador(team, index, change.inn);
+    }
+    moments.push({ id: uid(), minute: group.m, formation: moments.at(-1).formation, team });
+  }
+  prepMomentsDraft = moments;
+  prepMomentIndex = 0;
+  prepDraft = moments[0].team.map((slot) => ({ ...slot }));
+  $('#prep-formacion').value = moments[0].formation;
+  renderPrepBoard(); renderPrepSlots(); renderPrepMoments();
+  toast('Plan automático copiado. Puedes modificar cada momento y mover jugadores de puesto.');
+}
+
 function arrangeClaudePrepEditor() {
   if (!document.body.classList.contains('cb-redesign-active')) return;
   const editor = $('#preparacion-editor');
@@ -3488,7 +3671,6 @@ function arrangeClaudePrepEditor() {
   if (!editor || !live || !head) return;
   const keepers = editor.querySelector('.keeper-selectors');
   const keeperHelp = keepers?.nextElementSibling;
-  const formationRow = live.querySelector('.formacion-row');
   const squad = live.nextElementSibling;
   const actions = squad?.nextElementSibling;
   const hint = editor.querySelector('#prep-hint');
@@ -3500,7 +3682,8 @@ function arrangeClaudePrepEditor() {
   pitch.className = 'cbx-prep-pitch';
   layout.append(controls, pitch);
   head.after(layout);
-  controls.append(keepers, keeperHelp, formationRow, squad, hint, actions);
+  layout.before(editor.querySelector('#prep-moments'));
+  controls.append(keepers, keeperHelp, squad, hint, actions);
   const back = head.querySelector('#prep-back');
   if (back) actions.insertBefore(back, actions.children[1] || null);
   pitch.append(live);
@@ -3539,6 +3722,8 @@ function openPreparacionEditor(matchId) {
   prepDraft = prep?.team?.length
     ? prep.team.map((p) => ({ ...p }))
     : prepBuildTeam(formacion, firstKeeper);
+  prepMomentsDraft = normalizeMoments({ team: prepDraft, formacion, moments: prep?.moments });
+  prepMomentIndex = 0;
   const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === formacion ? 'selected' : ''}>${f}</option>`).join('');
   const convocados = availableIds
     .map((id) => state.players.find((p) => p.id === id))
@@ -3548,6 +3733,7 @@ function openPreparacionEditor(matchId) {
     .join('');
   $('#preparacion-editor').innerHTML = `
     <div class="section-head"><div><p class="eyebrow">Preparando · ${escapeHtml(localDate(match.date))}</p><h3>${match.round ? `J${escapeHtml(match.round)} · ` : ''}${escapeHtml(match.opponent)}</h3></div><button type="button" id="prep-back" class="secondary">← Volver al plan</button></div>
+    <section class="cbx-prep-moments panel" id="prep-moments" data-show-plan="${prep?.showPlanInLive === false ? 'false' : 'true'}"></section>
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
@@ -3569,6 +3755,7 @@ function openPreparacionEditor(matchId) {
   arrangeClaudePrepEditor();
   renderPrepBoard();
   renderPrepSlots();
+  renderPrepMoments();
   wirePrepEditor();
 }
 
@@ -3624,8 +3811,8 @@ function renderPrepSlots() {
       const slot = prepDraft[idx];
       if (sel.value && !availableIds.includes(sel.value)) return renderPrepSlots();
       prepDraft = asignarJugador(prepDraft, idx, sel.value);
-      if (slot.pos === 'Portero') $('#prep-keeper1').value = sel.value;
-      renderPrepSlots(); renderPrepBoard();
+      if (slot.pos === 'Portero' && prepMomentIndex === 0) $('#prep-keeper1').value = sel.value;
+      capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
     });
   });
 }
@@ -3666,14 +3853,14 @@ function wirePrepEditor() {
   }
   const formacion = $('#prep-formacion');
   if (formacion) formacion.addEventListener('change', () => {
-    prepDraft = prepCargarFormacion(prepDraft, formacion.value, $('#prep-keeper1').value);
-    renderPrepSlots(); renderPrepBoard();
+    prepDraft = prepCargarFormacion(prepDraft, formacion.value, prepDraft.find((slot) => slot.pos === 'Portero')?.playerId || $('#prep-keeper1').value);
+    capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
   });
   const keeper1 = $('#prep-keeper1');
   if (keeper1) keeper1.addEventListener('change', () => {
     const keeperIndex = prepDraft.findIndex((position) => position.pos === 'Portero');
     prepDraft = asignarJugador(prepDraft, keeperIndex, keeper1.value);
-    renderPrepSlots(); renderPrepBoard();
+    capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
   });
   const popupSelect = $('#prep-popup-select');
   if (popupSelect) popupSelect.addEventListener('change', () => {
@@ -3683,14 +3870,42 @@ function wirePrepEditor() {
     const slot = prepDraft[idx];
     if (popupSelect.value && !prepAvailableIds(prepMatchId).includes(popupSelect.value)) return;
     prepDraft = asignarJugador(prepDraft, idx, popupSelect.value);
-    if (slot.pos === 'Portero') $('#prep-keeper1').value = popupSelect.value;
-    renderPrepSlots(); renderPrepBoard();
+    if (slot.pos === 'Portero' && prepMomentIndex === 0) $('#prep-keeper1').value = popupSelect.value;
+    capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
+  });
+  $('#prep-moments')?.addEventListener('click', (event) => {
+    const target = event.target.closest('button');
+    if (!target) return;
+    if (target.dataset.prepMoment !== undefined) return selectPrepMoment(Number(target.dataset.prepMoment));
+    if (target.id === 'prep-add-moment') {
+      capturePrepMoment();
+      const used = new Set(prepMomentsDraft.map((moment) => moment.minute));
+      let minute = Math.min(69, (prepMomentsDraft.at(-1)?.minute || 0) + 15);
+      while (used.has(minute) && minute < 69) minute += 1;
+      if (used.has(minute)) return toast('No queda otro minuto libre para añadir un cambio.');
+      const base = prepMomentsDraft.at(-1);
+      prepMomentsDraft.push({ id: uid(), minute, formation: base.formation, team: base.team.map((slot) => ({ ...slot })) });
+      selectPrepMoment(prepMomentsDraft.length - 1);
+    }
+    if (target.id === 'prep-remove-moment' && prepMomentIndex > 0) {
+      capturePrepMoment();
+      prepMomentsDraft.splice(prepMomentIndex, 1);
+      selectPrepMoment(Math.max(0, prepMomentIndex - 1), false);
+    }
+    if (target.dataset.prepMinute) {
+      capturePrepMoment();
+      const moment = prepMomentsDraft[prepMomentIndex];
+      const next = moment.minute + Number(target.dataset.prepMinute);
+      if (next <= (prepMomentsDraft[prepMomentIndex - 1]?.minute || 0) || next >= (prepMomentsDraft[prepMomentIndex + 1]?.minute || 70)) return;
+      moment.minute = next; renderPrepMoments();
+    }
+    if (target.id === 'prep-copy-auto') copyAutoPrepMoments();
   });
   const back = $('#prep-back');
   if (back) back.addEventListener('click', () => {
     $('#preparacion-editor').classList.add('hidden');
     $('#preparacion-list').classList.remove('hidden');
-    prepDraft = null; prepMatchId = null;
+    prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
   });
   const save = $('#prep-save');
   if (save) save.addEventListener('click', () => savePreparacion());
@@ -3744,17 +3959,19 @@ function wirePrepEditor() {
 
 async function savePreparacion() {
   if (!prepDraft || !prepMatchId) return toast('No hay preparación activa para guardar.');
+  capturePrepMoment();
   const keeper1 = $('#prep-keeper1')?.value || '';
   const keeper2 = $('#prep-keeper2')?.value || keeper1;
-  const formacion = $('#prep-formacion')?.value || '1-3-2-1';
-  const keeperIndex = prepDraft.findIndex((position) => position.pos === 'Portero');
-  if (keeperIndex >= 0 && keeper1 && prepDraft[keeperIndex].playerId !== keeper1) {
-    prepDraft = asignarJugador(prepDraft, keeperIndex, keeper1);
+  const initial = prepMomentsDraft[0];
+  const keeperIndex = initial.team.findIndex((position) => position.pos === 'Portero');
+  if (keeperIndex >= 0 && keeper1 && initial.team[keeperIndex].playerId !== keeper1) {
+    initial.team = asignarJugador(initial.team, keeperIndex, keeper1);
   }
-  const onField = prepDraft.map((p) => p.playerId).filter(Boolean);
-  if (onField.length !== 7 || new Set(onField).size !== 7 || !onField.includes(keeper1)) {
+  const availableIds = prepAvailableIds(prepMatchId);
+  if (!validLineup(initial.team, availableIds) || !lineupIds(initial.team).includes(keeper1)) {
     return toast('Completa la alineación de 7 jugadores con el portero antes de guardar.');
   }
+  if (prepMomentsDraft.some((moment) => !validLineup(moment.team, availableIds))) return toast('Completa los 7 puestos de cada momento antes de guardar.');
   const existing = prepForMatch(prepMatchId);
   const record = {
     ...existing,
@@ -3763,8 +3980,10 @@ async function savePreparacion() {
     matchId: prepMatchId,
     firstKeeper: keeper1,
     secondKeeper: keeper2,
-    formacion,
-    team: prepDraft.map((p) => ({ ...p })),
+    formacion: initial.formation,
+    team: initial.team.map((p) => ({ ...p })),
+    moments: prepMomentsDraft.slice(1).map((moment) => ({ ...moment, team: moment.team.map((slot) => ({ ...slot })) })),
+    showPlanInLive: $('#prep-moments')?.dataset.showPlan !== 'false',
     delegateShown: existing?.delegateShown ?? false,
     savedAt: Date.now(),
   };
@@ -3773,7 +3992,7 @@ async function savePreparacion() {
   await applyPreparacionToLive(record);
   $('#preparacion-editor')?.classList.add('hidden');
   $('#preparacion-list')?.classList.remove('hidden');
-  prepDraft = null; prepMatchId = null;
+  prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
   renderPreparaciones();
   toast('Preparación guardada.');
 }
@@ -3795,7 +4014,9 @@ async function deletePreparacionById(matchId) {
 }
 
 async function togglePrepDelegate() {
+  capturePrepMoment();
   const existing = prepForMatch(prepMatchId);
+  const initial = prepMomentsDraft[0];
   const record = {
     ...existing,
     id: existing?.id ?? uid(),
@@ -3803,8 +4024,10 @@ async function togglePrepDelegate() {
     matchId: prepMatchId,
     firstKeeper: $('#prep-keeper1').value,
     secondKeeper: $('#prep-keeper2').value,
-    formacion: $('#prep-formacion').value,
-    team: prepDraft.map((p) => ({ ...p })),
+    formacion: initial.formation,
+    team: initial.team.map((p) => ({ ...p })),
+    moments: prepMomentsDraft.slice(1).map((moment) => ({ ...moment, team: moment.team.map((slot) => ({ ...slot })) })),
+    showPlanInLive: $('#prep-moments')?.dataset.showPlan !== 'false',
     delegateShown: !(existing?.delegateShown ?? false),
     savedAt: Date.now(),
   };
@@ -7893,6 +8116,14 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-view-live')) {
+      const prep = prepForMatch(target.dataset.id);
+      if (state.timer && state.timer.phase !== 'ready' && state.timer.matchId !== target.dataset.id) return toast('Hay otro partido en juego. Termínalo antes de abrir este plan.');
+      if (prep && (!state.timer || state.timer.matchId !== target.dataset.id)) await applyPreparacionToLive(prep);
+      showView('partido');
+      const plan = $('#live-match .cbx-live-plan');
+      if (plan) plan.open = true;
+    }
     if (target.matches('.prep-create-callup')) { pendingPrepAfterCallupMatchId = target.dataset.id; showView('convocatorias'); callupBuilder(target.dataset.id); }
     if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id); $('#prep-gif')?.click(); }
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
@@ -7973,6 +8204,15 @@ function wireEvents() {
     }
     if (target.matches('.delete-session')) await deleteTrainingSession(target.dataset.id);
     if (target.id === 'prepare-live') await prepareLive();
+    if (target.matches('.cbx-plan-apply')) await applySavedPlanMoment(target.dataset.momentId);
+    if (target.matches('.cbx-plan-defer') && state.timer) {
+      state.timer.planDeferred = [...new Set([...(state.timer.planDeferred || []), target.dataset.momentId])];
+      await persistTimer(); renderLive(); renderDelegate();
+    }
+    if (target.matches('.cbx-plan-close') && state.timer) {
+      state.timer.planAlertClosed = [...new Set([...(state.timer.planAlertClosed || []), target.dataset.momentId])];
+      await persistTimer(); renderLive(); renderDelegate();
+    }
     if (target.id === 'advance-live') await advanceLivePhase();
     if (target.id === 'make-sub') await makeSubstitution();
     if (target.id === 'exit-live') await cancelLiveMatch();
