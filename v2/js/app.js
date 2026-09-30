@@ -13,6 +13,8 @@ import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, 
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
+import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf } from './tacticas-pdf-domain.js';
+import { initTacticBoard } from './tactic-board-controller.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 import { buildAutoPlan } from './reparto-plan.js';
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
@@ -4459,53 +4461,27 @@ function renderExercises() {
 
   const filters = {
     formato_juego: form.elements.formato_juego?.value || form.elements.format?.value || 'todos',
-    category: form.elements.category.value,
-    players: form.elements.players.value,
-    material: form.elements.material.value,
-    difficulty: form.elements.difficulty.value,
-    favorites: form.elements.favorites.checked,
-    video: form.elements.video.checked,
+    category: form.elements.category?.value || '',
+    players: form.elements.players?.value || '',
+    material: form.elements.material?.value || '',
+    difficulty: form.elements.difficulty?.value || '',
+    duration: form.elements.duration?.value || '',
+    dimension: form.elements.dimension?.value || '',
+    search: form.elements.search?.value || '',
+    text: form.elements.search?.value || '',
+    favorites: form.elements.favorites?.checked || false,
+    video: form.elements.video?.checked || false,
   };
   const mineCategorySelected = filters.category === '__mine__';
   if (mineCategorySelected) filters.category = '';
 
   if (document.body.classList.contains('cb-redesign-active')) {
-    // Sincronizar estado visual de los chips y conmutadores con los filtros actuales
-    $$('.cbx-fpane[data-pane="category"] .cbx-chip').forEach((chip) => {
-      chip.classList.toggle('active', chip.dataset.val === (filters.category || ''));
-    });
-    $$('.cbx-fpane[data-pane="format"] .cbx-chip').forEach((chip) => {
-      chip.classList.toggle('active', chip.dataset.val === (filters.formato_juego || 'todos'));
-    });
-    $$('.cbx-fpane[data-pane="players"] .cbx-chip').forEach((chip) => {
-      chip.classList.toggle('active', chip.dataset.val === (filters.players || ''));
-    });
-    $$('.cbx-fpane[data-pane="material"] .cbx-chip').forEach((chip) => {
-      chip.classList.toggle('active', chip.dataset.val === (filters.material || ''));
-    });
-    $$('.cbx-fpane[data-pane="difficulty"] .cbx-chip').forEach((chip) => {
-      chip.classList.toggle('active', chip.dataset.val === (filters.difficulty || ''));
+    // Sincronizar estado visual de los chips de dimensión y conmutadores con los filtros actuales
+    $$('.cbx-dim-chip').forEach((chip) => {
+      chip.classList.toggle('active', (chip.dataset.dim || '') === (filters.dimension || ''));
     });
     $('#cbx-filter-fav')?.classList.toggle('active', Boolean(filters.favorites));
     $('#cbx-filter-video')?.classList.toggle('active', Boolean(filters.video));
-
-    const CATEGORY_MAP = {
-      'Calentamiento': ['Calentamiento / activación', 'Calentamiento/activación', 'Calentamiento'],
-      'Coordinación/motricidad': ['Coordinación y agilidad', 'Coordinación/motricidad'],
-      'Tecnificación': ['Tecnificación', 'Pase y posesión'],
-      'Pase/Técnica/Posesión': ['Pase y posesión', 'Posesión', 'Tecnificación'],
-      'Técnico-táctico': ['Técnico-táctico'],
-      'Táctica': ['Táctica'],
-      'Finalización': ['Finalización'],
-      'Porteros': ['Porteros'],
-      'Juego reducido': ['Juego reducido'],
-      'Partido condicionado / Small-sided games': ['Juego reducido'],
-      'Preparación física integrada': ['Físico con balón', 'Preparación física integrada'],
-      'Resistencia/Física': ['Físico con balón'],
-      'Juego': ['Juego reducido'],
-      'Defensa y duelos': ['Defensa y duelos'],
-      'Transiciones': ['Transiciones', 'Transición'],
-    };
 
     const humanVideoExerciseIds = new Set(
       state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
@@ -4522,20 +4498,7 @@ function renderExercises() {
       ? withVideoFlags.filter((item) => item.userCreated === true)
       : withVideoFlags;
 
-    let baseCategory = filters.category;
-    let categoryAllowedSet = null;
-    if (CATEGORY_MAP[baseCategory]) {
-      categoryAllowedSet = new Set(CATEGORY_MAP[baseCategory]);
-    }
-
-    const intermediateFilters = categoryAllowedSet ? { ...filters, category: '' } : filters;
-    let exercises = filterExercises(filterableExercises, intermediateFilters);
-    if (categoryAllowedSet) {
-      exercises = exercises.filter((item) => {
-        const cat = item.category || item.categoria;
-        return categoryAllowedSet.has(cat);
-      });
-    }
+    let exercises = filterExercises(filterableExercises, filters);
 
     exercises.sort((a, b) => {
       const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
@@ -4548,7 +4511,9 @@ function renderExercises() {
     });
 
     const countBadge = $('#cbx-exercise-count');
-    if (countBadge) countBadge.textContent = `${exercises.length} ejercicios`;
+    if (countBadge) {
+      countBadge.textContent = `${exercises.length} ejercicios`;
+    }
 
     const list = $('#exercises-list');
     if (!exercises.length) {
@@ -5233,12 +5198,165 @@ function showSessionDetail(sessionId) {
   $('#session-detail-dialog').showModal();
 }
 
+let claudeTacticFormation = '1-3-2-1';
+let claudeTacticAspect = 'estructura';
+let claudeTacticTool = 'select';
+let claudeTacticDraft = null;
+let claudeBoardController = null;
+
+function renderClaudeTactics() {
+  const formationsRow = $('#cbx-tactics-formations-row');
+  if (formationsRow) {
+    formationsRow.innerHTML = SISTEMAS_F7_ORDEN.map((f) => `
+      <button type="button" class="cbx-f7-chip ${f === claudeTacticFormation ? 'active' : ''}" data-f7-sys="${f}">${f}</button>
+    `).join('');
+  }
+
+  const toolsGrid = $('#cbx-tactics-tools-grid');
+  if (toolsGrid) {
+    const activeTool = claudeBoardController ? claudeBoardController.getTool() : claudeTacticTool;
+    const toolsList = [
+      { id: 'select', label: 'Mover', icon: renderTacticToolIcon('select') },
+      { id: 'pass', label: 'Pase', icon: renderTacticToolIcon('pass') },
+      { id: 'move', label: 'Movimiento', icon: renderTacticToolIcon('move') },
+      { id: 'dribble', label: 'Conducción', icon: renderTacticToolIcon('dribble') },
+      { id: 'shot', label: 'Disparo', icon: renderTacticToolIcon('shot') },
+      { id: 'sprint', label: 'Sprint', icon: renderTacticToolIcon('sprint') },
+      { id: 'ball', label: 'Balón', icon: renderTacticToolIcon('ball') },
+    ];
+    toolsGrid.innerHTML = toolsList.map((t) => `
+      <button type="button" class="cbx-tool-btn ${t.id === activeTool ? 'active' : ''}" data-board-tool="${t.id}">
+        <span class="cbx-tool-btn-icon">${t.icon}</span>
+        <span class="cbx-tool-btn-label">${t.label}</span>
+      </button>
+    `).join('');
+  }
+
+  const boardEl = $('#cbx-tactics-pitch-board');
+  if (boardEl) {
+    if (!claudeTacticDraft || claudeTacticDraft.formation !== claudeTacticFormation) {
+      const base = defaultTactic('F7', claudeTacticFormation);
+      claudeTacticDraft = {
+        ...base,
+        id: `claude-tactic-${claudeTacticFormation}`,
+        name: `Sistema ${claudeTacticFormation}`,
+        formation: claudeTacticFormation,
+        moves: [],
+      };
+    }
+    boardEl.innerHTML = renderTacticBoard(claudeTacticDraft);
+    claudeBoardController = initTacticBoard({
+      board: boardEl,
+      tools: null,
+      getState: () => claudeTacticDraft,
+      setState: (ns) => { claudeTacticDraft = ns; },
+      render: () => {
+        boardEl.innerHTML = renderTacticBoard(claudeTacticDraft);
+      },
+    });
+  }
+
+  const guidesTitle = $('#cbx-guides-title');
+  if (guidesTitle) {
+    guidesTitle.textContent = `GUÍAS TÁCTICAS · SISTEMA ${claudeTacticFormation}`;
+  }
+  $$('#cbx-guides-aspects-row .cbx-aspect-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.aspect === claudeTacticAspect);
+  });
+
+  const contentEl = $('#cbx-guides-content');
+  if (contentEl) {
+    const sys = getSistemaF7Pdf(claudeTacticFormation);
+    if (claudeTacticAspect === 'estructura') {
+      contentEl.innerHTML = `
+        <p><strong>Líneas del sistema:</strong> ${escapeHtml(sys.lineas)}</p>
+        <p><strong>Resumen:</strong> ${escapeHtml(sys.resumen)}</p>
+        <p><strong>Estructura:</strong> ${escapeHtml(sys.estructura)}</p>
+        <div style="margin-top:4px">
+          <strong>Funciones por puesto:</strong>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+            ${sys.funciones.map((f) => `<div class="cbx-guide-bullet"><span>${escapeHtml(f)}</span></div>`).join('')}
+          </div>
+        </div>
+      `;
+    } else if (claudeTacticAspect === 'salida') {
+      contentEl.innerHTML = `
+        <p><strong>Salida de balón y superioridad:</strong></p>
+        <p>${escapeHtml(sys.salida)}</p>
+      `;
+    } else if (claudeTacticAspect === 'progresion') {
+      contentEl.innerHTML = `
+        <p><strong>Ataque y progresión en campo rival:</strong></p>
+        <p>${escapeHtml(sys.progresion)}</p>
+      `;
+    } else if (claudeTacticAspect === 'basculaciones') {
+      contentEl.innerHTML = `
+        <p><strong>Basculaciones y equilibrio defensivo:</strong></p>
+        <p>${escapeHtml(sys.basculaciones)}</p>
+      `;
+    } else if (claudeTacticAspect === 'pressing') {
+      contentEl.innerHTML = `
+        <p><strong>Presión y recuperación tras pérdida:</strong></p>
+        <p>${escapeHtml(sys.pressing)}</p>
+      `;
+    } else if (claudeTacticAspect === 'ventajas') {
+      contentEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <strong style="color:#166534">Ventajas del sistema:</strong>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+              ${sys.ventajas.map((v) => `<div class="cbx-guide-bullet"><span>${escapeHtml(v)}</span></div>`).join('')}
+            </div>
+          </div>
+          <div>
+            <strong style="color:#991b1b">Inconvenientes:</strong>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+              ${sys.inconvenientes.map((i) => `<div class="cbx-guide-bullet"><span>${escapeHtml(i)}</span></div>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (claudeTacticAspect === 'f11') {
+      contentEl.innerHTML = `
+        <p><strong>Importancia formativa y adaptación al Fútbol 11:</strong></p>
+        <p>${escapeHtml(sys.f11)}</p>
+      `;
+    }
+  }
+
+  const savedListEl = $('#cbx-saved-tactics-list');
+  if (savedListEl) {
+    const userTactics = state.tactics || [];
+    const defaultPresets = [
+      { id: 'preset-1', name: 'Salida ante presión alta', formation: '1-3-2-1', situation: 'vs UD Lomo Verde' },
+      { id: 'preset-2', name: 'Córner a favor · bloqueo', formation: 'Balón parado', situation: 'Estrategia ofensiva' },
+      { id: 'preset-3', name: 'Bloqueo bajo con ventaja', formation: '1-4-1-1', situation: 'últimos 10\'' },
+    ];
+    const allToShow = userTactics.length ? userTactics : defaultPresets;
+    savedListEl.innerHTML = allToShow.map((t) => `
+      <div class="cbx-saved-tactic-item">
+        <div class="cbx-saved-tactic-info">
+          <span class="cbx-saved-tactic-name">${escapeHtml(t.name)}</span>
+          <span class="cbx-saved-tactic-sub">${escapeHtml(t.formation || '1-3-2-1')}${t.situation ? ' · ' + escapeHtml(t.situation) : ''}${t.rival ? ' · vs ' + escapeHtml(t.rival) : ''}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="cbx-btn-view-tactic" data-id="${escapeHtml(t.id)}">Ver</button>
+          ${userTactics.some(ut => ut.id === t.id) ? `<button type="button" class="delete-tactic danger compact" data-id="${escapeHtml(t.id)}">✕</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
 function renderTactics() {
   const tactics = sortTactics(state.tactics);
   $('#tactics-list').innerHTML = tactics.length ? tactics.map((tactic) => {
     return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button><button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`;
   }).join('') : '';
   renderTacticasInteractivas();
+  if (document.body.classList.contains('cb-redesign-active')) {
+    renderClaudeTactics();
+  }
 }
 
 // Renderiza el manual táctico como un selector desplegable que muestra una
@@ -8536,6 +8654,17 @@ function wireEvents() {
       return;
     }
 
+    const dimChipBtn = target.closest('.cbx-dim-chip');
+    if (dimChipBtn) {
+      const dimVal = dimChipBtn.dataset.dim || '';
+      const form = $('#exercise-filters');
+      if (form && form.elements.dimension) {
+        form.elements.dimension.value = dimVal;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
     const fchipBtn = target.closest('.cbx-chip');
     if (fchipBtn) {
       const filterKey = fchipBtn.dataset.filter;
@@ -8573,11 +8702,14 @@ function wireEvents() {
     if (target.id === 'cbx-clear-exercise-filters' || target.closest('#cbx-clear-exercise-filters')) {
       const form = $('#exercise-filters');
       if (form) {
+        if (form.elements.dimension) form.elements.dimension.value = '';
         if (form.elements.category) form.elements.category.value = '';
         if (form.elements.formato_juego) form.elements.formato_juego.value = 'todos';
         if (form.elements.players) form.elements.players.value = '';
         if (form.elements.material) form.elements.material.value = '';
         if (form.elements.difficulty) form.elements.difficulty.value = '';
+        if (form.elements.duration) form.elements.duration.value = '';
+        if (form.elements.search) form.elements.search.value = '';
         if (form.elements.favorites) form.elements.favorites.checked = false;
         if (form.elements.video) form.elements.video.checked = false;
         form.dispatchEvent(new Event('change', { bubbles: true }));
@@ -8591,15 +8723,119 @@ function wireEvents() {
       } else {
         const form = $('#exercise-filters');
         if (form) {
+          if (form.elements.dimension) form.elements.dimension.value = '';
           if (form.elements.category) form.elements.category.value = '';
           if (form.elements.formato_juego) form.elements.formato_juego.value = 'todos';
           if (form.elements.players) form.elements.players.value = '';
           if (form.elements.material) form.elements.material.value = '';
           if (form.elements.difficulty) form.elements.difficulty.value = '';
+          if (form.elements.duration) form.elements.duration.value = '';
+          if (form.elements.search) form.elements.search.value = '';
           if (form.elements.favorites) form.elements.favorites.checked = false;
           if (form.elements.video) form.elements.video.checked = false;
           form.dispatchEvent(new Event('change', { bubbles: true }));
         }
+      }
+      return;
+    }
+
+    // Claude Tácticas interactions
+    const f7Chip = target.closest('.cbx-f7-chip[data-f7-sys]');
+    if (f7Chip) {
+      claudeTacticFormation = f7Chip.dataset.f7Sys;
+      claudeTacticDraft = null;
+      renderClaudeTactics();
+      return;
+    }
+
+    const claudeToolBtn = target.closest('.cbx-tool-btn[data-board-tool]');
+    if (claudeToolBtn) {
+      const toolId = claudeToolBtn.dataset.boardTool;
+      claudeTacticTool = toolId;
+      if (claudeBoardController) claudeBoardController.setTool(toolId);
+      $$('.cbx-tool-btn[data-board-tool]').forEach((b) => b.classList.toggle('active', b === claudeToolBtn));
+      return;
+    }
+
+    const aspectChip = target.closest('.cbx-aspect-chip[data-aspect]');
+    if (aspectChip) {
+      claudeTacticAspect = aspectChip.dataset.aspect;
+      renderClaudeTactics();
+      return;
+    }
+
+    if (target.id === 'cbx-btn-anim' || target.closest('#cbx-btn-anim')) {
+      const found = TACTICAS_INTERACTIVAS.find((t) => t.formacion === claudeTacticFormation) || TACTICAS_INTERACTIVAS[0];
+      if (found) {
+        showTacticaInteractiva(found.id);
+      } else {
+        toast('Animación no disponible para este sistema.');
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-new-tactic-btn' || target.closest('#cbx-new-tactic-btn')) {
+      const base = defaultTactic('F7', claudeTacticFormation);
+      claudeTacticDraft = {
+        ...base,
+        id: `claude-tactic-${claudeTacticFormation}-${Date.now()}`,
+        name: `Táctica ${claudeTacticFormation}`,
+        formation: claudeTacticFormation,
+        moves: [],
+      };
+      renderClaudeTactics();
+      $('#cbx-tactics-pitch-board')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast('Pizarra lista para crear la nueva táctica.');
+      return;
+    }
+
+    if (target.id === 'cbx-save-tactic-btn' || target.closest('#cbx-save-tactic-btn')) {
+      const name = claudeTacticDraft?.name || `Sistema ${claudeTacticFormation}`;
+      const saved = buildTactic({
+        name,
+        formation: claudeTacticFormation,
+        format: 'F7',
+        team: claudeTacticDraft?.team,
+        opponent: claudeTacticDraft?.opponent,
+        ball: claudeTacticDraft?.ball,
+        moves: claudeTacticDraft?.moves,
+      }, {
+        id: uid(),
+        createdAt: Date.now(),
+        now: Date.now(),
+      });
+      await put('settings', { ...saved, recordType: 'tactic' });
+      await refresh(true);
+      renderTactics();
+      toast('Táctica guardada correctamente.');
+      return;
+    }
+
+    if (target.id === 'cbx-clear-tactic-btn' || target.closest('#cbx-clear-tactic-btn')) {
+      const base = defaultTactic('F7', claudeTacticFormation);
+      claudeTacticDraft = {
+        ...base,
+        id: `claude-tactic-${claudeTacticFormation}`,
+        name: `Sistema ${claudeTacticFormation}`,
+        formation: claudeTacticFormation,
+        moves: [],
+      };
+      if (claudeBoardController) claudeBoardController.render();
+      toast('Pizarra restablecida a la posición base.');
+      return;
+    }
+
+    const viewSavedTacticBtn = target.closest('.cbx-btn-view-tactic[data-id]');
+    if (viewSavedTacticBtn) {
+      const tacId = viewSavedTacticBtn.dataset.id;
+      const tac = state.tactics.find((t) => t.id === tacId);
+      if (tac) {
+        claudeTacticFormation = tac.formation || '1-3-2-1';
+        claudeTacticDraft = { ...tac };
+        renderClaudeTactics();
+        $('#cbx-tactics-pitch-board')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        showTacticDetail(tacId);
       }
       return;
     }

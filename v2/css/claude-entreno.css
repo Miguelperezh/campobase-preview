@@ -560,7 +560,125 @@ body.cb-redesign-active .cbx-filter-card {
   box-shadow: var(--cbx-shadow);
 }
 
-/* Pestañas de tipo de filtro */
+/* Dimensiones de trabajo Fútbol 7 */
+body.cb-redesign-active .cbx-filter-dims-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.cb-redesign-active .cbx-filter-dims-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.cb-redesign-active .cbx-filter-dims-label {
+  font: 700 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+body.cb-redesign-active .cbx-filter-dims-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+body.cb-redesign-active .cbx-filter-dims-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+body.cb-redesign-active .cbx-filter-dims-row::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+body.cb-redesign-active .cbx-dim-chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: 700 12px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active .cbx-dim-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+body.cb-redesign-active .cbx-dim-chip.active {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  border-color: #0f766e !important;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(15, 118, 110, 0.25);
+}
+
+/* Rejilla de filtros directos y buscador */
+body.cb-redesign-active .cbx-filter-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  align-items: flex-end;
+}
+
+body.cb-redesign-active .cbx-filter-search-box {
+  grid-column: span 2;
+  min-width: 200px;
+}
+
+@media (max-width: 640px) {
+  body.cb-redesign-active .cbx-filter-search-box {
+    grid-column: span 1 / -1;
+  }
+}
+
+body.cb-redesign-active .cbx-filter-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+body.cb-redesign-active .cbx-filter-control-item label {
+  font: 700 11px var(--cbx-ui);
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+body.cb-redesign-active .cbx-filter-input,
+body.cb-redesign-active .cbx-filter-select {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  padding: 0 10px;
+  font: 500 12.5px var(--cbx-ui);
+  color: #1e293b;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+body.cb-redesign-active .cbx-filter-input:focus,
+body.cb-redesign-active .cbx-filter-select:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+/* Pestañas de tipo de filtro legacy (si se usan) */
 body.cb-redesign-active .cbx-filter-tabs-row {
   display: flex;
   gap: 4px;
@@ -569,10 +687,6 @@ body.cb-redesign-active .cbx-filter-tabs-row {
   margin: -2px -2px 0;
   padding-bottom: 2px;
   scrollbar-width: none;
-}
-
-body.cb-redesign-active .cbx-filter-tabs-row::-webkit-scrollbar {
-  display: none;
 }
 
 body.cb-redesign-active .cbx-ftab {
@@ -584,29 +698,12 @@ body.cb-redesign-active .cbx-ftab {
   cursor: pointer;
   border-bottom: 2px solid transparent;
   white-space: nowrap;
-  transition: color .15s, border-color .15s;
-}
-
-body.cb-redesign-active .cbx-ftab:hover {
-  color: var(--cbx-ink);
 }
 
 body.cb-redesign-active .cbx-ftab.active {
   color: #0f172a;
   font-weight: 800;
   border-bottom-color: #0f766e;
-}
-
-/* Paneles de chips */
-body.cb-redesign-active .cbx-filter-panes {
-  min-height: 38px;
-}
-
-body.cb-redesign-active .cbx-fpane {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
 }
 
 body.cb-redesign-active .cbx-chip {
@@ -617,13 +714,7 @@ body.cb-redesign-active .cbx-chip {
   font: 700 12.5px var(--cbx-ui);
   color: #334155;
   cursor: pointer;
-  transition: all .15s ease;
   white-space: nowrap;
-}
-
-body.cb-redesign-active .cbx-chip:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
 }
 
 body.cb-redesign-active .cbx-chip.active {
@@ -1024,5 +1115,443 @@ body.cb-redesign-active .cbx-clear-filters-action {
   body.cb-redesign-active #exercises-list {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   TÁCTICAS CLAUDE REDESIGN (movil-11-tacticas.png)
+   ========================================================================== */
+body:not(.cb-redesign-active) #cbx-tacticas-redesign {
+  display: none !important;
+}
+
+body.cb-redesign-active .cbx-legacy-tactics-wrapper {
+  display: none !important;
+}
+
+body.cb-redesign-active #tacticas {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+body.cb-redesign-active .cbx-tactics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Hero Banner */
+body.cb-redesign-active .cbx-tactics-hero {
+  background: linear-gradient(135deg, #062b1d 0%, #0d4a34 100%);
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(6, 43, 29, 0.25);
+  color: #ffffff;
+}
+
+body.cb-redesign-active .cbx-tactics-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body.cb-redesign-active .cbx-tactics-eyebrow {
+  font: 800 11px var(--cbx-disp);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #34d399;
+}
+
+body.cb-redesign-active .cbx-tactics-title {
+  font: 900 24px var(--cbx-disp);
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+body.cb-redesign-active .btn-new-tactic-claude {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #10b981;
+  color: #ffffff;
+  border: 0;
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  transition: all .15s;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+
+body.cb-redesign-active .btn-new-tactic-claude:hover {
+  background: #059669;
+}
+
+/* Card Principal Pizarra */
+body.cb-redesign-active .cbx-tactics-board-card {
+  background: #ffffff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--cbx-shadow);
+}
+
+body.cb-redesign-active .cbx-tactics-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.cb-redesign-active .cbx-tactics-label {
+  font: 800 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+/* Chips de Formación F7 */
+body.cb-redesign-active .cbx-tactics-formations-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+body.cb-redesign-active .cbx-f7-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: 700 12.5px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active .cbx-f7-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-f7-chip.active {
+  background: #0a251b !important;
+  color: #ffffff !important;
+  border-color: #0a251b !important;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(10, 37, 27, 0.25);
+}
+
+/* Herramientas Grid */
+body.cb-redesign-active .cbx-tactics-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+@media (min-width: 520px) {
+  body.cb-redesign-active .cbx-tactics-tools-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+body.cb-redesign-active .cbx-tool-btn {
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+
+body.cb-redesign-active .cbx-tool-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-tool-btn.active {
+  border-color: #0f172a;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #0f172a;
+}
+
+body.cb-redesign-active .cbx-tool-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+}
+
+body.cb-redesign-active .cbx-tool-btn-label {
+  font: 700 11px var(--cbx-ui);
+  color: #1e293b;
+}
+
+/* Callout informativo */
+body.cb-redesign-active .cbx-tactics-callout {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+body.cb-redesign-active .cbx-tactics-callout p {
+  font: 500 12.5px var(--cbx-ui);
+  color: #166534;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Botones de acción de pizarra */
+body.cb-redesign-active .cbx-tactics-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+body.cb-redesign-active .btn-save-tactic-claude {
+  flex: 1.5;
+  height: 44px;
+  border-radius: 12px;
+  background: #10b981;
+  color: #ffffff;
+  border: 0;
+  font: 700 14px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .btn-save-tactic-claude:hover {
+  background: #059669;
+}
+
+body.cb-redesign-active .btn-clear-tactic-claude {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  font: 700 14px var(--cbx-ui);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+body.cb-redesign-active .btn-clear-tactic-claude:hover {
+  background: #f1f5f9;
+}
+
+/* Campo Pizarra SVG */
+body.cb-redesign-active .cbx-tactics-pitch-container {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1a4d34;
+  box-shadow: 0 4px 16px rgba(10, 37, 27, 0.2);
+  padding: 8px;
+}
+
+body.cb-redesign-active .cbx-tactics-pitch-board {
+  width: 100%;
+  touch-action: none;
+}
+
+body.cb-redesign-active .cbx-tactics-pitch-board svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Guías Tácticas Card */
+body.cb-redesign-active .cbx-tactics-guides-card {
+  background: #ffffff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--cbx-shadow);
+}
+
+body.cb-redesign-active .cbx-guides-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+body.cb-redesign-active .cbx-guides-title {
+  font: 800 15px var(--cbx-disp);
+  text-transform: uppercase;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+body.cb-redesign-active .btn-anim-claude {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  border: 0;
+  font: 700 12px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active .btn-anim-claude:hover {
+  background: #1e293b;
+}
+
+body.cb-redesign-active .cbx-guides-aspects-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+body.cb-redesign-active .cbx-aspect-chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: 700 12px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active .cbx-aspect-chip:hover {
+  background: #f1f5f9;
+}
+
+body.cb-redesign-active .cbx-aspect-chip.active {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  border-color: #0f766e !important;
+  font-weight: 800;
+}
+
+body.cb-redesign-active .cbx-guides-content-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font: 500 13px var(--cbx-ui);
+  color: #334155;
+  line-height: 1.5;
+}
+
+body.cb-redesign-active .cbx-guides-content-box strong {
+  color: #0f172a;
+}
+
+body.cb-redesign-active .cbx-guide-bullet {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+body.cb-redesign-active .cbx-guide-bullet::before {
+  content: "•";
+  color: #0f766e;
+  font-weight: 900;
+}
+
+/* Tácticas Guardadas */
+body.cb-redesign-active .cbx-saved-tactics-card {
+  background: #ffffff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--cbx-shadow);
+}
+
+body.cb-redesign-active .cbx-saved-tactics-title {
+  font: 800 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+body.cb-redesign-active .cbx-saved-tactics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: border-color .15s;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-item:hover {
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-name {
+  font: 800 13.5px var(--cbx-ui);
+  color: #0f172a;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-sub {
+  font: 500 12px var(--cbx-ui);
+  color: #64748b;
+}
+
+body.cb-redesign-active .cbx-btn-view-tactic {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font: 700 12px var(--cbx-ui);
+  color: #0f172a;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+body.cb-redesign-active .cbx-btn-view-tactic:hover {
+  background: #f1f5f9;
 }
 

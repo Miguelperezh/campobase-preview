@@ -180,93 +180,87 @@
       </div>
       <form id="exercise-filters" class="panel exercise-filters">
         <div class="cbx-filter-card">
-          <div class="cbx-filter-tabs-row" role="tablist">
-            <button type="button" class="cbx-ftab active" data-pane="category">Categoría</button>
-            <button type="button" class="cbx-ftab" data-pane="format">Formato</button>
-            <button type="button" class="cbx-ftab" data-pane="players">N.º de jugadores</button>
-            <button type="button" class="cbx-ftab" data-pane="material">Material</button>
-            <button type="button" class="cbx-ftab" data-pane="difficulty">Dificultad</button>
+          <!-- Dimensiones de trabajo en Fútbol 7 (Multi-dimensional tags) -->
+          <div class="cbx-filter-dims-container">
+            <div class="cbx-filter-dims-header">
+              <span class="cbx-filter-dims-label">Dimensión de trabajo (Fútbol 7)</span>
+            </div>
+            <div class="cbx-filter-dims-row" role="toolbar" aria-label="Dimensiones de entrenamiento">
+              <button type="button" class="cbx-dim-chip active" data-dim="">Todas</button>
+              <button type="button" class="cbx-dim-chip" data-dim="tactica">⚽ Táctica</button>
+              <button type="button" class="cbx-dim-chip" data-dim="tecnica">⚡ Técnica / Tecnificación</button>
+              <button type="button" class="cbx-dim-chip" data-dim="fisica">💪 Física</button>
+              <button type="button" class="cbx-dim-chip" data-dim="ludico">🎮 Lúdico / Juegos</button>
+              <button type="button" class="cbx-dim-chip" data-dim="finalizacion">🎯 Finalización</button>
+              <button type="button" class="cbx-dim-chip" data-dim="calentamiento">🔥 Calentamiento</button>
+              <button type="button" class="cbx-dim-chip" data-dim="porteros">🧤 Porteros</button>
+            </div>
           </div>
-          
-          <div class="cbx-filter-panes">
-            <!-- Category pane -->
-            <div class="cbx-fpane active" data-pane="category">
-              <button type="button" class="cbx-chip active" data-filter="category" data-val="">Todas</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Calentamiento">Calentamiento</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Coordinación/motricidad">Coordinación/motricidad</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Tecnificación">Tecnificación</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Pase/Técnica/Posesión">Pase/Técnica/Posesión</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Técnico-táctico">Técnico-táctico</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Táctica">Táctica</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Finalización">Finalización</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Porteros">Porteros</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Juego reducido">Juego reducido</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Partido condicionado / Small-sided games">Partido condicionado / Small-sided games</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Preparación física integrada">Preparación física integrada</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Resistencia/Física">Resistencia/Física</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Juego">Juego</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Defensa y duelos">Defensa y duelos</button>
-              <button type="button" class="cbx-chip" data-filter="category" data-val="Transiciones">Transiciones</button>
-            </div>
 
-            <!-- Format pane -->
-            <div class="cbx-fpane" data-pane="format" style="display:none">
-              <button type="button" class="cbx-chip active" data-filter="format" data-val="todos">Todos</button>
-              <button type="button" class="cbx-chip" data-filter="format" data-val="futbol_7">Fútbol 7</button>
-              <button type="button" class="cbx-chip" data-filter="format" data-val="futbol_11">Fútbol 11</button>
+          <!-- Filtros directos y buscador -->
+          <div class="cbx-filter-controls-grid">
+            <div class="cbx-filter-control-item cbx-filter-search-box">
+              <label for="cbx-filter-search">Buscar</label>
+              <input type="search" id="cbx-filter-search" name="search" placeholder="🔍 Buscar por nombre, tarea, concepto..." class="cbx-filter-input" autocomplete="off">
             </div>
-
-            <!-- Players pane -->
-            <div class="cbx-fpane" data-pane="players" style="display:none">
-              <button type="button" class="cbx-chip active" data-filter="players" data-val="">Cualquier número</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="1-2">1-2 jug.</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="3-4">3-4 jug.</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="5-6">5-6 jug.</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="7-8">7-8 jug.</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="9-11">9-11 jug.</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="12-14">12-14 jug.</button>
-              <button type="button" class="cbx-chip" data-filter="players" data-val="15+">15+ jug.</button>
+            <div class="cbx-filter-control-item">
+              <label for="filter-formato-juego">Formato</label>
+              <select name="formato_juego" id="filter-formato-juego" class="cbx-filter-select">
+                <option value="todos" selected>Todos los formatos</option>
+                <option value="futbol_7">Fútbol 7</option>
+                <option value="futbol_11">Fútbol 11</option>
+              </select>
             </div>
-
-            <!-- Material pane -->
-            <div class="cbx-fpane" data-pane="material" style="display:none">
-              <button type="button" class="cbx-chip active" data-filter="material" data-val="">Todos los materiales</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="balon">Balones</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="cono">Conos</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="peto">Petos</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="pica">Picas</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="valla">Vallas</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="escalera">Escalera</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="porteria">Porterías</button>
-              <button type="button" class="cbx-chip" data-filter="material" data-val="miniporteria">Miniporterías</button>
+            <div class="cbx-filter-control-item">
+              <label for="filter-difficulty">Dificultad</label>
+              <select name="difficulty" id="filter-difficulty" class="cbx-filter-select">
+                <option value="">Todas las dificultades</option>
+                <option value="Baja">Baja</option>
+                <option value="Media">Media</option>
+                <option value="Alta">Alta</option>
+              </select>
             </div>
-
-            <!-- Difficulty pane -->
-            <div class="cbx-fpane" data-pane="difficulty" style="display:none">
-              <button type="button" class="cbx-chip active" data-filter="difficulty" data-val="">Todas las dificultades</button>
-              <button type="button" class="cbx-chip" data-filter="difficulty" data-val="Baja">Baja</button>
-              <button type="button" class="cbx-chip" data-filter="difficulty" data-val="Media">Media</button>
-              <button type="button" class="cbx-chip" data-filter="difficulty" data-val="Alta">Alta</button>
+            <div class="cbx-filter-control-item">
+              <label for="filter-players">Jugadores</label>
+              <select name="players" id="filter-players" class="cbx-filter-select">
+                <option value="">Cualquier número</option>
+              </select>
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-material">Material</label>
+              <select name="material" id="filter-material" class="cbx-filter-select">
+                <option value="">Todos los materiales</option>
+              </select>
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-duration">Duración</label>
+              <select name="duration" id="filter-duration" class="cbx-filter-select">
+                <option value="">Cualquier duración</option>
+                <option value="<=5">≤ 5 min</option>
+                <option value="6-10">6–10 min</option>
+                <option value="11-15">11–15 min</option>
+                <option value="16-20">16–20 min</option>
+                <option value=">20">&gt; 20 min</option>
+              </select>
             </div>
           </div>
 
           <div class="cbx-filter-bottom-bar">
-            <button type="button" class="cbx-toggle-chip" id="cbx-filter-fav">★ Solo favoritos</button>
-            <button type="button" class="cbx-toggle-chip" id="cbx-filter-video">▶ Solo con vídeo</button>
+            <div class="cbx-filter-toggles">
+              <button type="button" class="cbx-toggle-chip" id="cbx-filter-fav">★ Solo favoritos</button>
+              <button type="button" class="cbx-toggle-chip" id="cbx-filter-video">▶ Solo con vídeo</button>
+            </div>
             <span class="cbx-spacer" style="flex:1"></span>
             <span class="cbx-filter-count" id="cbx-exercise-count"></span>
             <button type="button" class="cbx-filter-clear-btn" id="cbx-clear-exercise-filters">Quitar filtros</button>
           </div>
         </div>
 
-        <div class="cbx-native-filter-fields">
-          <label>Formato<select name="formato_juego" id="filter-formato-juego"><option value="todos" selected>Todos</option><option value="futbol_7">Fútbol 7</option><option value="futbol_11">Fútbol 11</option></select></label>
-          <label>Categoría<select name="category"><option value="">Todas las categorías</option></select></label>
-          <label>N.º de jugadores<select name="players"><option value="">Cualquier número</option></select></label>
-          <label>Material<select name="material"><option value="">Todos los materiales</option></select></label>
-          <label>Dificultad<select name="difficulty"><option value="">Todas las dificultades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
-          <label class="favorite-filter"><input name="favorites" type="checkbox"> Solo favoritos</label>
-          <label class="favorite-filter"><input name="video" type="checkbox"> Solo con video</label>
+        <div class="cbx-native-filter-fields" style="display:none">
+          <input type="hidden" name="dimension" id="filter-dimension" value="">
+          <select name="category"><option value="">Todas las categorías</option></select>
+          <input name="favorites" type="checkbox">
+          <input name="video" type="checkbox">
         </div>
       </form>
       <div id="exercises-list" class="exercise-grid"></div>
@@ -293,13 +287,95 @@
     </section>
 
     <section id="tacticas" class="view" aria-labelledby="title-tactics">
-      <div class="section-head"><div><p class="eyebrow">Pizarra táctica</p><h2 id="title-tactics">Tácticas</h2></div><div class="button-row"><button id="new-tactic" class="primary">+ Táctica</button></div></div>
-      <div id="tactic-builder" class="panel hidden"></div>
-      <div id="tactics-list" class="stack"></div>
-      <form id="tactica-filters" class="panel exercise-filters">
-        <label>Selecciona una táctica<select name="formacion"><option value="">Elige una táctica…</option></select></label>
-      </form>
-      <div id="tacticas-interactivas" class="exercise-grid"></div>
+      <!-- Contenedor Rediseño Claude (movil-11-tacticas.png) -->
+      <div id="cbx-tacticas-redesign" class="cbx-tactics-page">
+        <!-- Hero Banner Card -->
+        <div class="cbx-tactics-hero">
+          <div class="cbx-tactics-hero-text">
+            <span class="cbx-tactics-eyebrow">PIZARRA TÁCTICA</span>
+            <h2 class="cbx-tactics-title">TÁCTICAS</h2>
+          </div>
+          <button type="button" class="btn-new-tactic-claude" id="cbx-new-tactic-btn">+ Táctica</button>
+        </div>
+
+        <!-- Pizarra Interactiva Principal Card -->
+        <div class="cbx-tactics-board-card">
+          <!-- Selector de Formación F7 -->
+          <div class="cbx-tactics-section-group">
+            <span class="cbx-tactics-label">FORMACIÓN F7</span>
+            <div class="cbx-tactics-formations-row" id="cbx-tactics-formations-row" role="radiogroup" aria-label="Formación F7">
+              <!-- Rellenado dinámicamente por JS -->
+            </div>
+          </div>
+
+          <!-- Barra de Herramientas -->
+          <div class="cbx-tactics-section-group">
+            <span class="cbx-tactics-label">HERRAMIENTAS</span>
+            <div class="cbx-tactics-tools-grid" id="cbx-tactics-tools-grid" role="toolbar" aria-label="Herramientas de dibujo táctico">
+              <!-- Rellenado dinámicamente por JS -->
+            </div>
+          </div>
+
+          <!-- Callout informativo Claude -->
+          <div class="cbx-tactics-callout">
+            <p>Mi equipo en rojo, rival en negro. Arrastra jugadores o dibuja pases, movimientos, conducciones, disparos y sprints. La guía de la formación se consulta desde «Ver» en la táctica guardada.</p>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="cbx-tactics-actions-row">
+            <button type="button" class="btn-save-tactic-claude" id="cbx-save-tactic-btn">Guardar táctica</button>
+            <button type="button" class="btn-clear-tactic-claude" id="cbx-clear-tactic-btn">Borrar todo</button>
+          </div>
+
+          <!-- Contenedor del Campo / Pizarra SVG -->
+          <div class="cbx-tactics-pitch-container">
+            <div id="cbx-tactics-pitch-board" class="cbx-tactics-pitch-board"></div>
+          </div>
+        </div>
+
+        <!-- Sección de Guías Tácticas (del PDF y manual) -->
+        <div class="cbx-tactics-guides-card">
+          <div class="cbx-guides-header">
+            <h3 class="cbx-guides-title" id="cbx-guides-title">GUÍAS TÁCTICAS · SISTEMA 1-3-2-1</h3>
+            <button type="button" class="btn-anim-claude" id="cbx-btn-anim">Ver animación</button>
+          </div>
+
+          <!-- Chips de aspecto -->
+          <div class="cbx-guides-aspects-row" id="cbx-guides-aspects-row" role="tablist">
+            <button type="button" class="cbx-aspect-chip active" data-aspect="estructura">Estructura</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="salida">Salida</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="progresion">Progresión</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="basculaciones">Basculaciones</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="pressing">Pressing</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="ventajas">Ventajas / Inconvenientes</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="f11">Adaptación F11</button>
+          </div>
+
+          <!-- Caja de contenido dinámico -->
+          <div class="cbx-guides-content-box" id="cbx-guides-content">
+            <!-- Rellenado dinámicamente por JS desde el PDF -->
+          </div>
+        </div>
+
+        <!-- Sección Tácticas Guardadas -->
+        <div class="cbx-saved-tactics-card">
+          <span class="cbx-saved-tactics-title">TÁCTICAS GUARDADAS</span>
+          <div class="cbx-saved-tactics-list" id="cbx-saved-tactics-list">
+            <!-- Rellenado dinámicamente por JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Elementos legacy para compatibilidad de tests y fallback -->
+      <div class="cbx-legacy-tactics-wrapper">
+        <div class="section-head"><div><p class="eyebrow">Pizarra táctica</p><h2 id="title-tactics">Tácticas</h2></div><div class="button-row"><button id="new-tactic" class="primary">+ Táctica</button></div></div>
+        <div id="tactic-builder" class="panel hidden"></div>
+        <div id="tactics-list" class="stack"></div>
+        <form id="tactica-filters" class="panel exercise-filters">
+          <label>Selecciona una táctica<select name="formacion"><option value="">Elige una táctica…</option></select></label>
+        </form>
+        <div id="tacticas-interactivas" class="exercise-grid"></div>
+      </div>
     </section>
 
     <section id="ajustes" class="view" aria-labelledby="title-settings">

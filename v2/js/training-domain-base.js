@@ -333,18 +333,69 @@ export function buildExercise(values, metadata = {}) {
   };
 }
 
+export function matchesDimension(item, dim) {
+  const d = clean(dim).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!d || d === 'todas' || d === 'todos') return true;
+  const cat = clean(item.category || item.categoria).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const subcat = clean(item.subcategoria).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const name = clean(item.name || item.nombre).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const works = (Array.isArray(item.works) ? item.works : (Array.isArray(item.que_se_trabaja) ? item.que_se_trabaja : [])).join(' ').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const tags = (Array.isArray(item.tags) ? item.tags : (Array.isArray(item.etiquetas) ? item.etiquetas : [])).join(' ').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const text = `${cat} ${subcat} ${name} ${works} ${tags}`;
+
+  if (d === 'tactica') {
+    return cat.includes('tactic') || cat.includes('defensa') || cat.includes('ataque') || cat.includes('transicion') || cat.includes('posesion') || cat.includes('rondo') || text.includes('tactic') || text.includes('presion') || text.includes('cobertura') || text.includes('bascul') || text.includes('desmarque') || text.includes('linea') || text.includes('salida de balon');
+  }
+  if (d === 'tecnica') {
+    return cat.includes('tecnic') || cat.includes('tecnificacion') || cat.includes('pase') || cat.includes('combinativa') || text.includes('tecnic') || text.includes('pase') || text.includes('control') || text.includes('conduccion') || text.includes('regate') || text.includes('pared') || text.includes('remate');
+  }
+  if (d === 'fisica') {
+    return cat.includes('fisic') || cat.includes('coordinacion') || cat.includes('agilidad') || cat.includes('motricidad') || text.includes('fisic') || text.includes('resistencia') || text.includes('velocidad') || text.includes('agilidad') || text.includes('coordinacion') || text.includes('fuerza') || text.includes('potencia');
+  }
+  if (d === 'ludico') {
+    return Boolean(item.ludico) || cat.includes('juego') || cat.includes('rondo') || text.includes('ludico') || text.includes('juego') || text.includes('minipartido') || text.includes('partidillo') || text.includes('reducido');
+  }
+  if (d === 'finalizacion') {
+    return cat.includes('finalizacion') || text.includes('finaliza') || text.includes('remate') || text.includes('tiro') || text.includes('definicion') || text.includes('disparo') || text.includes('gol');
+  }
+  if (d === 'calentamiento') {
+    return cat.includes('calentamiento') || cat.includes('activacion') || text.includes('calentamiento') || text.includes('activacion');
+  }
+  if (d === 'porteros') {
+    return cat.includes('porter') || text.includes('porter') || text.includes('guardameta');
+  }
+  return true;
+}
+
 export function filterExercises(exercises, filters = {}) {
   if (!Array.isArray(exercises)) throw new TypeError('Los ejercicios deben ser una lista.');
   const material = clean(filters.material).toLocaleLowerCase('es');
   const players = clean(filters.players).toLocaleLowerCase('es');
   const formatVal = filters.formato_juego !== undefined ? filters.formato_juego : filters.format;
   const queryText = clean(filters.text || filters.search || filters.query).toLocaleLowerCase('es');
+  const duration = clean(filters.duration);
+  const dimension = clean(filters.dimension || filters.dim);
 
   return exercises.filter((item) => {
     if (filters.category && item.category !== filters.category) return false;
     if (filters.difficulty && item.difficulty !== filters.difficulty) return false;
     if (filters.favorites && !item.favorite) return false;
     if (filters.video && !item.video) return false;
+
+    // Filtro por dimensión Fútbol 7 (táctica, física, técnica, etc.)
+    if (dimension && !matchesDimension(item, dimension)) {
+      return false;
+    }
+
+    // Filtro por duración
+    if (duration) {
+      const dur = Number(item.duration) || 0;
+      if (duration === '<=5' && dur > 5) return false;
+      if (duration === '6-10' && (dur < 6 || dur > 10)) return false;
+      if (duration === '11-15' && (dur < 11 || dur > 15)) return false;
+      if (duration === '16-20' && (dur < 16 || dur > 20)) return false;
+      if (duration === '>20' && dur <= 20) return false;
+    }
 
     // Filtro por texto si se especifica
     if (queryText) {
@@ -389,6 +440,9 @@ export function filterExercises(exercises, filters = {}) {
         (queryMat === 'porteria' && itemMat.includes('porteria')) ||
         (queryMat === 'miniporteria' && itemMat.includes('miniporteria')) ||
         (queryMat === 'pica' && (itemMat.includes('pica') || itemMat.includes('palo'))) ||
+        (queryMat === 'valla' && itemMat.includes('valla')) ||
+        (queryMat === 'escalera' && itemMat.includes('escalera')) ||
+        (queryMat === 'peto' && itemMat.includes('peto')) ||
         (queryMat === 'elastica' && (itemMat.includes('elastica') || itemMat.includes('goma')));
       if (!matchMat) return false;
     }
@@ -396,20 +450,22 @@ export function filterExercises(exercises, filters = {}) {
     // Filtro por jugadores
     if (players) {
       const itemP = clean(item.players).toLocaleLowerCase('es');
-      if (itemP.includes(players)) return true;
-      const numMatch = itemP.match(/\d+/);
-      const count = numMatch ? parseInt(numMatch[0], 10) : null;
-      if (count !== null) {
-        if (players === '1-2' && (count >= 1 && count <= 2)) return true;
-        if (players === '3-4' && (count >= 3 && count <= 4)) return true;
-        if (players === '5-6' && (count >= 5 && count <= 6)) return true;
-        if (players === '7-8' && (count >= 7 && count <= 8)) return true;
-        if (players === '9-11' && (count >= 9 && count <= 11)) return true;
-        if (players === '12-14' && (count >= 12 && count <= 14)) return true;
-        if (players === '15+' && count >= 15) return true;
-        if (String(count) === players) return true;
+      let matchesPlayers = itemP.includes(players);
+      if (!matchesPlayers) {
+        const numMatch = itemP.match(/\d+/);
+        const count = numMatch ? parseInt(numMatch[0], 10) : null;
+        if (count !== null) {
+          if (players === '1-2' || players === '1-4') matchesPlayers = (count >= 1 && count <= (players === '1-4' ? 4 : 2));
+          else if (players === '3-4') matchesPlayers = (count >= 3 && count <= 4);
+          else if (players === '5-6' || players === '5-8') matchesPlayers = (count >= 5 && count <= (players === '5-8' ? 8 : 6));
+          else if (players === '7-8') matchesPlayers = (count >= 7 && count <= 8);
+          else if (players === '9-11' || players === '9-12') matchesPlayers = (count >= 9 && count <= (players === '9-12' ? 12 : 11));
+          else if (players === '12-14') matchesPlayers = (count >= 12 && count <= 14);
+          else if (players === '13+' || players === '15+') matchesPlayers = count >= (players === '13+' ? 13 : 15);
+          else if (String(count) === players) matchesPlayers = true;
+        }
       }
-      return false;
+      if (!matchesPlayers) return false;
     }
 
     return true;

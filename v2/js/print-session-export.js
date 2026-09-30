@@ -188,6 +188,8 @@ export function resolveExerciseData(exerciseOrId, state) {
 export function buildSingleExerciseHtml(exerciseOrId, state) {
   const data = resolveExerciseData(exerciseOrId, state);
   const teamName = state?.teamName || state?.settings?.teamName || 'CampoBase';
+  const crestUrl = state?.clubCrest || state?.settings?.crest || 'icons/escudo.png';
+  const categoryLevel = state?.category || state?.settings?.category || 'Alevín';
 
   const previewHtml = data.preview
     ? `<img src="${esc(data.preview)}" alt="Diagrama de ${esc(data.name)}" class="cb-print-field-img" />`
@@ -203,78 +205,139 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
     <div id="cb-print-root" class="cb-print-root cb-print-exercise-page">
       <div class="cb-print-sheet cb-print-page">
         <header class="cb-print-header">
-        <div class="cb-print-brand-row">
-          <span class="cb-print-logo">⚽ CAMPOBASE</span>
-          <span class="cb-print-doc-badge">FICHA TÉCNICA DE ENTRENAMIENTO</span>
-          <span class="cb-print-team-name">${esc(teamName)}</span>
+          <div class="cbx-print-header-top">
+            <div class="cbx-print-crest-wrap">
+              <img src="${esc(crestUrl)}" class="cbx-print-crest-img" alt="Escudo" onerror="this.style.display='none'">
+            </div>
+            <div class="cbx-print-header-center">
+              <div class="cbx-print-eyebrow">EJERCICIO · ${esc(data.category).toUpperCase()} · ${esc(data.works || 'FÚTBOL 7').toUpperCase()}</div>
+              <h1 class="cb-print-title">${esc(data.name)}</h1>
+            </div>
+            <div class="cbx-print-header-badges">
+              <span class="cbx-print-badge-soft">${esc(categoryLevel)}</span>
+              <span class="cbx-print-badge-amber">Intensidad Media</span>
+              <span class="cb-print-doc-badge">FICHA TÉCNICA DE ENTRENAMIENTO</span>
+            </div>
+          </div>
+          <div class="cb-print-brand-row" style="display:none">
+            <span class="cb-print-logo">⚽ CAMPOBASE</span>
+            <span class="cb-print-team-name">${esc(teamName)}</span>
+          </div>
+          <div class="cb-print-tags-row">
+            <span class="cb-print-pill accent">🏷️ ${esc(data.category)}</span>
+            <span class="cb-print-pill">⏱️ ${esc(data.duration)}</span>
+            ${data.space ? `<span class="cb-print-pill">📐 ${esc(data.space)}</span>` : ''}
+            ${data.players ? `<span class="cb-print-pill">👥 ${esc(data.players)}</span>` : ''}
+          </div>
+        </header>
+
+        <!-- 4 Cajas de métricas rápidas (Claude A4) -->
+        <div class="cbx-print-stat-cards">
+          <div class="cbx-print-stat-card">
+            <span class="cbx-print-stat-card-label">DURACIÓN</span>
+            <span class="cbx-print-stat-card-val">${esc(data.duration)}</span>
+          </div>
+          <div class="cbx-print-stat-card">
+            <span class="cbx-print-stat-card-label">SERIES</span>
+            <span class="cbx-print-stat-card-val">4 x 5' · 1' desc.</span>
+          </div>
+          <div class="cbx-print-stat-card">
+            <span class="cbx-print-stat-card-label">JUGADORES</span>
+            <span class="cbx-print-stat-card-val">${esc(data.players || '10 jugadores')}</span>
+          </div>
+          <div class="cbx-print-stat-card">
+            <span class="cbx-print-stat-card-label">ESPACIO</span>
+            <span class="cbx-print-stat-card-val">${esc(data.space || '25x20m')}</span>
+          </div>
         </div>
-        <h1 class="cb-print-title">${esc(data.name)}</h1>
-        <div class="cb-print-tags-row">
-          <span class="cb-print-pill accent">🏷️ ${esc(data.category)}</span>
-          <span class="cb-print-pill">⏱️ ${esc(data.duration)}</span>
-          ${data.space ? `<span class="cb-print-pill">📐 ${esc(data.space)}</span>` : ''}
-          ${data.players ? `<span class="cb-print-pill">👥 ${esc(data.players)}</span>` : ''}
-        </div>
-      </header>
 
-      <div class="cb-print-exercise-layout">
-        <!-- Parte superior: Gráfico del campo a ancho completo -->
-        <div class="cb-print-stage-box">
-          ${previewHtml}
-        </div>
-
-        <!-- Parte inferior: 2 columnas equilibradas para no saltar de página -->
-        <div class="cb-print-columns-grid">
-          <div class="cb-print-col">
-            ${data.objective ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">🎯 Objetivo de la Tarea</h3>
-              <p class="cb-print-card-text">${esc(data.objective)}</p>
-              ${data.works ? `<p class="cb-print-card-subtext"><strong>Contenidos:</strong> ${esc(data.works)}</p>` : ''}
-            </div>` : ''}
-
-            ${data.material ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">📦 Material Necesario</h3>
-              <p class="cb-print-card-text">${esc(data.material)}</p>
-            </div>` : ''}
-
-            ${data.organization ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">👥 Organización y Espacio</h3>
-              <p class="cb-print-card-text">${esc(data.organization)}</p>
-            </div>` : ''}
-
-            ${data.rotation ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">🔁 Rotación de Jugadores</h3>
-              <p class="cb-print-card-text">${esc(data.rotation)}</p>
-            </div>` : ''}
+        <div class="cb-print-exercise-layout">
+          <!-- Gráfico de campo grande con leyenda -->
+          <div class="cb-print-stage-box cbx-print-pitch-container">
+            ${previewHtml}
+            <div class="cbx-print-pitch-legend">
+              <span class="legend-dot red">●</span> Ataca
+              <span class="legend-dot blue">●</span> Defiende
+              <span class="legend-line">―</span> pase
+              <span class="legend-line dashed">· · ·</span> conducción
+            </div>
           </div>
 
-          <div class="cb-print-col">
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">📋 Desarrollo de la Tarea (Paso a paso)</h3>
-              <p class="cb-print-card-text pre-line">${esc(data.description || 'Sin descripción detallada.')}</p>
+          <!-- 2 columnas equilibradas -->
+          <div class="cb-print-columns-grid">
+            <div class="cb-print-col">
+              ${data.objective ? `
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">🎯 Objetivo de la Tarea</h3>
+                <p class="cb-print-card-text">${esc(data.objective)}</p>
+                ${data.works ? `<p class="cb-print-card-subtext"><strong>Contenidos:</strong> ${esc(data.works)}</p>` : ''}
+              </div>` : ''}
+
+              ${data.material ? `
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">📦 Material Necesario</h3>
+                <p class="cb-print-card-text">${esc(data.material)}</p>
+              </div>` : ''}
+
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">📋 Desarrollo de la Tarea (Paso a paso)</h3>
+                <div class="cbx-print-steps-list">
+                  <p class="cb-print-card-text pre-line">${esc(data.description || 'Sin descripción detallada.')}</p>
+                </div>
+              </div>
+
+              ${data.organization ? `
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">👥 Organización y Espacio</h3>
+                <p class="cb-print-card-text">${esc(data.organization)}</p>
+              </div>` : ''}
+
+              ${data.rotation ? `
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">🔁 Rotación de Jugadores</h3>
+                <p class="cb-print-card-text">${esc(data.rotation)}</p>
+              </div>` : ''}
             </div>
 
-            ${data.rules ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">⚡ Reglas de Provocación</h3>
-              <p class="cb-print-card-text pre-line">${esc(data.rules)}</p>
-            </div>` : ''}
+            <div class="cb-print-col">
+              ${data.rules ? `
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">⚡ Reglas de Provocación</h3>
+                <p class="cb-print-card-text pre-line">${esc(data.rules)}</p>
+              </div>` : ''}
 
-            ${data.tips ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">💡 Consignas Clave del Entrenador</h3>
-              <p class="cb-print-card-text pre-line">${esc(data.tips)}</p>
-            </div>` : ''}
+              ${data.tips ? `
+              <div class="cb-print-card">
+                <h3 class="cb-print-card-title">💡 Consignas Clave del Entrenador</h3>
+                <p class="cb-print-card-text pre-line">${esc(data.tips)}</p>
+              </div>` : ''}
+
+              <div class="cb-print-card cbx-print-variants-box">
+                <h3 class="cb-print-card-title">PUNTOS CLAVE &amp; VARIANTES</h3>
+                <p class="cb-print-card-text"><strong>Más fácil:</strong> Disminuir oposición o añadir comodín.</p>
+                <p class="cb-print-card-text"><strong>Más difícil:</strong> Limitar a 1-2 toques o reducir tiempo de finalización.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notas para el entrenador -->
+          <div class="cbx-print-notes-section">
+            <h4 class="cbx-print-notes-title">NOTAS DEL ENTRENADOR</h4>
+            <div class="cbx-print-notes-lines">
+              <div class="cbx-print-note-line"></div>
+              <div class="cbx-print-note-line"></div>
+              <div class="cbx-print-note-line"></div>
+            </div>
           </div>
         </div>
+
+        <footer class="cbx-print-footer">
+          <span>CampoBase · Biblioteca de ejercicios</span>
+          <span>Ref. ${esc(data.id || 'EJ-001')}</span>
+        </footer>
       </div>
     </div>
-  </div>
-`;
+  `;
 }
 
 /**
@@ -302,6 +365,12 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
   }
 
   const teamName = state?.teamName || state?.settings?.teamName || 'CampoBase';
+  const category = state?.category || state?.settings?.category || 'Alevín D';
+  const season = state?.season || state?.settings?.season || '2026/27';
+  const crestUrl = state?.clubCrest || state?.settings?.crest || 'icons/escudo.png';
+  const staffNames = state?.staff || state?.settings?.staff || 'Migue · Carlos';
+  const players = Array.isArray(state?.players) ? state.players : [];
+
   const sessionName = session.name || 'Sesión de Entrenamiento';
   const sessionDate = session.date ? new Date(session.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const blocks = Array.isArray(session.blocks) ? session.blocks : [];
@@ -315,10 +384,20 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
     return data.material;
   }).filter(Boolean).join(', ');
 
+  const sessionObjective = session.objective || blocks.map((b) => resolveExerciseData(b.exerciseId, state).objective).filter(Boolean)[0] || 'Desarrollo táctico y técnico de la sesión.';
+
+  // Timeline bar
+  const timelineSegments = blocks.map((block) => {
+    const bDur = Number(block.duration) || 15;
+    const typeClass = block.type === 'warmup' ? 'warmup' : block.type === 'final' ? 'final' : block.type === 'cool' ? 'cool' : 'main';
+    return `<div class="cbx-print-timeline-segment ${typeClass}" style="flex: ${bDur};"><span>${bDur}'</span></div>`;
+  }).join('');
+
   const blocksHtml = blocks.map((block, idx) => {
     const data = resolveExerciseData(block.exerciseId, state);
     const blockDuration = block.duration ? `${block.duration} min` : data.duration;
     const blockPhase = block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte Principal' : block.type === 'final' ? 'Juego / Vuelta a la Calma' : data.category;
+    const typeTagClass = block.type === 'warmup' ? 'badge-warmup' : block.type === 'final' ? 'badge-final' : 'badge-main';
     
     const previewHtml = data.preview
       ? `<img src="${esc(data.preview)}" alt="Diagrama" class="cb-print-session-task-img" />`
@@ -329,11 +408,11 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
         <div class="cb-print-task-head">
           <div class="cb-print-task-left">
             <span class="cb-print-task-badge">#${idx + 1}</span>
-            <span class="cb-print-task-phase">${esc(blockPhase)}</span>
+            <span class="cb-print-task-phase ${typeTagClass}">${esc(blockPhase)}</span>
             <h2 class="cb-print-task-title">${esc(data.name)}</h2>
           </div>
           <div class="cb-print-task-right">
-            <span class="cb-print-pill-duration">⏱️ ${esc(blockDuration)}</span>
+            <span class="cb-print-pill-duration">${esc(blockDuration)}</span>
           </div>
         </div>
 
@@ -360,29 +439,123 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
     `;
   }).join('');
 
+  // Attendance columns
+  const half = Math.ceil(players.length / 2);
+  const col1 = players.slice(0, half);
+  const col2 = players.slice(half);
+
+  const renderAttendanceCol = (list, offset = 0) => list.map((p, i) => `
+    <div class="cbx-print-att-item">
+      <span class="cbx-print-att-box"></span>
+      <span class="cbx-print-att-num">${esc(p.number || offset + i + 1)}</span>
+      <span class="cbx-print-att-name">${esc(p.name)}</span>
+    </div>
+  `).join('');
+
   return `
     <div id="cb-print-root" class="cb-print-root cb-print-session-page">
       <div class="cb-print-sheet cb-print-page">
         <header class="cb-print-header">
-          <div class="cb-print-brand-row">
+          <div class="cbx-print-header-top">
+            <div class="cbx-print-crest-wrap">
+              <img src="${esc(crestUrl)}" class="cbx-print-crest-img" alt="Escudo" onerror="this.style.display='none'">
+            </div>
+            <div class="cbx-print-header-center">
+              <div class="cbx-print-eyebrow">${esc(teamName).toUpperCase()} · ${esc(category).toUpperCase()} · TEMPORADA ${esc(season).toUpperCase()}</div>
+              <h1 class="cb-print-title">${esc(sessionName)}</h1>
+              <div class="cbx-print-submeta">
+                ${esc(sessionDate)}${session.time ? ' · ' + esc(session.time) : ''}${session.pitch ? ' · ' + esc(session.pitch) : ''}
+              </div>
+            </div>
+            <div class="cbx-print-header-side">
+              <div class="cbx-print-duration-big">${esc(totalDuration)}'</div>
+              <div class="cbx-print-header-players">${players.length || 14} jugadores</div>
+              <div class="cbx-print-header-staff">${esc(staffNames)}</div>
+            </div>
+          </div>
+
+          <div class="cb-print-brand-row" style="display:none">
             <span class="cb-print-logo">⚽ CAMPOBASE</span>
             <span class="cb-print-doc-badge">HOJA DE SESIÓN DE ENTRENAMIENTO</span>
             <span class="cb-print-team-name">${esc(teamName)}</span>
           </div>
-          <h1 class="cb-print-title">${esc(sessionName)}</h1>
-          <div class="cb-print-meta-grid">
+          <div class="cb-print-meta-grid" style="display:none">
             <div><strong>📅 Fecha:</strong> ${esc(sessionDate)}</div>
             ${session.time ? `<div><strong>⏰ Hora:</strong> ${esc(session.time)}</div>` : ''}
             ${session.pitch ? `<div><strong>🏟️ Campo:</strong> ${esc(session.pitch)}</div>` : ''}
             <div><strong>⏱️ Tiempo Total:</strong> ${esc(totalDuration)} min (${blocks.length} tareas)</div>
           </div>
-          ${totalMaterial ? `<div class="cb-print-summary-box"><strong>📦 Material total necesario:</strong> ${esc(totalMaterial)}</div>` : ''}
-          ${session.notes ? `<div class="cb-print-summary-box"><strong>📝 Observaciones:</strong> ${esc(session.notes)}</div>` : ''}
+          ${totalMaterial ? `<div class="cb-print-summary-box" style="display:none"><strong>📦 Material total necesario:</strong> ${esc(totalMaterial)}</div>` : ''}
+          ${session.notes ? `<div class="cb-print-summary-box" style="display:none"><strong>📝 Observaciones:</strong> ${esc(session.notes)}</div>` : ''}
         </header>
+
+        <!-- Cajas Objetivo y Material (Claude A4) -->
+        <div class="cbx-print-cards-row">
+          <div class="cbx-print-card-box">
+            <span class="cbx-print-card-box-label">OBJETIVO</span>
+            <p class="cbx-print-card-box-text">${esc(sessionObjective)}</p>
+            ${session.notes ? `<p class="cbx-print-card-box-notes"><strong>Priorizar ritmo de circulación:</strong> ${esc(session.notes)}</p>` : ''}
+          </div>
+          <div class="cbx-print-card-box">
+            <span class="cbx-print-card-box-label">MATERIAL</span>
+            <p class="cbx-print-card-box-text">${esc(totalMaterial || '20 conos · 14 balones · petos')}</p>
+          </div>
+        </div>
+
+        <!-- Barra de proporción de tiempo (Claude A4) -->
+        <div class="cbx-print-timeline-bar">
+          ${timelineSegments}
+        </div>
 
         <div class="cb-print-session-tasks-list">
           ${blocksHtml}
         </div>
+
+        <!-- Sección inferior: Asistencia (check para bolígrafo) y Notas (Claude A4) -->
+        <div class="cbx-print-bottom-grid">
+          <div class="cbx-print-attendance-section">
+            <h4 class="cbx-print-section-title">ASISTENCIA</h4>
+            <div class="cbx-print-attendance-grid">
+              <div class="cbx-print-att-col">
+                ${players.length ? renderAttendanceCol(col1, 0) : `
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 1 Hugo Martín</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 3 Leo Santana</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 5 Pelayo Cabrera</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 7 Mateo Pérez</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 9 Samuel Ojeda</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 11 Bruno Vega</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 14 Adrián Sosa</div>
+                `}
+              </div>
+              <div class="cbx-print-att-col">
+                ${players.length ? renderAttendanceCol(col2, half) : `
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 2 Pablo Ruiz</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 4 Álex Déniz</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 6 Dani Rivero</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 8 Iker Medina</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 10 Marcos León</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 13 Nico Falcón</div>
+                  <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 16 Gael Hernández</div>
+                `}
+              </div>
+            </div>
+          </div>
+          <div class="cbx-print-notes-section">
+            <h4 class="cbx-print-section-title">NOTAS</h4>
+            <div class="cbx-print-notes-lines">
+              <div class="cbx-print-note-line"></div>
+              <div class="cbx-print-note-line"></div>
+              <div class="cbx-print-note-line"></div>
+              <div class="cbx-print-note-line"></div>
+              <div class="cbx-print-note-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="cbx-print-footer">
+          <span>CampoBase · Sesión</span>
+          <span>Impreso el ${new Date().toLocaleDateString('es-ES')}</span>
+        </footer>
       </div>
     </div>
   `;

@@ -65,9 +65,30 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
   }
   if (!/\.mp4$/i.test(path)) return source;
 
-  const isLibraryV2 = path.startsWith('library-v2-preview/');
-  const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
-  if (!isLibraryV2 && !isCampoBaseHuman) return source;
+  let isMigrated = false;
+  if (path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path)) {
+    isMigrated = true;
+  } else if (path.startsWith('library-v2-preview/')) {
+    const f7Match = path.match(/^library-v2-preview\/f7-(\d+)\/ejercicio\.mp4$/i);
+    if (f7Match) {
+      const num = parseInt(f7Match[1], 10);
+      isMigrated = num >= 1 && num <= 150;
+    } else {
+      const pdf150Match = path.match(/^library-v2-preview\/pdf150-(\d+)\/ejercicio\.mp4$/i);
+      if (pdf150Match) {
+        const num = parseInt(pdf150Match[1], 10);
+        isMigrated = num >= 1 && num <= 150;
+      } else {
+        const pdf98Match = path.match(/^library-v2-preview\/pdf98-(\d+)\/ejercicio\.mp4$/i);
+        if (pdf98Match) {
+          const num = parseInt(pdf98Match[1], 10);
+          isMigrated = num >= 1 && num <= 98;
+        }
+      }
+    }
+  }
+
+  if (!isMigrated) return source;
 
   const originalAsset = path.replaceAll('/', '__');
   return releaseUrlForAsset(mobile ? mobileReleaseAsset(originalAsset) : originalAsset);
