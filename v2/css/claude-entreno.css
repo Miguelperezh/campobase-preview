@@ -1326,6 +1326,33 @@ body.cb-redesign-active .cbx-tactics-actions-row {
   gap: 10px;
 }
 
+body.cb-redesign-active .btn-rival-toggle-claude {
+  flex: 1.2;
+  height: 44px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+}
+
+body.cb-redesign-active .btn-rival-toggle-claude:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+body.cb-redesign-active .btn-rival-toggle-claude.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
 body.cb-redesign-active .btn-save-tactic-claude {
   flex: 1.5;
   height: 44px;
@@ -1481,6 +1508,61 @@ body.cb-redesign-active .cbx-guide-bullet::before {
   content: "•";
   color: #0f766e;
   font-weight: 900;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-board-wrap {
+  background: #0f172a;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+body.cb-redesign-active .cbx-guide-aspect-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-badge {
+  background: #10b981;
+  color: #ffffff;
+  font: 800 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-meta {
+  color: #94a3b8;
+  font: 600 11px var(--cbx-ui);
+}
+
+body.cb-redesign-active .cbx-guide-aspect-pitch {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a4d34;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-pitch svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Tácticas Guardadas */

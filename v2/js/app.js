@@ -13,7 +13,7 @@ import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, 
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf } from './tacticas-pdf-domain.js';
+import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf, getAspectBoardData } from './tacticas-pdf-domain.js';
 import { initTacticBoard } from './tactic-board-controller.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 import { buildAutoPlan } from './reparto-plan.js';
@@ -5201,10 +5201,18 @@ function showSessionDetail(sessionId) {
 let claudeTacticFormation = '1-3-2-1';
 let claudeTacticAspect = 'estructura';
 let claudeTacticTool = 'select';
+let claudeTacticShowRival = false; // Por defecto SIN rival, según directriz de Migue
 let claudeTacticDraft = null;
 let claudeBoardController = null;
 
 function renderClaudeTactics() {
+  const toggleRivalBtn = $('#cbx-toggle-rival-btn');
+  if (toggleRivalBtn) {
+    toggleRivalBtn.setAttribute('aria-pressed', String(claudeTacticShowRival));
+    toggleRivalBtn.classList.toggle('active', claudeTacticShowRival);
+    toggleRivalBtn.textContent = claudeTacticShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+  }
+
   const formationsRow = $('#cbx-tactics-formations-row');
   if (formationsRow) {
     formationsRow.innerHTML = SISTEMAS_F7_ORDEN.map((f) => `
@@ -5234,24 +5242,27 @@ function renderClaudeTactics() {
 
   const boardEl = $('#cbx-tactics-pitch-board');
   if (boardEl) {
-    if (!claudeTacticDraft || claudeTacticDraft.formation !== claudeTacticFormation) {
-      const base = defaultTactic('F7', claudeTacticFormation);
+    if (!claudeTacticDraft || claudeTacticDraft.formation !== claudeTacticFormation || claudeTacticDraft.aspect !== claudeTacticAspect) {
+      const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
       claudeTacticDraft = {
-        ...base,
-        id: `claude-tactic-${claudeTacticFormation}`,
-        name: `Sistema ${claudeTacticFormation}`,
+        ...aspectData,
+        id: `claude-tactic-${claudeTacticFormation}-${claudeTacticAspect}`,
+        name: `Sistema ${claudeTacticFormation} · ${aspectData.title || claudeTacticAspect}`,
         formation: claudeTacticFormation,
-        moves: [],
+        aspect: claudeTacticAspect,
+        showOpponent: claudeTacticShowRival,
       };
+    } else {
+      claudeTacticDraft.showOpponent = claudeTacticShowRival;
     }
-    boardEl.innerHTML = renderTacticBoard(claudeTacticDraft);
+    boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
     claudeBoardController = initTacticBoard({
       board: boardEl,
       tools: null,
       getState: () => claudeTacticDraft,
       setState: (ns) => { claudeTacticDraft = ns; },
       render: () => {
-        boardEl.innerHTML = renderTacticBoard(claudeTacticDraft);
+        boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
       },
     });
   }
@@ -5267,12 +5278,16 @@ function renderClaudeTactics() {
   const contentEl = $('#cbx-guides-content');
   if (contentEl) {
     const sys = getSistemaF7Pdf(claudeTacticFormation);
+    const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
+    const aspectBoardHtml = renderTacticBoard(aspectData, { showOpponent: claudeTacticShowRival, interactive: false });
+
+    let aspectTextHtml = '';
     if (claudeTacticAspect === 'estructura') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <p><strong>Líneas del sistema:</strong> ${escapeHtml(sys.lineas)}</p>
         <p><strong>Resumen:</strong> ${escapeHtml(sys.resumen)}</p>
         <p><strong>Estructura:</strong> ${escapeHtml(sys.estructura)}</p>
-        <div style="margin-top:4px">
+        <div style="margin-top:6px">
           <strong>Funciones por puesto:</strong>
           <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
             ${sys.funciones.map((f) => `<div class="cbx-guide-bullet"><span>${escapeHtml(f)}</span></div>`).join('')}
@@ -5280,27 +5295,27 @@ function renderClaudeTactics() {
         </div>
       `;
     } else if (claudeTacticAspect === 'salida') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <p><strong>Salida de balón y superioridad:</strong></p>
         <p>${escapeHtml(sys.salida)}</p>
       `;
     } else if (claudeTacticAspect === 'progresion') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <p><strong>Ataque y progresión en campo rival:</strong></p>
         <p>${escapeHtml(sys.progresion)}</p>
       `;
     } else if (claudeTacticAspect === 'basculaciones') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <p><strong>Basculaciones y equilibrio defensivo:</strong></p>
         <p>${escapeHtml(sys.basculaciones)}</p>
       `;
     } else if (claudeTacticAspect === 'pressing') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <p><strong>Presión y recuperación tras pérdida:</strong></p>
         <p>${escapeHtml(sys.pressing)}</p>
       `;
     } else if (claudeTacticAspect === 'ventajas') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
             <strong style="color:#166534">Ventajas del sistema:</strong>
@@ -5317,11 +5332,28 @@ function renderClaudeTactics() {
         </div>
       `;
     } else if (claudeTacticAspect === 'f11') {
-      contentEl.innerHTML = `
+      aspectTextHtml = `
         <p><strong>Importancia formativa y adaptación al Fútbol 11:</strong></p>
         <p>${escapeHtml(sys.f11)}</p>
       `;
     }
+
+    contentEl.innerHTML = `
+      <div class="cbx-guide-aspect-container">
+        <div class="cbx-guide-aspect-board-wrap">
+          <div class="cbx-guide-aspect-board-header">
+            <span class="cbx-guide-aspect-badge">${escapeHtml(aspectData.title || claudeTacticAspect.toUpperCase())}</span>
+            <span class="cbx-guide-aspect-meta">${claudeTacticShowRival ? 'Con rival' : 'Solo equipo'}</span>
+          </div>
+          <div class="cbx-guide-aspect-pitch">
+            ${aspectBoardHtml}
+          </div>
+        </div>
+        <div class="cbx-guide-aspect-text">
+          ${aspectTextHtml}
+        </div>
+      </div>
+    `;
   }
 
   const savedListEl = $('#cbx-saved-tactics-list');
@@ -8760,7 +8792,18 @@ function wireEvents() {
     const aspectChip = target.closest('.cbx-aspect-chip[data-aspect]');
     if (aspectChip) {
       claudeTacticAspect = aspectChip.dataset.aspect;
+      claudeTacticDraft = null;
       renderClaudeTactics();
+      return;
+    }
+
+    if (target.id === 'cbx-toggle-rival-btn' || target.closest('#cbx-toggle-rival-btn')) {
+      claudeTacticShowRival = !claudeTacticShowRival;
+      if (claudeTacticDraft) {
+        claudeTacticDraft.showOpponent = claudeTacticShowRival;
+      }
+      renderClaudeTactics();
+      toast(claudeTacticShowRival ? 'Rival visible en la pizarra.' : 'Rival oculto. Mostrando solo tu equipo.');
       return;
     }
 
@@ -8799,6 +8842,7 @@ function wireEvents() {
         opponent: claudeTacticDraft?.opponent,
         ball: claudeTacticDraft?.ball,
         moves: claudeTacticDraft?.moves,
+        showOpponent: claudeTacticShowRival,
       }, {
         id: uid(),
         createdAt: Date.now(),
@@ -8812,16 +8856,9 @@ function wireEvents() {
     }
 
     if (target.id === 'cbx-clear-tactic-btn' || target.closest('#cbx-clear-tactic-btn')) {
-      const base = defaultTactic('F7', claudeTacticFormation);
-      claudeTacticDraft = {
-        ...base,
-        id: `claude-tactic-${claudeTacticFormation}`,
-        name: `Sistema ${claudeTacticFormation}`,
-        formation: claudeTacticFormation,
-        moves: [],
-      };
-      if (claudeBoardController) claudeBoardController.render();
-      toast('Pizarra restablecida a la posición base.');
+      claudeTacticDraft = null;
+      renderClaudeTactics();
+      toast('Pizarra restablecida a la posición base del aspecto.');
       return;
     }
 

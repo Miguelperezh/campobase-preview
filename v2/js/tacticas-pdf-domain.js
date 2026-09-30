@@ -325,3 +325,359 @@ export const SISTEMAS_F7_PDF = Object.freeze({
 export function getSistemaF7Pdf(formacion) {
   return SISTEMAS_F7_PDF[formacion] || SISTEMAS_F7_PDF['1-3-2-1'];
 }
+
+export const BASE_FORMATIONS = Object.freeze({
+  '1-3-2-1': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Lateral der.', x: 80, y: 70 },
+    { n: 3, pos: 'Defensa central', x: 50, y: 74 },
+    { n: 4, pos: 'Lateral izq.', x: 20, y: 70 },
+    { n: 5, pos: 'Medio der.', x: 64, y: 50 },
+    { n: 6, pos: 'Medio izq.', x: 36, y: 50 },
+    { n: 7, pos: 'Delantero', x: 50, y: 24 },
+  ],
+  '1-2-3-1': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Central der.', x: 65, y: 72 },
+    { n: 3, pos: 'Central izq.', x: 35, y: 72 },
+    { n: 4, pos: 'Mediocentro', x: 50, y: 54 },
+    { n: 5, pos: 'Extremo der.', x: 82, y: 46 },
+    { n: 6, pos: 'Extremo izq.', x: 18, y: 46 },
+    { n: 7, pos: 'Delantero', x: 50, y: 24 },
+  ],
+  '1-2-2-2': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Central der.', x: 65, y: 72 },
+    { n: 3, pos: 'Central izq.', x: 35, y: 72 },
+    { n: 4, pos: 'Medio der.', x: 64, y: 52 },
+    { n: 5, pos: 'Medio izq.', x: 36, y: 52 },
+    { n: 6, pos: 'Delantero der.', x: 64, y: 26 },
+    { n: 7, pos: 'Delantero izq.', x: 36, y: 26 },
+  ],
+  '1-3-1-2': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Lateral der.', x: 80, y: 70 },
+    { n: 3, pos: 'Defensa central', x: 50, y: 74 },
+    { n: 4, pos: 'Lateral izq.', x: 20, y: 70 },
+    { n: 5, pos: 'Mediocentro', x: 50, y: 50 },
+    { n: 6, pos: 'Delantero der.', x: 64, y: 26 },
+    { n: 7, pos: 'Delantero izq.', x: 36, y: 26 },
+  ],
+  '1-1-3-2': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Defensa libre', x: 50, y: 75 },
+    { n: 3, pos: 'Medio der.', x: 80, y: 50 },
+    { n: 4, pos: 'Mediocentro', x: 50, y: 52 },
+    { n: 5, pos: 'Medio izq.', x: 20, y: 50 },
+    { n: 6, pos: 'Delantero der.', x: 62, y: 26 },
+    { n: 7, pos: 'Delantero izq.', x: 38, y: 26 },
+  ],
+  '1-3-3': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Lateral der.', x: 80, y: 70 },
+    { n: 3, pos: 'Defensa central', x: 50, y: 74 },
+    { n: 4, pos: 'Lateral izq.', x: 20, y: 70 },
+    { n: 5, pos: 'Extremo der.', x: 80, y: 30 },
+    { n: 6, pos: 'Delantero centro', x: 50, y: 24 },
+    { n: 7, pos: 'Extremo izq.', x: 20, y: 30 },
+  ],
+  '1-4-1-1': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Lateral der.', x: 84, y: 70 },
+    { n: 3, pos: 'Central der.', x: 62, y: 72 },
+    { n: 4, pos: 'Central izq.', x: 38, y: 72 },
+    { n: 5, pos: 'Lateral izq.', x: 16, y: 70 },
+    { n: 6, pos: 'Mediocentro', x: 50, y: 48 },
+    { n: 7, pos: 'Delantero', x: 50, y: 24 },
+  ],
+  '1-2-1-3': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Central der.', x: 65, y: 74 },
+    { n: 3, pos: 'Central izq.', x: 35, y: 74 },
+    { n: 4, pos: 'Mediocentro', x: 50, y: 54 },
+    { n: 5, pos: 'Extremo der.', x: 82, y: 30 },
+    { n: 6, pos: 'Delantero centro', x: 50, y: 24 },
+    { n: 7, pos: 'Extremo izq.', x: 18, y: 30 },
+  ],
+  '1-1-3-1-1': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Defensa libre', x: 50, y: 78 },
+    { n: 3, pos: 'Interior der.', x: 80, y: 60 },
+    { n: 4, pos: 'Mediocentro defensivo', x: 50, y: 62 },
+    { n: 5, pos: 'Interior izq.', x: 20, y: 60 },
+    { n: 6, pos: 'Mediapunta', x: 50, y: 42 },
+    { n: 7, pos: 'Delantero', x: 50, y: 22 },
+  ],
+  '1-1-4-1': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Defensa libre', x: 50, y: 76 },
+    { n: 3, pos: 'Carrilero der.', x: 82, y: 54 },
+    { n: 4, pos: 'Medio centro der.', x: 62, y: 52 },
+    { n: 5, pos: 'Medio centro izq.', x: 38, y: 52 },
+    { n: 6, pos: 'Carrilero izq.', x: 18, y: 54 },
+    { n: 7, pos: 'Delantero', x: 50, y: 24 },
+  ],
+  '1-2-2-1-1': [
+    { n: 1, pos: 'Portero', x: 50, y: 88 },
+    { n: 2, pos: 'Central der.', x: 65, y: 74 },
+    { n: 3, pos: 'Central izq.', x: 35, y: 74 },
+    { n: 4, pos: 'Medio interior der.', x: 64, y: 54 },
+    { n: 5, pos: 'Medio interior izq.', x: 36, y: 54 },
+    { n: 6, pos: 'Mediapunta', x: 50, y: 36 },
+    { n: 7, pos: 'Delantero', x: 50, y: 20 },
+  ],
+});
+
+export function getAspectBoardData(formacion, aspect = 'estructura', showOpponent = false) {
+  const f = SISTEMAS_F7_ORDEN.includes(formacion) ? formacion : '1-3-2-1';
+  const pdf = getSistemaF7Pdf(f);
+  const baseTeam = (BASE_FORMATIONS[f] || BASE_FORMATIONS['1-3-2-1']).map((p) => ({ ...p }));
+  const asp = String(aspect || 'estructura').toLowerCase();
+  const hasOpponent = Boolean(showOpponent);
+
+  // Opponent template (F7 rival en 1-3-2-1)
+  const defaultOpponent = hasOpponent ? [
+    { n: 1, pos: 'Portero rival', x: 50, y: 12 },
+    { n: 2, pos: 'Defensa rival der.', x: 74, y: 26 },
+    { n: 3, pos: 'Central rival', x: 50, y: 22 },
+    { n: 4, pos: 'Defensa rival izq.', x: 26, y: 26 },
+    { n: 5, pos: 'Medio rival der.', x: 65, y: 44 },
+    { n: 6, pos: 'Medio rival izq.', x: 35, y: 44 },
+    { n: 7, pos: 'Delantero rival', x: 50, y: 64 },
+  ] : [];
+
+  if (asp === 'salida') {
+    // Fase de inicio y salida de balón desde el portero
+    const team = baseTeam.map((p) => {
+      if (p.n === 1) return { ...p, x: 50, y: 88 };
+      if (p.pos.includes('Lateral der.') || p.pos.includes('Carrilero der.')) return { ...p, x: 84, y: 70 };
+      if (p.pos.includes('Lateral izq.') || p.pos.includes('Carrilero izq.')) return { ...p, x: 16, y: 70 };
+      if (p.pos.includes('central') || p.pos.includes('libre') || p.pos.includes('Central izq.')) return { ...p, x: 38, y: 78 };
+      if (p.pos.includes('Central der.')) return { ...p, x: 62, y: 78 };
+      if (p.pos.includes('Medio') || p.pos.includes('Interior') || p.pos.includes('Mediocentro')) {
+        return p.n % 2 === 0 ? { ...p, x: 38, y: 58 } : { ...p, x: 62, y: 52 };
+      }
+      if (p.pos.includes('Extremo der.')) return { ...p, x: 82, y: 42 };
+      if (p.pos.includes('Extremo izq.')) return { ...p, x: 18, y: 42 };
+      if (p.pos.includes('Delantero')) return { ...p, x: 50, y: 22 };
+      return { ...p };
+    });
+
+    const moves = [
+      { from: { x: 50, y: 86 }, to: { x: 38, y: 78 }, kind: 'pass' },
+      { from: { x: 38, y: 78 }, to: { x: 16, y: 70 }, kind: 'pass' },
+      { from: { x: 16, y: 70 }, to: { x: 16, y: 46 }, kind: 'sprint' },
+      { from: { x: 62, y: 52 }, to: { x: 52, y: 48 }, kind: 'move' },
+    ];
+
+    const opponent = hasOpponent ? [
+      { n: 1, pos: 'Portero rival', x: 50, y: 12 },
+      { n: 2, pos: 'Defensa rival der.', x: 70, y: 32 },
+      { n: 3, pos: 'Central rival', x: 50, y: 30 },
+      { n: 4, pos: 'Defensa rival izq.', x: 30, y: 32 },
+      { n: 5, pos: 'Medio rival der.', x: 65, y: 56 },
+      { n: 6, pos: 'Medio rival izq.', x: 35, y: 56 },
+      { n: 7, pos: 'Delantero rival', x: 44, y: 74 },
+    ] : [];
+
+    return {
+      formation: f,
+      format: 'F7',
+      aspect: asp,
+      title: 'Salida de balón',
+      description: pdf.salida,
+      team,
+      ball: { x: 50, y: 85 },
+      moves,
+      opponent,
+      showOpponent: hasOpponent,
+    };
+  }
+
+  if (asp === 'progresion') {
+    // Fase de progresión y ataque hacia campo rival
+    const team = baseTeam.map((p) => {
+      if (p.n === 1) return { ...p, x: 50, y: 80 };
+      if (p.pos.includes('Lateral der.') || p.pos.includes('Carrilero der.') || p.pos.includes('Extremo der.')) return { ...p, x: 78, y: 38 };
+      if (p.pos.includes('Lateral izq.') || p.pos.includes('Carrilero izq.') || p.pos.includes('Extremo izq.')) return { ...p, x: 22, y: 34 };
+      if (p.pos.includes('central') || p.pos.includes('libre')) return { ...p, x: 50, y: 60 };
+      if (p.pos.includes('Central izq.')) return { ...p, x: 38, y: 62 };
+      if (p.pos.includes('Central der.')) return { ...p, x: 62, y: 62 };
+      if (p.pos.includes('Medio') || p.pos.includes('Interior') || p.pos.includes('Mediocentro')) {
+        return p.n % 2 === 0 ? { ...p, x: 44, y: 44 } : { ...p, x: 62, y: 40 };
+      }
+      if (p.pos.includes('Delantero')) return { ...p, x: 52, y: 20 };
+      return { ...p };
+    });
+
+    const moves = [
+      { from: { x: 78, y: 38 }, to: { x: 80, y: 24 }, kind: 'dribble' },
+      { from: { x: 80, y: 24 }, to: { x: 52, y: 18 }, kind: 'pass' },
+      { from: { x: 52, y: 24 }, to: { x: 52, y: 16 }, kind: 'sprint' },
+      { from: { x: 22, y: 34 }, to: { x: 34, y: 20 }, kind: 'sprint' },
+    ];
+
+    const opponent = hasOpponent ? [
+      { n: 1, pos: 'Portero rival', x: 50, y: 10 },
+      { n: 2, pos: 'Defensa rival der.', x: 72, y: 22 },
+      { n: 3, pos: 'Central rival', x: 50, y: 18 },
+      { n: 4, pos: 'Defensa rival izq.', x: 28, y: 22 },
+      { n: 5, pos: 'Medio rival der.', x: 62, y: 36 },
+      { n: 6, pos: 'Medio rival izq.', x: 38, y: 36 },
+      { n: 7, pos: 'Delantero rival', x: 50, y: 52 },
+    ] : [];
+
+    return {
+      formation: f,
+      format: 'F7',
+      aspect: asp,
+      title: 'Progresión y Ataque',
+      description: pdf.progresion,
+      team,
+      ball: { x: 78, y: 38 },
+      moves,
+      opponent,
+      showOpponent: hasOpponent,
+    };
+  }
+
+  if (asp === 'basculaciones') {
+    // Fase defensiva: basculación colectiva hacia la banda del balón
+    const team = baseTeam.map((p) => {
+      if (p.n === 1) return { ...p, x: 52, y: 88 };
+      if (p.pos.includes('der.')) return { ...p, x: Math.min(94, p.x + 10), y: p.y - 12 };
+      if (p.pos.includes('izq.')) return { ...p, x: Math.min(60, p.x + 22), y: p.y - 8 };
+      return { ...p, x: Math.min(80, p.x + 16), y: p.y - 10 };
+    });
+
+    const moves = [
+      { from: { x: 40, y: 62 }, to: { x: 62, y: 62 }, kind: 'move' },
+      { from: { x: 30, y: 50 }, to: { x: 52, y: 46 }, kind: 'move' },
+      { from: { x: 70, y: 50 }, to: { x: 80, y: 44 }, kind: 'sprint' },
+    ];
+
+    const opponent = hasOpponent ? [
+      { n: 1, pos: 'Portero rival', x: 50, y: 12 },
+      { n: 2, pos: 'Defensa rival der.', x: 76, y: 26 },
+      { n: 3, pos: 'Central rival', x: 56, y: 24 },
+      { n: 4, pos: 'Defensa rival izq.', x: 34, y: 26 },
+      { n: 5, pos: 'Medio rival der.', x: 82, y: 40 },
+      { n: 6, pos: 'Medio rival izq.', x: 58, y: 38 },
+      { n: 7, pos: 'Delantero rival', x: 72, y: 54 },
+    ] : [];
+
+    return {
+      formation: f,
+      format: 'F7',
+      aspect: asp,
+      title: 'Basculaciones Defensivas',
+      description: pdf.basculaciones,
+      team,
+      ball: { x: 82, y: 40 },
+      moves,
+      opponent,
+      showOpponent: hasOpponent,
+    };
+  }
+
+  if (asp === 'pressing') {
+    // Fase defensiva: presión alta en salida rival
+    const team = baseTeam.map((p) => {
+      if (p.n === 1) return { ...p, x: 50, y: 82 };
+      if (p.pos.includes('Delantero')) return { ...p, x: 42, y: 28 };
+      if (p.pos.includes('Extremo der.') || p.pos.includes('Medio der.')) return { ...p, x: 72, y: 34 };
+      if (p.pos.includes('Extremo izq.') || p.pos.includes('Medio izq.')) return { ...p, x: 26, y: 32 };
+      if (p.pos.includes('Mediocentro') || p.pos.includes('Mediapunta')) return { ...p, x: 48, y: 40 };
+      if (p.pos.includes('Central') || p.pos.includes('Lateral') || p.pos.includes('libre')) {
+        return { ...p, y: Math.max(50, p.y - 18) };
+      }
+      return { ...p, y: p.y - 15 };
+    });
+
+    const moves = [
+      { from: { x: 50, y: 36 }, to: { x: 36, y: 24 }, kind: 'sprint' },
+      { from: { x: 24, y: 42 }, to: { x: 22, y: 28 }, kind: 'sprint' },
+      { from: { x: 50, y: 64 }, to: { x: 50, y: 50 }, kind: 'move' },
+    ];
+
+    const opponent = hasOpponent ? [
+      { n: 1, pos: 'Portero rival', x: 50, y: 10 },
+      { n: 2, pos: 'Defensa rival der.', x: 76, y: 22 },
+      { n: 3, pos: 'Central rival', x: 34, y: 22 },
+      { n: 4, pos: 'Defensa rival izq.', x: 20, y: 24 },
+      { n: 5, pos: 'Medio rival der.', x: 64, y: 38 },
+      { n: 6, pos: 'Medio rival izq.', x: 36, y: 38 },
+      { n: 7, pos: 'Delantero rival', x: 50, y: 56 },
+    ] : [];
+
+    return {
+      formation: f,
+      format: 'F7',
+      aspect: asp,
+      title: 'Pressing Defensivo',
+      description: pdf.pressing,
+      team,
+      ball: { x: 34, y: 22 },
+      moves,
+      opponent,
+      showOpponent: hasOpponent,
+    };
+  }
+
+  if (asp === 'ventajas') {
+    const moves = [
+      { from: { x: 36, y: 50 }, to: { x: 64, y: 50 }, kind: 'pass' },
+      { from: { x: 64, y: 50 }, to: { x: 50, y: 24 }, kind: 'pass' },
+      { from: { x: 50, y: 24 }, to: { x: 36, y: 50 }, kind: 'pass' },
+    ];
+
+    return {
+      formation: f,
+      format: 'F7',
+      aspect: asp,
+      title: 'Ventajas e Inconvenientes',
+      description: `${pdf.ventajas.slice(0, 3).join('. ')}.`,
+      team: baseTeam,
+      ball: { x: 50, y: 50 },
+      moves,
+      opponent: defaultOpponent,
+      showOpponent: hasOpponent,
+    };
+  }
+
+  if (asp === 'f11') {
+    const moves = [
+      { from: { x: 20, y: 70 }, to: { x: 12, y: 58 }, kind: 'move' },
+      { from: { x: 80, y: 70 }, to: { x: 88, y: 58 }, kind: 'move' },
+      { from: { x: 50, y: 24 }, to: { x: 50, y: 16 }, kind: 'move' },
+    ];
+
+    return {
+      formation: f,
+      format: 'F7',
+      aspect: asp,
+      title: 'Adaptación al Fútbol 11',
+      description: pdf.f11,
+      team: baseTeam,
+      ball: { x: 50, y: 50 },
+      moves,
+      opponent: defaultOpponent,
+      showOpponent: hasOpponent,
+    };
+  }
+
+  // Estructura base
+  return {
+    formation: f,
+    format: 'F7',
+    aspect: 'estructura',
+    title: 'Estructura Base',
+    description: pdf.estructura,
+    team: baseTeam,
+    ball: { x: 50, y: 50 },
+    moves: [],
+    opponent: defaultOpponent,
+    showOpponent: hasOpponent,
+  };
+}
+

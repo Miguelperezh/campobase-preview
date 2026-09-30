@@ -467,13 +467,18 @@ export function renderTacticBoard(tactic = {}, options = {}) {
     const p = t.team[i];
     parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num">${xml(p.n)}</text></g>`);
   }
-  for (let i = 0; i < (t.opponent || []).length; i++) {
-    const p = t.opponent[i];
-    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${xml(p.n)}</text></g>`);
+  const showOpponent = options.showOpponent !== undefined
+    ? Boolean(options.showOpponent)
+    : (t.showOpponent !== undefined ? Boolean(t.showOpponent) : true);
+  if (showOpponent) {
+    for (let i = 0; i < (t.opponent || []).length; i++) {
+      const p = t.opponent[i];
+      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${xml(p.n)}</text></g>`);
+    }
   }
   const ball = t.ball || { x: 50, y: 50 };
   parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
-  const swatches = `<span class="tac-legend-team">●</span> = mi equipo<span class="tac-legend-rival">●</span> = rival<span style="display:inline-flex;align-items:center;margin-right:.6rem"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;border:1px solid #111;margin-right:4px"></span>balón</span>`;
+  const swatches = `<span class="tac-legend-team">●</span> = mi equipo${showOpponent ? '<span class="tac-legend-rival">●</span> = rival' : ''}<span style="display:inline-flex;align-items:center;margin-right:.6rem"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;border:1px solid #111;margin-right:4px"></span>balón</span>`;
   const arrowSwatches = (t.moves || []).length > 0
     ? [...new Set((t.moves || []).map((m) => m.kind || 'pass'))].map(actionLabel).join('')
     : '<span style="color:#888">dibujar flechas con las herramientas de arriba</span>';
