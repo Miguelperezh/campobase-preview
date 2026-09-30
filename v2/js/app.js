@@ -496,8 +496,10 @@ function applyGlobalSearch() {
 function isUserInteracting() {
   if (document.querySelector('dialog[open]:not(#auth-dialog)')) return true;
   const active = document.activeElement;
-  if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea')) return true;
+  if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea, summary, details')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
+  // Si hay algún desplegable o panel details abierto en vivo, no interrumpir al usuario con re-render
+  if (document.querySelector('#live-match details[open], #delegado details[open]')) return true;
   // Si hay un reproductor de ejercicio en marcha, no re-renderizar (se reiniciaría).
   if ((window.__viewersPlaying || 0) > 0) return true;
   // Si la pizarra táctica en vivo está ampliada (lightbox abierto), no re-renderizar
@@ -1785,7 +1787,7 @@ function arrangeClaudeLive(phase, logWasOpen, callup) {
   main.className = 'cbx-live-main';
   const changes = document.createElement('section');
   changes.className = 'cbx-live-changes panel';
-  changes.innerHTML = '<h3>Cambios</h3>';
+  changes.innerHTML = '<div class="cbx-live-changes-header"><h3>Cambios</h3><span class="cbx-live-changes-sub">Manual de 1 a 7 · ordenados por minutos</span></div>';
   if (grid) changes.append(grid);
   if (actionRow) changes.append(actionRow);
   if (actionHelp?.matches('p.meta')) changes.append(actionHelp);
@@ -1882,16 +1884,31 @@ function renderLive() {
   const unlockBtn = roleCanUseOwnerFeatures(state.role)
     ? `<button id="unlock-delegate" class="secondary" title="Permite que el delegado vea este partido antes de los 20 min">${state.timer.delegateUnlocked ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>`
     : '';
-  const logWasOpen = root.querySelector('.match-log')?.open ?? false;
+  // Preservar el estado abierto de TODOS los desplegables/details para que el refresco no los cierre
+  const openDetailsClasses = new Set();
+  const openDetailsSummaries = new Set();
+  root.querySelectorAll('details[open]').forEach((d) => {
+    d.className.trim().split(/\s+/).forEach((c) => c && openDetailsClasses.add(c));
+    const s = d.querySelector('summary')?.textContent?.trim();
+    if (s) openDetailsSummaries.add(s);
+  });
   root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   ${setPiecesQuickBanner()}
   ${renderLiveRepartoDashboard(fieldIds, callup.availableIds.filter((id) => !fieldIds.includes(id)), livePlayedSeconds(), liveTargets(), config, false)}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
-  arrangeClaudeLive(state.timer.phase, logWasOpen, callup);
+  arrangeClaudeLive(state.timer.phase, openDetailsClasses.has('match-log'), callup);
   renderLiveTactics();
   updateLivePlanAlerts();
+  // Restaurar estado abierto en todos los details del partido en vivo
+  root.querySelectorAll('details').forEach((d) => {
+    const hasClass = d.className.trim().split(/\s+/).some((c) => openDetailsClasses.has(c));
+    const s = d.querySelector('summary')?.textContent?.trim();
+    if (hasClass || (s && openDetailsSummaries.has(s))) {
+      d.open = true;
+    }
+  });
   startTicks();
 }
 
@@ -2042,47 +2059,65 @@ function fieldBenchMarkup(fieldIds, callup, config) {
   const targetMap = new Map(targets.map((t) => [t.playerId, t.minutes]));
   const defaultTarget = Math.round((config.duration * config.players) / (callup.availableIds.length || 1));
 
-  const row = (id, checkName) => {
+  const row = (id, checkName, where) => {
     const targetMin = targetMap.get(id) ?? defaultTarget;
     const playedSec = livePlayerSeconds(id) ?? 0;
     const playedMin = Math.round(playedSec / 60);
     const targetSec = (targetMin || 1) * 60;
     const percent = Math.min(100, Math.round((playedSec / targetSec) * 100));
     const fillClass = percent >= 100 ? 'prog-complete' : percent >= 60 ? 'prog-good' : percent >= 30 ? 'prog-mid' : 'prog-low';
+    const player = playerById(state.players, id);
+    const dorsal = player?.number || '';
+    const full = playerName(id);
+    const short = nombreCorto(player?.name || full);
+    const isGk = normalizePositions(player).includes('Portero');
     return `
-      <div class="check-row live-player-row">
-        <div class="live-player-row-top">
-          <label>
-            <input type="checkbox" name="${checkName}" value="${id}">
-            <span class="live-player-name">${escapeHtml(playerName(id))}</span>
-          </label>
-          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
-        </div>
-        <div class="live-player-row-bar">
-          <div class="live-bar-track">
-            <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
-          </div>
-          <div class="live-bar-meta">
-            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-            <span><span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span> <span data-player-pct-label="${id}">(${percent}%)</span></span>
-          </div>
-        </div>
-      </div>
+      <label class="check-row live-player-row ${where === 'f' ? 'is-field-row' : 'is-bench-row'}" title="${escapeHtml(full)} · Objetivo: ${targetMin} min (Jugados: ${playedMin} / ${targetMin} min · ${percent}%)">
+        <input type="checkbox" name="${checkName}" value="${id}" class="live-player-check">
+        <span class="live-player-dorsal">${escapeHtml(dorsal)}</span>
+        <span class="live-player-body">
+          <span class="live-player-row-top">
+            <span class="live-player-header">
+              <strong class="live-player-name">${escapeHtml(short)}</strong>
+              ${isGk ? '<span class="live-gk-badge">POR</span>' : ''}
+            </span>
+          </span>
+          <span class="live-bar-track">
+            <span class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></span>
+          </span>
+        </span>
+        <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        <span class="sr-only">
+          <span class="live-player-row-bar">
+            <span class="live-bar-meta">
+              <span class="live-target-badge">Obj: <strong>${targetMin} min</strong></span>
+              <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
+              <span data-player-pct-label="${id}">(${percent}%)</span>
+            </span>
+          </span>
+        </span>
+      </label>
     `;
   };
 
   return `
     <div class="live-grid">
       <div class="panel on-field">
-        <h3>En campo (${fieldIds.length}/${config.players})</h3>
+        <div class="live-col-head">
+          <span class="live-col-title">En campo · sale</span>
+          <span class="live-col-count">(${fieldIds.length}/${config.players})</span>
+        </div>
         <div class="check-list">
-          ${fieldSorted.map((id) => row(id, 'sub-out')).join('')}
+          ${fieldSorted.map((id) => row(id, 'sub-out', 'f')).join('')}
         </div>
       </div>
       <div class="panel bench">
-        <h3>Suplentes</h3>
+        <div class="live-col-head">
+          <span class="live-col-title">Suplentes · entra</span>
+          <span class="live-col-count">(${benchSorted.length})</span>
+        </div>
         <div class="check-list">
-          ${benchSorted.map((id) => row(id, 'sub-in')).join('')}
+          ${benchSorted.map((id) => row(id, 'sub-in', 'b')).join('')}
         </div>
       </div>
     </div>
@@ -2801,32 +2836,44 @@ function renderDelegate() {
     ? `${playerName(suggestion.inIds[0])} ha jugado menos. Mételo y saca a ${playerName(suggestion.outIds[0])}.`
     : 'No hay jugadores disponibles entre los suplentes.';
 
-  const row = (id, name) => {
+  const row = (id, name, where) => {
     const targetMin = targetMap.get(id) ?? defaultTarget;
     const playedSec = played[id] ?? 0;
     const playedMin = Math.round(playedSec / 60);
     const targetSec = (targetMin || 1) * 60;
     const percent = Math.min(100, Math.round((playedSec / targetSec) * 100));
     const fillClass = percent >= 100 ? 'prog-complete' : percent >= 60 ? 'prog-good' : percent >= 30 ? 'prog-mid' : 'prog-low';
+    const player = playerById(state.players, id);
+    const dorsal = player?.number || '';
+    const full = playerName(id);
+    const short = nombreCorto(player?.name || full);
+    const isGk = normalizePositions(player).includes('Portero');
     return `
-      <div class="check-row live-player-row">
-        <div class="live-player-row-top">
-          <label>
-            <input type="checkbox" name="${name}" value="${id}">
-            <span class="live-player-name">${escapeHtml(playerName(id))}</span>
-          </label>
-          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
-        </div>
-        <div class="live-player-row-bar">
-          <div class="live-bar-track">
-            <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
-          </div>
-          <div class="live-bar-meta">
-            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-            <span><span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span> <span data-player-pct-label="${id}">(${percent}%)</span></span>
-          </div>
-        </div>
-      </div>
+      <label class="check-row live-player-row ${where === 'f' ? 'is-field-row' : 'is-bench-row'}" title="${escapeHtml(full)} · Objetivo: ${targetMin} min (Jugados: ${playedMin} / ${targetMin} min · ${percent}%)">
+        <input type="checkbox" name="${name}" value="${id}" class="live-player-check">
+        <span class="live-player-dorsal">${escapeHtml(dorsal)}</span>
+        <span class="live-player-body">
+          <span class="live-player-row-top">
+            <span class="live-player-header">
+              <strong class="live-player-name">${escapeHtml(short)}</strong>
+              ${isGk ? '<span class="live-gk-badge">POR</span>' : ''}
+            </span>
+          </span>
+          <span class="live-bar-track">
+            <span class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></span>
+          </span>
+        </span>
+        <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        <span class="sr-only">
+          <span class="live-player-row-bar">
+            <span class="live-bar-meta">
+              <span class="live-target-badge">Obj: <strong>${targetMin} min</strong></span>
+              <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
+              <span data-player-pct-label="${id}">(${percent}%)</span>
+            </span>
+          </span>
+        </span>
+      </label>
     `;
   };
 
@@ -2834,7 +2881,7 @@ function renderDelegate() {
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><div class="live-col-head"><span class="live-col-title">Sale del campo</span><span class="live-col-count">(${delegateFieldIds.length})</span></div><div class="check-list">${delegateFieldIds.map((id) => row(id, 'delegate-out', 'f')).join('')}</div></div><div class="panel bench"><div class="live-col-head"><span class="live-col-title">Entra al campo</span><span class="live-col-count">(${delegateBenchIds.length})</span></div><div class="check-list">${delegateBenchIds.map((id) => row(id, 'delegate-in', 'b')).join('')}</div></div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
   const savedPlan = savedPlanMarkup(prepForMatch(state.timer.matchId));
   if (savedPlan) root.querySelector('#delegate-tactics')?.insertAdjacentHTML('beforebegin', savedPlan);
   renderDelegateTactics();

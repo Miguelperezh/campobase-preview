@@ -134,7 +134,7 @@ async function removeQueuedMutation(id) {
 }
 
 function canUseCloud() {
-  return Boolean(cloudStore) && (typeof navigator === 'undefined' || navigator.onLine);
+  return !isReadOnlyPreview() && Boolean(cloudStore) && (typeof navigator === 'undefined' || navigator.onLine);
 }
 
 async function prepareStorageBindingForWrite() {
@@ -191,7 +191,7 @@ export async function put(store, value) {
   transaction.objectStore(store).put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
-  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
+  if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'upsert');
   return recordToStore;
 }
@@ -210,7 +210,7 @@ export async function putPlayerProfile(value) {
   transaction.objectStore('players').put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation('players', 'upsert', recordToStore));
   await transactionDone(transaction);
-  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
+  if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged('players', 'profile-upsert');
   return recordToStore;
 }
@@ -252,7 +252,7 @@ export async function putBatch(recordsByStore) {
     }
   }
   await transactionDone(transaction);
-  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
+  if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(storeNames, 'batch');
 }
 
@@ -268,7 +268,7 @@ export async function remove(store, id) {
   transaction.objectStore(store).delete(id);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
-  if (canUseCloud() && !isReadOnlyPreview()) await flushSyncQueue();
+  if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'delete');
 }
 
