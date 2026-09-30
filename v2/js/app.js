@@ -4433,6 +4433,14 @@ function setExerciseLibraryMode(mode = 'all') {
   renderExercises();
 }
 
+function isUsableExercisePreview(value = '') {
+  const source = String(value || '').trim();
+  if (!source) return false;
+  if (/\/ejercicio-previews\//i.test(source)) return false;
+  if (/\.(?:mp4|webm|mov|m4v)(?:$|[?#])/i.test(source)) return false;
+  return true;
+}
+
 function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
@@ -4440,9 +4448,9 @@ function renderExercises() {
   const allExerciseCount = state.exercises.length;
   const myExerciseCount = state.exercises.filter((item) => item.userCreated === true).length;
   const allCountEl = $('#all-exercises-count');
-  if (allCountEl) allCountEl.textContent = `(${allExerciseCount})`;
+  if (allCountEl) allCountEl.textContent = `${allExerciseCount}`;
   const countEl = $('#my-exercises-count');
-  if (countEl) countEl.textContent = `(${myExerciseCount})`;
+  if (countEl) countEl.textContent = `${myExerciseCount}`;
   $$('.exercise-library-tab').forEach((button) => {
     const active = button.dataset.exerciseLibraryMode === exerciseLibraryMode;
     button.classList.toggle('active', active);
@@ -4460,6 +4468,159 @@ function renderExercises() {
   };
   const mineCategorySelected = filters.category === '__mine__';
   if (mineCategorySelected) filters.category = '';
+
+  if (document.body.classList.contains('cb-redesign-active')) {
+    // Sincronizar estado visual de los chips y conmutadores con los filtros actuales
+    $$('.cbx-fpane[data-pane="category"] .cbx-chip').forEach((chip) => {
+      chip.classList.toggle('active', chip.dataset.val === (filters.category || ''));
+    });
+    $$('.cbx-fpane[data-pane="format"] .cbx-chip').forEach((chip) => {
+      chip.classList.toggle('active', chip.dataset.val === (filters.formato_juego || 'todos'));
+    });
+    $$('.cbx-fpane[data-pane="players"] .cbx-chip').forEach((chip) => {
+      chip.classList.toggle('active', chip.dataset.val === (filters.players || ''));
+    });
+    $$('.cbx-fpane[data-pane="material"] .cbx-chip').forEach((chip) => {
+      chip.classList.toggle('active', chip.dataset.val === (filters.material || ''));
+    });
+    $$('.cbx-fpane[data-pane="difficulty"] .cbx-chip').forEach((chip) => {
+      chip.classList.toggle('active', chip.dataset.val === (filters.difficulty || ''));
+    });
+    $('#cbx-filter-fav')?.classList.toggle('active', Boolean(filters.favorites));
+    $('#cbx-filter-video')?.classList.toggle('active', Boolean(filters.video));
+
+    const CATEGORY_MAP = {
+      'Calentamiento': ['Calentamiento / activación', 'Calentamiento/activación', 'Calentamiento'],
+      'Coordinación/motricidad': ['Coordinación y agilidad', 'Coordinación/motricidad'],
+      'Tecnificación': ['Tecnificación', 'Pase y posesión'],
+      'Pase/Técnica/Posesión': ['Pase y posesión', 'Posesión', 'Tecnificación'],
+      'Técnico-táctico': ['Técnico-táctico'],
+      'Táctica': ['Táctica'],
+      'Finalización': ['Finalización'],
+      'Porteros': ['Porteros'],
+      'Juego reducido': ['Juego reducido'],
+      'Partido condicionado / Small-sided games': ['Juego reducido'],
+      'Preparación física integrada': ['Físico con balón', 'Preparación física integrada'],
+      'Resistencia/Física': ['Físico con balón'],
+      'Juego': ['Juego reducido'],
+      'Defensa y duelos': ['Defensa y duelos'],
+      'Transiciones': ['Transiciones', 'Transición'],
+    };
+
+    const humanVideoExerciseIds = new Set(
+      state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
+    );
+    const withVideoFlags = humanVideoExerciseIds.size
+      ? state.exercises.map((item) => (
+          humanVideoExerciseIds.has(String(item.id)) && item.hasHumanVideo !== true
+            ? { ...item, hasHumanVideo: true }
+            : item
+        ))
+      : state.exercises;
+
+    const filterableExercises = (exerciseLibraryMode === 'mine' || mineCategorySelected)
+      ? withVideoFlags.filter((item) => item.userCreated === true)
+      : withVideoFlags;
+
+    let baseCategory = filters.category;
+    let categoryAllowedSet = null;
+    if (CATEGORY_MAP[baseCategory]) {
+      categoryAllowedSet = new Set(CATEGORY_MAP[baseCategory]);
+    }
+
+    const intermediateFilters = categoryAllowedSet ? { ...filters, category: '' } : filters;
+    let exercises = filterExercises(filterableExercises, intermediateFilters);
+    if (categoryAllowedSet) {
+      exercises = exercises.filter((item) => {
+        const cat = item.category || item.categoria;
+        return categoryAllowedSet.has(cat);
+      });
+    }
+
+    exercises.sort((a, b) => {
+      const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
+      const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
+      const aValid = aIdx !== -1, bValid = bIdx !== -1;
+      if (aValid && bValid) return aIdx - bIdx;
+      if (aValid) return -1;
+      if (bValid) return 1;
+      return Number(b.favorite) - Number(a.favorite) || (a.category || '').localeCompare(b.category || '', 'es') || (a.name || '').localeCompare(b.name || '', 'es');
+    });
+
+    const countBadge = $('#cbx-exercise-count');
+    if (countBadge) countBadge.textContent = `${exercises.length} ejercicios`;
+
+    const list = $('#exercises-list');
+    if (!exercises.length) {
+      list.innerHTML = `
+        <div class="cbx-empty-exercises">
+          <div class="cbx-empty-title">${exerciseLibraryMode === 'mine' ? 'Todavía no has creado ejercicios propios' : 'Ningún ejercicio con estos filtros'}</div>
+          <div class="cbx-empty-desc">${exerciseLibraryMode === 'mine' ? 'Usa el botón + Ejercicio para diseñar tu primer ejercicio personalizado.' : 'Prueba con otra categoría o quita «Solo favoritos» y «Solo con vídeo».'}</div>
+          <button type="button" class="cbx-clear-filters-action" id="cbx-empty-clear-btn">${exerciseLibraryMode === 'mine' ? '+ Crear ejercicio' : 'Quitar filtros'}</button>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = exercises.map((rawItem) => {
+      const validated = findValidatedExercise(rawItem.id);
+      const ex = validated ? { ...validated, favorite: Boolean(rawItem.favorite) } : rawItem;
+      const cleanNombre = String(ex.nombre || ex.name || '').replace(/^--\s*/, '').trim();
+      const dr = ex.datos_rapidos || {};
+      const playersRaw = String(dr.jugadores || ex.players || '').replace(/jugadores|jug\.?/gi, '').trim() || '8';
+      const dur = String(ex.carga?.duracion || dr.tiempo || ex.duration || 15).replace(/[^\d]/g, '') || '15';
+      const diff = ex.dificultad || ex.difficulty || 'Media';
+      const diffClass = diff.toLowerCase() === 'alta' ? 'alta' : diff.toLowerCase() === 'baja' ? 'baja' : 'media';
+      const fmt = ex.formato_juego === 'futbol_7' ? 'F7' : (ex.formato_juego === 'futbol_11' ? 'F11' : 'F7 · F11');
+      const mat = dr.material || (ex.materiales ? ex.materiales.map((m) => m.nombre).filter(Boolean).join(', ') : (ex.material || 'Balones y conos'));
+      const cat = ex.categoria || ex.category || 'Técnico-táctico';
+      const hasRealVideo = Boolean(ex.hasHumanVideo || ex.video_muestra_humanos || (ex.media && ex.media.video_muestra_humanos));
+
+      const media = ex.media || {};
+      const rawPreview = media.preview || ex.preview || '';
+      const preview = isUsableExercisePreview(rawPreview) ? rawPreview : '';
+
+      const previewThumbHtml = preview
+        ? `<img src="${escapeHtml(preview)}" alt="${escapeHtml(cleanNombre)}" class="cbx-card-preview-img" loading="lazy">`
+        : `
+          <div class="cbx-card-pitch-mock" aria-hidden="true">
+            <div class="cbx-pitch-markings"></div>
+            <span class="cbx-pitch-dot dot-red" style="left:30%;top:40%;"></span>
+            <span class="cbx-pitch-dot dot-red" style="left:44%;top:62%;"></span>
+            <span class="cbx-pitch-dot dot-black" style="left:62%;top:34%;"></span>
+            <span class="cbx-pitch-dot dot-ball" style="left:54%;top:50%;"></span>
+          </div>
+        `;
+
+      return `
+        <article class="cbx-exercise-card panel exercise-card exercise-v2-card" data-exercise-id="${escapeHtml(ex.id)}">
+          <div class="cbx-card-thumb-wrap view-exercise" data-exercise-id="${escapeHtml(ex.id)}" role="button" tabindex="0" aria-label="Ver demostración de ${escapeHtml(cleanNombre)}">
+            ${previewThumbHtml}
+            <span class="cbx-card-badge-demo">Ver demostración · GIF/MP4</span>
+            ${hasRealVideo ? '<span class="cbx-card-badge-realvideo">Vídeo real</span>' : ''}
+            <button type="button" class="favorite-exercise cbx-card-star-btn ${ex.favorite ? 'active' : ''}" data-id="${escapeHtml(ex.id)}" aria-label="Favorito">
+              ${ex.favorite ? '★' : '☆'}
+            </button>
+          </div>
+          <div class="cbx-card-body">
+            <div class="cbx-card-pills-row">
+              <span class="cbx-card-pill-players">${escapeHtml(playersRaw)} jug.</span>
+              <span class="cbx-card-pill-dur">${escapeHtml(dur)}′</span>
+              <span class="cbx-card-pill-diff diff-${diffClass}">${escapeHtml(diff)}</span>
+            </div>
+            <h3 class="cbx-card-title view-exercise" data-exercise-id="${escapeHtml(ex.id)}">${escapeHtml(cleanNombre)}</h3>
+            <div class="cbx-card-cat-fmt">${escapeHtml(cat)} · ${escapeHtml(fmt)}</div>
+            <div class="cbx-card-mat">Material: ${escapeHtml(mat)}</div>
+            <div class="cbx-card-actions">
+              <button type="button" class="view-exercise cbx-card-btn-demo" data-exercise-id="${escapeHtml(ex.id)}">Ver demostración</button>
+              <button type="button" class="add-exercise-to-session cbx-card-btn-add" data-id="${escapeHtml(ex.id)}">+ Añadir a sesión</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+    return;
+  }
 
   const humanVideoExerciseIds = new Set(
     state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
@@ -8363,6 +8524,86 @@ function wireEvents() {
       const whistleBtn = target.closest('.open-whistle-session') || target;
       openWhistleDialog(whistleBtn.dataset.id, whistleBtn.dataset.blockIndex);
     }
+    // Interacciones de filtros del rediseño Claude en Ejercicios
+    const ftabBtn = target.closest('.cbx-ftab');
+    if (ftabBtn) {
+      const paneName = ftabBtn.dataset.pane;
+      $$('.cbx-ftab').forEach((b) => b.classList.toggle('active', b === ftabBtn));
+      $$('.cbx-fpane').forEach((p) => {
+        p.style.display = p.dataset.pane === paneName ? 'flex' : 'none';
+        p.classList.toggle('active', p.dataset.pane === paneName);
+      });
+      return;
+    }
+
+    const fchipBtn = target.closest('.cbx-chip');
+    if (fchipBtn) {
+      const filterKey = fchipBtn.dataset.filter;
+      const filterVal = fchipBtn.dataset.val;
+      const form = $('#exercise-filters');
+      if (form) {
+        if (filterKey === 'category' && form.elements.category) form.elements.category.value = filterVal;
+        if (filterKey === 'format' && form.elements.formato_juego) form.elements.formato_juego.value = filterVal;
+        if (filterKey === 'players' && form.elements.players) form.elements.players.value = filterVal;
+        if (filterKey === 'material' && form.elements.material) form.elements.material.value = filterVal;
+        if (filterKey === 'difficulty' && form.elements.difficulty) form.elements.difficulty.value = filterVal;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-filter-fav' || target.closest('#cbx-filter-fav')) {
+      const form = $('#exercise-filters');
+      if (form && form.elements.favorites) {
+        form.elements.favorites.checked = !form.elements.favorites.checked;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-filter-video' || target.closest('#cbx-filter-video')) {
+      const form = $('#exercise-filters');
+      if (form && form.elements.video) {
+        form.elements.video.checked = !form.elements.video.checked;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-clear-exercise-filters' || target.closest('#cbx-clear-exercise-filters')) {
+      const form = $('#exercise-filters');
+      if (form) {
+        if (form.elements.category) form.elements.category.value = '';
+        if (form.elements.formato_juego) form.elements.formato_juego.value = 'todos';
+        if (form.elements.players) form.elements.players.value = '';
+        if (form.elements.material) form.elements.material.value = '';
+        if (form.elements.difficulty) form.elements.difficulty.value = '';
+        if (form.elements.favorites) form.elements.favorites.checked = false;
+        if (form.elements.video) form.elements.video.checked = false;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-empty-clear-btn' || target.closest('#cbx-empty-clear-btn')) {
+      if (exerciseLibraryMode === 'mine') {
+        $('#new-exercise')?.click();
+      } else {
+        const form = $('#exercise-filters');
+        if (form) {
+          if (form.elements.category) form.elements.category.value = '';
+          if (form.elements.formato_juego) form.elements.formato_juego.value = 'todos';
+          if (form.elements.players) form.elements.players.value = '';
+          if (form.elements.material) form.elements.material.value = '';
+          if (form.elements.difficulty) form.elements.difficulty.value = '';
+          if (form.elements.favorites) form.elements.favorites.checked = false;
+          if (form.elements.video) form.elements.video.checked = false;
+          form.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+      return;
+    }
+
     if (target.matches('.cancel-builder')) { $('#callup-builder').classList.add('hidden'); pendingPrepAfterCallupMatchId = ''; }
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');

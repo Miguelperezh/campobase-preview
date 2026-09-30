@@ -164,19 +164,110 @@
     </section>
 
     <section id="ejercicios" class="view" aria-labelledby="title-exercises">
-      <div class="section-head"><div><p class="eyebrow">Planificación de entrenamientos</p><h2 id="title-exercises">Ejercicios</h2></div><div class="button-row"><button type="button" id="new-exercise" data-dialog="exercise-dialog" class="primary">+ Ejercicio</button><button id="new-session-exercises" class="secondary">+ Sesión</button></div></div>
+      <div class="section-head cbx-banner">
+        <div>
+          <p class="cbx-eyebrow eyebrow">Planificación de entrenamientos</p>
+          <h2 id="title-exercises">Ejercicios</h2>
+        </div>
+        <div class="button-row">
+          <button type="button" id="new-exercise" data-dialog="exercise-dialog" class="primary cbx-btn-main">+ Ejercicio</button>
+          <button id="new-session-exercises" class="secondary cbx-btn-sub">+ Sesión</button>
+        </div>
+      </div>
       <div class="exercise-library-tabs" role="tablist" aria-label="Tipo de biblioteca de ejercicios">
-        <button type="button" class="exercise-library-tab active" data-exercise-library-mode="all" role="tab" aria-selected="true">Biblioteca <span id="all-exercises-count" class="exercise-library-tab-count"></span></button>
-        <button type="button" class="exercise-library-tab" data-exercise-library-mode="mine" role="tab" aria-selected="false">Mis ejercicios <span id="my-exercises-count" class="exercise-library-tab-count"></span></button>
+        <button type="button" class="exercise-library-tab active" data-exercise-library-mode="all" role="tab" aria-selected="true">Biblioteca · <span id="all-exercises-count" class="exercise-library-tab-count"></span></button>
+        <button type="button" class="exercise-library-tab" data-exercise-library-mode="mine" role="tab" aria-selected="false">Mis ejercicios · <span id="my-exercises-count" class="exercise-library-tab-count"></span></button>
       </div>
       <form id="exercise-filters" class="panel exercise-filters">
-        <label>Formato<select name="formato_juego" id="filter-formato-juego"><option value="todos" selected>Todos</option><option value="futbol_7">Fútbol 7</option><option value="futbol_11">Fútbol 11</option></select></label>
-        <label>Categoría<select name="category"><option value="">Todas las categorías</option></select></label>
-        <label>N.º de jugadores<select name="players"><option value="">Cualquier número</option></select></label>
-        <label>Material<select name="material"><option value="">Todos los materiales</option></select></label>
-        <label>Dificultad<select name="difficulty"><option value="">Todas las dificultades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
-        <label class="favorite-filter"><input name="favorites" type="checkbox"> Solo favoritos</label>
-        <label class="favorite-filter"><input name="video" type="checkbox"> Solo con video</label>
+        <div class="cbx-filter-card">
+          <div class="cbx-filter-tabs-row" role="tablist">
+            <button type="button" class="cbx-ftab active" data-pane="category">Categoría</button>
+            <button type="button" class="cbx-ftab" data-pane="format">Formato</button>
+            <button type="button" class="cbx-ftab" data-pane="players">N.º de jugadores</button>
+            <button type="button" class="cbx-ftab" data-pane="material">Material</button>
+            <button type="button" class="cbx-ftab" data-pane="difficulty">Dificultad</button>
+          </div>
+          
+          <div class="cbx-filter-panes">
+            <!-- Category pane -->
+            <div class="cbx-fpane active" data-pane="category">
+              <button type="button" class="cbx-chip active" data-filter="category" data-val="">Todas</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Calentamiento">Calentamiento</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Coordinación/motricidad">Coordinación/motricidad</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Tecnificación">Tecnificación</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Pase/Técnica/Posesión">Pase/Técnica/Posesión</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Técnico-táctico">Técnico-táctico</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Táctica">Táctica</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Finalización">Finalización</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Porteros">Porteros</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Juego reducido">Juego reducido</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Partido condicionado / Small-sided games">Partido condicionado / Small-sided games</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Preparación física integrada">Preparación física integrada</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Resistencia/Física">Resistencia/Física</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Juego">Juego</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Defensa y duelos">Defensa y duelos</button>
+              <button type="button" class="cbx-chip" data-filter="category" data-val="Transiciones">Transiciones</button>
+            </div>
+
+            <!-- Format pane -->
+            <div class="cbx-fpane" data-pane="format" style="display:none">
+              <button type="button" class="cbx-chip active" data-filter="format" data-val="todos">Todos</button>
+              <button type="button" class="cbx-chip" data-filter="format" data-val="futbol_7">Fútbol 7</button>
+              <button type="button" class="cbx-chip" data-filter="format" data-val="futbol_11">Fútbol 11</button>
+            </div>
+
+            <!-- Players pane -->
+            <div class="cbx-fpane" data-pane="players" style="display:none">
+              <button type="button" class="cbx-chip active" data-filter="players" data-val="">Cualquier número</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="1-2">1-2 jug.</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="3-4">3-4 jug.</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="5-6">5-6 jug.</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="7-8">7-8 jug.</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="9-11">9-11 jug.</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="12-14">12-14 jug.</button>
+              <button type="button" class="cbx-chip" data-filter="players" data-val="15+">15+ jug.</button>
+            </div>
+
+            <!-- Material pane -->
+            <div class="cbx-fpane" data-pane="material" style="display:none">
+              <button type="button" class="cbx-chip active" data-filter="material" data-val="">Todos los materiales</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="balon">Balones</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="cono">Conos</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="peto">Petos</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="pica">Picas</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="valla">Vallas</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="escalera">Escalera</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="porteria">Porterías</button>
+              <button type="button" class="cbx-chip" data-filter="material" data-val="miniporteria">Miniporterías</button>
+            </div>
+
+            <!-- Difficulty pane -->
+            <div class="cbx-fpane" data-pane="difficulty" style="display:none">
+              <button type="button" class="cbx-chip active" data-filter="difficulty" data-val="">Todas las dificultades</button>
+              <button type="button" class="cbx-chip" data-filter="difficulty" data-val="Baja">Baja</button>
+              <button type="button" class="cbx-chip" data-filter="difficulty" data-val="Media">Media</button>
+              <button type="button" class="cbx-chip" data-filter="difficulty" data-val="Alta">Alta</button>
+            </div>
+          </div>
+
+          <div class="cbx-filter-bottom-bar">
+            <button type="button" class="cbx-toggle-chip" id="cbx-filter-fav">★ Solo favoritos</button>
+            <button type="button" class="cbx-toggle-chip" id="cbx-filter-video">▶ Solo con vídeo</button>
+            <span class="cbx-spacer" style="flex:1"></span>
+            <span class="cbx-filter-count" id="cbx-exercise-count"></span>
+            <button type="button" class="cbx-filter-clear-btn" id="cbx-clear-exercise-filters">Quitar filtros</button>
+          </div>
+        </div>
+
+        <div class="cbx-native-filter-fields">
+          <label>Formato<select name="formato_juego" id="filter-formato-juego"><option value="todos" selected>Todos</option><option value="futbol_7">Fútbol 7</option><option value="futbol_11">Fútbol 11</option></select></label>
+          <label>Categoría<select name="category"><option value="">Todas las categorías</option></select></label>
+          <label>N.º de jugadores<select name="players"><option value="">Cualquier número</option></select></label>
+          <label>Material<select name="material"><option value="">Todos los materiales</option></select></label>
+          <label>Dificultad<select name="difficulty"><option value="">Todas las dificultades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
+          <label class="favorite-filter"><input name="favorites" type="checkbox"> Solo favoritos</label>
+          <label class="favorite-filter"><input name="video" type="checkbox"> Solo con video</label>
+        </div>
       </form>
       <div id="exercises-list" class="exercise-grid"></div>
     </section>

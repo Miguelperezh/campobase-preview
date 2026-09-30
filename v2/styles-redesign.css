@@ -2743,7 +2743,7 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .card,
 body.cb-redesign-active[data-has-custom-font-color="true"] .panel,
 body.cb-redesign-active[data-has-custom-font-color="true"] .meta,
 body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text):not(.cb-preview-badge),
-body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor) {
+body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip) {
   color: var(--cb-font-custom-color) !important;
 }
 

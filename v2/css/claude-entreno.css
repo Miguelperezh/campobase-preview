@@ -426,3 +426,603 @@ body.cb-redesign-active #sesiones .cbx-session-more-details button {
     gap: 6px;
   }
 }
+
+/* ==========================================================
+   EJERCICIOS (Rediseño Claude)
+   ========================================================== */
+
+/* Banner de Ejercicios */
+body.cb-redesign-active #ejercicios > .cbx-banner {
+  min-height: 106px;
+  margin: 0 0 12px;
+  padding: 20px 22px;
+  border: 0;
+  border-radius: var(--cbx-r-hero);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--cbx-hero), color-mix(in srgb, var(--cbx-hero) 72%, #297053)) !important;
+  box-shadow: var(--cbx-shadow-hero);
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner .cbx-eyebrow,
+body.cb-redesign-active #ejercicios > .cbx-banner .eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, .75) !important;
+  font: 800 12px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner h2 {
+  margin: 4px 0 0;
+  color: #fff !important;
+  font: 800 32px/1 var(--cbx-disp) !important;
+  font-family: var(--cbx-disp) !important;
+  text-transform: uppercase;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner .button-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner #new-exercise {
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cbx-acc) !important;
+  color: #fff !important;
+  font: 800 14px var(--cbx-ui) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, .25);
+  cursor: pointer;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner #new-session-exercises {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .15) !important;
+  color: #fff !important;
+  font: 700 14px var(--cbx-ui) !important;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+/* Selector Biblioteca / Mis ejercicios */
+body.cb-redesign-active #ejercicios .exercise-library-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  max-width: 420px;
+  margin: 14px 0;
+  border: 0;
+}
+
+body.cb-redesign-active #ejercicios .exercise-library-tab {
+  height: 38px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  font: 700 13px var(--cbx-ui);
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all .15s ease;
+  user-select: none;
+}
+
+body.cb-redesign-active #ejercicios .exercise-library-tab.active {
+  background: #fff;
+  color: var(--cbx-ink);
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Tarjeta contenedora de filtros */
+body.cb-redesign-active #exercise-filters {
+  display: block !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 16px !important;
+}
+
+body.cb-redesign-active #exercise-filters .cbx-native-filter-fields {
+  display: none !important;
+}
+
+body.cb-redesign-active .cbx-filter-card {
+  width: 100% !important;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--cbx-shadow);
+}
+
+/* Pestañas de tipo de filtro */
+body.cb-redesign-active .cbx-filter-tabs-row {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid #e2e8f0;
+  margin: -2px -2px 0;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+body.cb-redesign-active .cbx-filter-tabs-row::-webkit-scrollbar {
+  display: none;
+}
+
+body.cb-redesign-active .cbx-ftab {
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  font: 700 13px var(--cbx-ui);
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+}
+
+body.cb-redesign-active .cbx-ftab:hover {
+  color: var(--cbx-ink);
+}
+
+body.cb-redesign-active .cbx-ftab.active {
+  color: #0f172a;
+  font-weight: 800;
+  border-bottom-color: #0f766e;
+}
+
+/* Paneles de chips */
+body.cb-redesign-active .cbx-filter-panes {
+  min-height: 38px;
+}
+
+body.cb-redesign-active .cbx-fpane {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+body.cb-redesign-active .cbx-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font: 700 12.5px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active .cbx-chip:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-chip.active {
+  background: #0a251b !important;
+  color: #fff !important;
+  border-color: #0a251b !important;
+  font-weight: 800;
+}
+
+/* Barra inferior de filtros */
+body.cb-redesign-active .cbx-filter-bottom-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+body.cb-redesign-active .cbx-toggle-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font: 700 12px var(--cbx-ui);
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all .15s ease;
+  user-select: none;
+}
+
+body.cb-redesign-active .cbx-toggle-chip:hover {
+  background: #f8fafc;
+}
+
+body.cb-redesign-active #cbx-filter-fav.active {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+  font-weight: 800;
+}
+
+body.cb-redesign-active #cbx-filter-video.active {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  font-weight: 800;
+}
+
+body.cb-redesign-active .cbx-filter-count {
+  font: 700 12.5px var(--cbx-ui);
+  color: #64748b;
+  margin-right: 4px;
+}
+
+body.cb-redesign-active .cbx-filter-clear-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font: 700 12px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .cbx-filter-clear-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Grid de ejercicios */
+body.cb-redesign-active #exercises-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* Tarjeta individual de ejercicio */
+body.cb-redesign-active .cbx-exercise-card {
+  background: #fff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  box-shadow: 0 3px 12px rgba(15,23,42,.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+body.cb-redesign-active .cbx-exercise-card:hover {
+  box-shadow: 0 6px 18px rgba(15,23,42,.1);
+}
+
+/* Zona superior: Portada / Pizarra / Miniatura */
+body.cb-redesign-active .cbx-card-thumb-wrap {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  background: repeating-linear-gradient(90deg, #1f5a41 0 12.5%, #236447 12.5% 25%);
+  cursor: pointer;
+  display: block;
+}
+
+body.cb-redesign-active .cbx-card-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+body.cb-redesign-active .cbx-card-pitch-mock {
+  position: absolute;
+  inset: 0;
+}
+
+body.cb-redesign-active .cbx-pitch-markings {
+  position: absolute;
+  inset: 10px;
+  border: 1.5px solid rgba(255,255,255,.35);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+body.cb-redesign-active .cbx-pitch-markings::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 1.5px solid rgba(255,255,255,.35);
+}
+
+body.cb-redesign-active .cbx-pitch-dot {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+
+body.cb-redesign-active .cbx-pitch-dot.dot-red {
+  width: 12px;
+  height: 12px;
+  background: #c8102e;
+}
+
+body.cb-redesign-active .cbx-pitch-dot.dot-black {
+  width: 12px;
+  height: 12px;
+  background: #111;
+}
+
+body.cb-redesign-active .cbx-pitch-dot.dot-ball {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 1.5px solid #111;
+}
+
+/* Insignias sobre la portada */
+body.cb-redesign-active .cbx-card-badge-demo {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  font: 800 11px var(--cbx-ui);
+  color: #fff;
+  background: rgba(0,0,0,.5);
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+body.cb-redesign-active .cbx-card-badge-realvideo {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font: 800 11px var(--cbx-ui);
+  color: #fff;
+  background: #c8102e;
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+body.cb-redesign-active .cbx-card-star-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0,0,0,.5);
+  color: #fff;
+  font-size: 18px;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  transition: transform .15s, background .15s;
+  z-index: 2;
+}
+
+body.cb-redesign-active .cbx-card-star-btn:hover {
+  transform: scale(1.1);
+  background: rgba(0,0,0,.7);
+}
+
+body.cb-redesign-active .cbx-card-star-btn.active {
+  color: #f59e0b;
+  background: rgba(0,0,0,.7);
+}
+
+/* Cuerpo de la tarjeta */
+body.cb-redesign-active .cbx-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+body.cb-redesign-active .cbx-card-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+body.cb-redesign-active[data-has-custom-font-color="true"] .cbx-card-pill-players,
+body.cb-redesign-active .cbx-card-pill-players {
+  font: 800 13px var(--cbx-ui);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #0a251b !important;
+  color: #fff !important;
+}
+
+body.cb-redesign-active .cbx-card-pill-dur {
+  font: 700 12px var(--cbx-ui);
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff {
+  font: 700 12px var(--cbx-ui);
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff.diff-media {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff.diff-baja {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff.diff-alta {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+body.cb-redesign-active .cbx-card-title {
+  font: 800 16px/1.25 var(--cbx-ui);
+  color: var(--cbx-ink);
+  margin: 0;
+  cursor: pointer;
+  transition: color .15s;
+}
+
+body.cb-redesign-active .cbx-card-title:hover {
+  color: #0f766e;
+}
+
+body.cb-redesign-active .cbx-card-cat-fmt {
+  font: 600 12.5px var(--cbx-ui);
+  color: #1e523d;
+}
+
+body.cb-redesign-active .cbx-card-mat {
+  font: 500 12.5px var(--cbx-ui);
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Fila de botones de acción de tarjeta */
+body.cb-redesign-active .cbx-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+body.cb-redesign-active .cbx-card-btn-demo {
+  flex: 1;
+  height: 40px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--cbx-hero);
+  color: #fff;
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .cbx-card-btn-demo:hover {
+  background: #10b981;
+}
+
+body.cb-redesign-active .cbx-card-btn-add {
+  flex: 1;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cbx-acc) 28%, #e2e8f0);
+  background: color-mix(in srgb, var(--cbx-acc) 8%, #fff);
+  color: var(--cbx-ink);
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .cbx-card-btn-add:hover {
+  background: color-mix(in srgb, var(--cbx-acc) 16%, #fff);
+}
+
+/* Estado vacío de ejercicios */
+body.cb-redesign-active .cbx-empty-exercises {
+  text-align: center;
+  padding: 32px 20px;
+  border-radius: 18px;
+  border: 2px dashed #cbd5e1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  grid-column: 1 / -1;
+  margin: 12px 0;
+}
+
+body.cb-redesign-active .cbx-empty-title {
+  font: 800 20px var(--cbx-disp);
+  text-transform: uppercase;
+  color: var(--cbx-ink);
+}
+
+body.cb-redesign-active .cbx-empty-desc {
+  font: 500 14px var(--cbx-ui);
+  color: #64748b;
+  max-width: 440px;
+}
+
+body.cb-redesign-active .cbx-clear-filters-action {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--cbx-acc);
+  color: #fff;
+  font: 800 14px var(--cbx-ui);
+  cursor: pointer;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 620px) {
+  body.cb-redesign-active #ejercicios > .cbx-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  body.cb-redesign-active #ejercicios > .cbx-banner .button-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  body.cb-redesign-active #ejercicios > .cbx-banner .button-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  body.cb-redesign-active #exercises-list {
+    grid-template-columns: 1fr;
+  }
+}
+
