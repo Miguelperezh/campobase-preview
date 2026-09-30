@@ -4847,6 +4847,121 @@ function showExerciseDetail(exerciseId) {
 
 function renderTrainingSessions() {
   const sessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const root = $('#sessions-list');
+    if (!sessions.length) {
+      root.innerHTML = `<div class="cbx-card empty-state" style="text-align:center;padding:32px 16px;">
+        <h3 style="font:800 20px var(--cbx-disp);text-transform:uppercase;color:var(--cbx-ink);margin-bottom:8px;">Todavía no hay sesiones de entrenamiento guardadas</h3>
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">Usa «+ Sesión» para crear una sesión o «WhatsApp semana» para compartir horarios.</p>
+      </div>`;
+      return;
+    }
+
+    root.innerHTML = `<div class="cbx-sessions-grid">${sessions.map((session) => {
+      const targetDuration = Number(session.targetDuration) || 60;
+      const totalDuration = Number(session.totalDuration) || (session.blocks || []).reduce((acc, b) => acc + (Number(b.duration) || 0), 0);
+
+      // Status pill
+      let statusPill = '';
+      if (totalDuration < targetDuration) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-amber">Quedan ${targetDuration - totalDuration} min</span>`;
+      } else if (totalDuration === targetDuration) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-green">Completa</span>`;
+      } else {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-red">Exceso ${totalDuration - targetDuration} min</span>`;
+      }
+
+      // Attendance status
+      const hasAttendance = (state.trainings || []).some((t) => (t.sessionId && t.sessionId === session.id) || (t.date && String(t.date).slice(0, 10) === String(session.date).slice(0, 10) && t.kind !== 'match'));
+      const attendancePill = hasAttendance
+        ? `<span class="cbx-session-pill cbx-session-pill-green">Asistencia pasada</span>`
+        : `<span class="cbx-session-pill cbx-session-pill-gray">Asistencia pendiente</span>`;
+
+      // Warmup tag if applicable
+      const isWarmup = session.sessionKind === 'match-warmup';
+      const warmupPill = isWarmup ? `<span class="cbx-session-pill cbx-session-pill-blue">Calentamiento de partido</span>` : '';
+
+      // Date and time
+      const dateFormatted = localDate(session.date);
+      const timeStr = session.time ? ` · ${session.time}` : '';
+
+      // Proportional bar segments
+      const maxDuration = Math.max(totalDuration, targetDuration, 1);
+      const barSegments = (session.blocks || []).map((b) => {
+        const dur = Number(b.duration) || 15;
+        const pct = Math.max(3, Math.round((dur / maxDuration) * 100));
+        const colorClass = b.type === 'warmup' ? 'bar-warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'bar-game' : 'bar-main';
+        return `<span class="cbx-session-bar-seg ${colorClass}" style="flex: ${dur} 0 auto; width:${pct}%;"></span>`;
+      }).join('');
+
+      // Blocks list
+      const blocksHtml = (session.blocks || []).map((b, idx) => {
+        const validated = findValidatedExercise(b.exerciseId);
+        const exName = validated?.nombre || exerciseName(b.exerciseId);
+        const phaseType = b.type === 'warmup' ? 'warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'game' : 'main';
+        const phaseLabel = sessionBlockLabel(b.type);
+        const duration = Number(b.duration) || 15;
+
+        return `
+          <div class="cbx-session-block-row">
+            <span class="cbx-session-block-dot dot-${phaseType}">${idx + 1}</span>
+            <span class="cbx-session-mini-pitch" aria-hidden="true">
+              <svg viewBox="0 0 46 32" class="cbx-mini-pitch-svg">
+                <rect width="46" height="32" rx="4" fill="#1f5a41"/>
+                <path d="M23 0v32M0 8h8v16H0M46 8h-8v16h8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                <circle cx="12" cy="14" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
+                <circle cx="28" cy="20" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
+                <circle cx="36" cy="10" r="2" fill="#fff"/>
+              </svg>
+            </span>
+            <div class="cbx-session-block-info">
+              <button type="button" class="session-exercise-link cbx-session-exercise-name" data-exercise-id="${escapeHtml(b.exerciseId)}" aria-label="Ver ejercicio ${escapeHtml(exName)}">${escapeHtml(exName)}</button>
+              <span class="cbx-session-block-phase">${escapeHtml(phaseLabel)}</span>
+            </div>
+            <strong class="cbx-session-block-duration">${duration}′</strong>
+            <button type="button" class="open-whistle-session cbx-session-block-play" data-id="${session.id}" data-block-index="${idx}" title="Cronómetro del bloque">▶</button>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <article class="cbx-session-card panel session-card" data-session-id="${session.id}">
+          <div class="cbx-session-pills-row">
+            <span class="cbx-session-pill cbx-session-pill-date">${escapeHtml(dateFormatted)}${escapeHtml(timeStr)}</span>
+            ${statusPill}
+            ${attendancePill}
+            ${warmupPill}
+          </div>
+          <div>
+            <h3 class="cbx-session-name"><button type="button" class="view-session link-button" data-id="${session.id}" style="font:inherit;color:inherit;text-decoration:none;text-align:left;padding:0;background:none;border:0;cursor:pointer;">${escapeHtml(session.name)}</button></h3>
+            <p class="cbx-session-meta">${escapeHtml(session.pitch || 'Campo de entrenamiento')} · ${totalDuration} / ${targetDuration} min</p>
+          </div>
+          <div class="cbx-session-bar-track">
+            ${barSegments}
+          </div>
+          <div class="cbx-session-blocks-list">
+            ${blocksHtml}
+          </div>
+          <div class="cbx-session-actions-row">
+            <button type="button" class="open-whistle-session cbx-btn-whistle" data-id="${session.id}">⏱️ Silbato</button>
+            <button type="button" class="open-whatsapp-session cbx-btn-wa" data-id="${session.id}">📱 WhatsApp</button>
+            <button type="button" class="print-session cbx-btn-sub" data-id="${session.id}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir</button>
+            <button type="button" class="edit-session cbx-btn-sub" data-id="${session.id}">✏️ Editar</button>
+          </div>
+          <details class="cbx-session-more-details">
+            <summary>Más opciones</summary>
+            <div class="button-row">
+              <button type="button" class="view-session secondary compact" data-id="${session.id}">Ver ficha técnica</button>
+              <button type="button" class="delete-session danger compact" data-id="${session.id}">Borrar sesión</button>
+            </div>
+          </details>
+        </article>
+      `;
+    }).join('')}</div>`;
+    return;
+  }
+
   $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
     const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration, session.pitch);
@@ -7403,7 +7518,7 @@ function playFox40Whistle(type = 'alarm') {
   }
 }
 
-function openWhistleDialog(sessionId) {
+function openWhistleDialog(sessionId, startBlockIndex = 0) {
   const dialog = $('#whistle-dialog');
   if (!dialog) return;
 
@@ -7428,8 +7543,9 @@ function openWhistleDialog(sessionId) {
     ];
   }
 
-  whistleCurrentIndex = 0;
-  setupWhistleBlock(0);
+  const initialIdx = Math.max(0, Math.min(Number(startBlockIndex) || 0, whistleBlocks.length - 1));
+  whistleCurrentIndex = initialIdx;
+  setupWhistleBlock(initialIdx);
   renderWhistleBlocksList();
   dialog.showModal();
 }
@@ -8242,8 +8358,11 @@ function wireEvents() {
     if (target.matches('.open-whatsapp-match')) openWhatsAppDialog({ mode: 'callup', matchId: target.dataset.id });
     if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
     const waPlayerBtn = target.closest('.open-whatsapp-player');
-    if (waPlayerBtn) openWhatsAppDialog({ mode: 'callup', playerId: waPlayerBtn.dataset.id });
-    if (target.matches('.open-whistle-session')) openWhistleDialog(target.dataset.id);
+    if (target.id === 'open-whatsapp-week-header-btn' || target.closest('#open-whatsapp-week-header-btn')) openWhatsAppDialog({ mode: 'week' });
+    if (target.matches('.open-whistle-session') || target.closest('.open-whistle-session')) {
+      const whistleBtn = target.closest('.open-whistle-session') || target;
+      openWhistleDialog(whistleBtn.dataset.id, whistleBtn.dataset.blockIndex);
+    }
     if (target.matches('.cancel-builder')) { $('#callup-builder').classList.add('hidden'); pendingPrepAfterCallupMatchId = ''; }
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');

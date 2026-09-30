@@ -1,0 +1,428 @@
+/* CampoBase · Entreno (Sesiones de entrenamiento, Ejercicios, Tácticas)
+   Estilos específicos del rediseño Claude para el módulo Entreno. */
+
+/* Encabezado y banner de Sesiones */
+body.cb-redesign-active #sesiones > .cbx-banner {
+  min-height: 106px;
+  margin: 0 0 12px;
+  padding: 20px 22px;
+  border: 0;
+  border-radius: var(--cbx-r-hero);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--cbx-hero), color-mix(in srgb, var(--cbx-hero) 72%, #297053)) !important;
+  box-shadow: var(--cbx-shadow-hero);
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .cbx-eyebrow,
+body.cb-redesign-active #sesiones > .cbx-banner .eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, .75) !important;
+  font: 800 12px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner h2 {
+  margin: 4px 0 0;
+  color: #fff !important;
+  font: 800 32px/1 var(--cbx-disp) !important;
+  font-family: var(--cbx-disp) !important;
+  text-transform: uppercase;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .button-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .cbx-btn-whatsapp-week {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 0;
+  background: #25d366 !important;
+  color: #053b1d !important;
+  font: 800 13px var(--cbx-ui) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, .25);
+  transition: transform .15s ease, filter .15s ease;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .cbx-btn-whatsapp-week:hover {
+  filter: brightness(1.05);
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner #new-session {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cbx-acc) !important;
+  color: #fff !important;
+  font: 800 14px var(--cbx-ui) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, .25);
+  cursor: pointer;
+}
+
+/* Leyenda de fases de entrenamiento */
+body.cb-redesign-active #sesiones .cbx-sessions-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font: 700 12px var(--cbx-ui);
+  color: #475569;
+  margin: 8px 0 16px;
+  padding: 0 4px;
+}
+
+body.cb-redesign-active #sesiones .cbx-sessions-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-sessions-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+body.cb-redesign-active #sesiones .cbx-sessions-legend .legend-warmup { background: #f59e0b; }
+body.cb-redesign-active #sesiones .cbx-sessions-legend .legend-main { background: #10b981; }
+body.cb-redesign-active #sesiones .cbx-sessions-legend .legend-game { background: #2563eb; }
+
+/* Grid de tarjetas de sesión */
+body.cb-redesign-active #sesiones .cbx-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Tarjeta individual de sesión */
+body.cb-redesign-active #sesiones .cbx-session-card {
+  background: #fff;
+  border: 1px solid var(--cbx-line);
+  border-radius: var(--cbx-r-card);
+  box-shadow: var(--cbx-shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Fila de píldoras de estado y fecha */
+body.cb-redesign-active #sesiones .cbx-session-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill {
+  font: 700 12px/1.2 var(--cbx-ui);
+  padding: 4px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-date {
+  background: #dff0e7;
+  color: #153c2c;
+  font-weight: 800;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-gray {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+/* Título de sesión y campo */
+body.cb-redesign-active #sesiones .cbx-session-name {
+  font: 800 19px/1.2 var(--cbx-ui);
+  color: var(--cbx-ink);
+  margin: 0;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-meta {
+  font: 600 13px/1.3 var(--cbx-ui);
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+/* Barra horizontal de bloques proporcional */
+body.cb-redesign-active #sesiones .cbx-session-bar-track {
+  display: flex;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  gap: 2px;
+  background: #f1f5f9;
+  margin: 2px 0 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-bar-seg {
+  height: 100%;
+  border-radius: 3px;
+  min-width: 4px;
+  transition: width .2s ease;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-bar-seg.bar-warmup { background: #f59e0b; }
+body.cb-redesign-active #sesiones .cbx-session-bar-seg.bar-main { background: #10b981; }
+body.cb-redesign-active #sesiones .cbx-session-bar-seg.bar-game { background: #2563eb; }
+
+/* Lista de bloques de ejercicios */
+body.cb-redesign-active #sesiones .cbx-session-blocks-list {
+  display: flex;
+  flex-direction: column;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-row {
+  display: grid;
+  grid-template-columns: 24px 46px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font: 800 12px/1 var(--cbx-ui);
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-dot.dot-warmup { background: #f59e0b; }
+body.cb-redesign-active #sesiones .cbx-session-block-dot.dot-main { background: #10b981; }
+body.cb-redesign-active #sesiones .cbx-session-block-dot.dot-game { background: #2563eb; }
+
+body.cb-redesign-active #sesiones .cbx-session-mini-pitch {
+  position: relative;
+  width: 46px;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: block;
+  border: 1px solid #1e523d;
+}
+
+body.cb-redesign-active #sesiones .cbx-mini-pitch-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  font: 700 13.5px/1.2 var(--cbx-ui);
+  color: var(--cbx-ink);
+  text-align: left;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-exercise-name:hover {
+  color: #10b981;
+  text-decoration: underline;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-phase {
+  font: 600 11.5px/1 var(--cbx-ui);
+  color: #64748b;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-duration {
+  font: 800 14px/1 var(--cbx-ui);
+  color: var(--cbx-ink);
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-play {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--cbx-hero);
+  color: #fff;
+  font: 800 11px/1 var(--cbx-ui);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: background .15s ease, transform .1s ease;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-play:hover {
+  background: #10b981;
+  transform: scale(1.05);
+}
+
+/* Fila de botones de acción de sesión */
+body.cb-redesign-active #sesiones .cbx-session-actions-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-whistle {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--cbx-hero);
+  color: #fff;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-wa {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 0;
+  background: #25d366;
+  color: #053b1d;
+  font: 800 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-sub {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: var(--cbx-ink);
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-sub:hover {
+  background: #f8fafc;
+}
+
+/* Desplegable de más opciones */
+body.cb-redesign-active #sesiones .cbx-session-more-details {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-more-details summary {
+  cursor: pointer;
+  color: var(--cbx-muted);
+  font: 700 11px var(--cbx-ui);
+  user-select: none;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-more-details .button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-more-details button {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 620px) {
+  body.cb-redesign-active #sesiones > .cbx-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  body.cb-redesign-active #sesiones > .cbx-banner .button-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  body.cb-redesign-active #sesiones > .cbx-banner .button-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  body.cb-redesign-active #sesiones .cbx-sessions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.cb-redesign-active #sesiones .cbx-session-actions-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+}

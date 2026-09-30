@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="css/claude-hoy.css?v=claude-correccion-1">
   <link rel="stylesheet" href="css/claude-plantilla.css?v=claude-asistencia-3">
   <link rel="stylesheet" href="css/claude-partido.css?v=claude-partido-5">
+  <link rel="stylesheet" href="css/claude-entreno.css?v=claude-sesiones-1">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -180,8 +181,22 @@
       <div id="exercises-list" class="exercise-grid"></div>
     </section>
 
-    <section id="sesiones" class="view" aria-labelledby="title-sessions">
-      <div class="section-head"><div><p class="eyebrow">Fecha y bloques</p><h2 id="title-sessions">Sesiones de entrenamiento</h2></div><div class="button-row"><button id="new-session" class="primary">+ Sesión</button></div></div>
+    <section id="sesiones" class="view cbx-entreno-sesiones" aria-labelledby="title-sessions">
+      <div class="section-head cbx-banner">
+        <div>
+          <p class="cbx-eyebrow eyebrow">Fecha y bloques</p>
+          <h2 id="title-sessions">Sesiones de entrenamiento</h2>
+        </div>
+        <div class="button-row">
+          <button id="open-whatsapp-week-header-btn" type="button" class="cbx-btn-whatsapp-week">WhatsApp semana</button>
+          <button id="new-session" class="primary">+ Sesión</button>
+        </div>
+      </div>
+      <div class="cbx-sessions-legend">
+        <span><i class="legend-warmup"></i>Calentamiento</span>
+        <span><i class="legend-main"></i>Parte principal</span>
+        <span><i class="legend-game"></i>Juego final</span>
+      </div>
       <div id="session-builder" class="panel hidden"></div>
       <div id="sessions-list" class="stack"></div>
     </section>
