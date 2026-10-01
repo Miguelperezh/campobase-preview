@@ -1046,5 +1046,9 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
        - `spec.md`: Especificación formal de requisitos funcionales y criterios de aceptación.
        - `plan.md`: Plan de arquitectura técnica, aislamiento y control de regresión.
        - `tasks.md`: Desglose atómico de tareas con trazabilidad y verificación.
+      - `specs/002-partido-en-vivo-pizarra-preparacion/`:
+        - `spec.md`: Unificación de pizarra única en Partido en Vivo y Preparación, conmutador de rival por defecto oculto y blindaje de leyenda.
+        - `plan.md`: Arquitectura técnica de actualización sobre el mismo SVG y persistencia en IndexedDB.
+        - `tasks.md`: Verificación de tareas y paso de tests al 100%.
 
 
