@@ -576,3 +576,93 @@ export function formatWeekSpanLabel(startKey, endKey) {
   return `del ${d1} de ${MONTH_NAMES_ES[m1 - 1] || ''} al ${d2} de ${MONTH_NAMES_ES[m2 - 1] || ''}`;
 }
 
+/**
+ * Genera el resumen oficial del partido para compartir con las familias por WhatsApp.
+ * Incluye: resultado, goleadores del equipo, minutos de juego de los chicos y agradecimiento.
+ * Filtro de privacidad estricto: NUNCA incluye puntuaciones, notas internas ni observaciones disciplinarias.
+ */
+export function buildWhatsAppMatchFamilySummary({
+  match = {},
+  players = [],
+  callup = null,
+  teamName = 'C.F. Unión Viera Alevín D',
+} = {}) {
+  const opponent = match.opponent || 'Rival';
+  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : (match.scoreFor ?? 0);
+  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : (match.scoreAgainst ?? 0);
+  const rawDate = match.date || callup?.date || '';
+  const dateFormatted = formatLongDate(rawDate) || 'Partido disputado';
+  const isHome = match.venue === 'home';
+  const matchType = match?.type || callup?.matchType || 'league';
+  const competitionLabel = ({
+    league: 'Liga',
+    friendly: 'Amistoso',
+    tournament: 'Torneo',
+  }[matchType] || 'Liga');
+
+  // Goleadores del equipo
+  const goalEvents = Array.isArray(match.goals) ? match.goals : (Array.isArray(match.details?.goals) ? match.details.goals : []);
+  const scorerCounts = {};
+  for (const g of goalEvents) {
+    if (g.isOwnGoal || g.team === 'own' || g.team === 'rival') {
+      if (g.isOwnGoal && (g.team === 'for' || g.team === 'us')) {
+        scorerCounts['Gol en propia meta'] = (scorerCounts['Gol en propia meta'] || 0) + 1;
+      }
+      continue;
+    }
+    const p = players.find((x) => x.id === g.playerId);
+    const name = p ? p.name : (g.playerName || 'Compañero');
+    scorerCounts[name] = (scorerCounts[name] || 0) + 1;
+  }
+
+  let goalsText = '';
+  const scorersList = Object.entries(scorerCounts);
+  if (scorersList.length > 0) {
+    goalsText = scorersList.map(([name, count]) => `• ${name}${count > 1 ? ` (${count})` : ''}`).join('\n');
+  } else if (gf > 0) {
+    goalsText = `• ${gf} ${gf === 1 ? 'gol marcado' : 'goles marcados'}`;
+  } else {
+    goalsText = '• Sin goles a favor en este encuentro';
+  }
+
+  // Minutos de los convocados
+  const availableIds = callup?.availableIds || Object.keys(match.minuteTotals || {});
+  const minuteTotals = match.minuteTotals || {};
+  const calledPlayers = players.filter((p) => availableIds.includes(p.id));
+  calledPlayers.sort((a, b) => (cleanPlayerNumber(a.number) - cleanPlayerNumber(b.number)) || a.name.localeCompare(b.name));
+
+  let minutesListText = '';
+  if (calledPlayers.length > 0) {
+    minutesListText = calledPlayers.map((p) => {
+      const totalSec = minuteTotals[p.id] || 0;
+      const mins = Math.round(totalSec / 60);
+      const numStr = p.number ? `${cleanPlayerNumber(p.number)} · ` : '';
+      return `• ${numStr}${p.name}: ${mins}′`;
+    }).join('\n');
+  }
+
+  const lines = [
+    `📢 *RESUMEN DE PARTIDO — ${teamName.toUpperCase()}*`,
+    `🗓️ ${dateFormatted} · ${competitionLabel} (${isHome ? 'Local' : 'Visitante'})`,
+    '',
+    `⚽ *RESULTADO FINAL:*`,
+    `*${teamName}* ${gf} – ${ga} *${opponent}*`,
+    '',
+    `🎯 *Goles:*`,
+    goalsText,
+  ];
+
+  if (minutesListText) {
+    lines.push('', `⏱️ *Minutos disputados por los chicos:*`, minutesListText);
+  }
+
+  lines.push(
+    '',
+    `👏 *¡Gran esfuerzo y compromiso de todo el equipo!*`,
+    `Agradecemos de corazón a todas las familias su apoyo, deportividad y respeto constante desde la grada. ¡A seguir aprendiendo y disfrutando juntos del fútbol! 🔴⚫💪`
+  );
+
+  return lines.join('\n');
+}
+
+

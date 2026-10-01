@@ -1223,5 +1223,38 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de pruebas en `tests/partido-en-vivo-eventos.test.js` (3 tests pasando).
    - **627/627 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
 
+### 27. Entrega v67 (01/10/2026) — Finalización de Partido, Puntuaciones 1–5 y Resumen para Familias (Spec 010)
+
+1. **Flujo Completo de Finalización de Partido (`finishMatch`, `renderPostMatchSummary`):**
+   - **Eliminación del estado vacío abrupto:** Al pulsar «Final del partido» en el 2.º tiempo, el sistema ya no expulsa al entrenador a una pantalla vacía. Se consolida el resultado, se persisten los minutos y asistencias y se activa la vista inmediata de post-partido (`renderPostMatchSummary`) vinculada a `state.recentFinishedMatchId`.
+   - **Cabecera Oficial:** Marcador final con distintivo `✓ Partido Finalizado`, resultado `${miEquipo} X : Y ${rival}`, fecha en lenguaje natural, condición (Local/Visitante) y duración total del partido.
+   - **Prevención de doble conteo y reversibilidad:** Al finalizar, el recálculo atómico de minutos y asistencia se ejecuta una sola vez. Con `reopenLiveMatch(matchId)`, el entrenador puede restaurar el partido al 2.º tiempo en vivo para corregir incidencias sin duplicar minutos acumulados en las fichas de los jugadores.
+
+2. **Resumen para las Familias y Generador WhatsApp (`js/whatsapp-suite.js`):**
+   - **Tarjeta Visual Claude:** Fondo con gradiente esmeralda profundo (`linear-gradient(160deg, #053b24, #124c36)`), textos en blanco puro (`#ffffff !important`) inmunes a personalizaciones de fuente, subtítulo en mayúsculas `RESUMEN PARA LAS FAMILIAS`, marcador hero y lista de goleadores a favor.
+   - **Minutos formativos:** Desglose completo de todos los convocados ordenados por dorsal con sus minutos jugados (`1 · Mario Rodríguez (35′) · 9 · Hugo Santana (40′) ...`).
+   - **Botón `📲 Enviar resumen por WhatsApp`:**
+     - Genera automáticamente el mensaje deportivo mediante `buildWhatsAppMatchFamilySummary()`.
+     - Abre WhatsApp (`wa.me/?text=...`) y copia el texto al portapapeles.
+     - **Filtro estricto de privacidad:** NUNCA incluye puntuaciones 1–5, notas disciplinarias ni valoraciones técnicas privadas del cuerpo técnico. Incluye mensaje cálido de agradecimiento y deportividad hacia las familias.
+
+3. **Puntuar Convocados (Puntuaciones 1–5):**
+   - **Tarjeta con Borde Ámbar Claude:** Maquetada con `border: 2px solid #f59e0b; border-radius: 18px; background: #fff;`.
+   - **Aislamiento de permisos:** Disponible exclusivamente para el entrenador (`roleCanUseOwnerFeatures`); el delegado en su vista no puede calificar ni modificar notas.
+   - **Botones interactivos de nota 1 a 5 (`.cbx-star-btn`):** Cada convocado dispone de 5 botones táctiles de 34×34px (`1` a `5`). Al pulsar una nota, se resalta en ámbar brillante con sombra.
+   - **Guardado y sincronización inmediata:** `Guardar puntuaciones` actualiza `match.ratings`, registra en `player.ratingHistory` y recalcula de inmediato la media individual de temporada de cada jugador.
+   - **Opcionalidad sin bloqueo:** Botón `Puntuar más tarde` permite cerrar la vista sin forzar la calificación inmediata, pudiendo calificar más adelante desde el Calendario.
+
+4. **Acciones Operativas Post-Partido:**
+   - Botón directo `🖨️ Imprimir plan y acta` para generar el documento oficial en A4.
+   - Botón `📅 Ver en Calendario`.
+   - Botón `🔄 Reabrir partido` para corregir detalles del acta en vivo si fuera necesario.
+
+5. **Especificación SDD 010 y Validación:**
+   - Carpeta formal en `specs/010-finalizacion-partido-puntuaciones-resumen-familias/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/partido-finalizacion-resumen-puntuaciones.test.js` (4 tests pasando).
+   - **631/631 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+
 
 

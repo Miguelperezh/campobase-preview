@@ -38,6 +38,7 @@ import {
   getNextWeekDateRange,
   isWeekend,
   formatWeekSpanLabel,
+  buildWhatsAppMatchFamilySummary,
 } from './whatsapp-suite.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -1829,10 +1830,264 @@ function arrangeClaudeLive(phase, logWasOpen, callup) {
   });
 }
 
+function renderPostMatchSummary(match) {
+  const root = $('#live-match');
+  if (!root) return;
+  const callup = callupForMatch(match);
+  const myTeam = myTeamName();
+  const opponent = match.opponent || 'Rival';
+  const gf = match.goalsFor ?? 0;
+  const ga = match.goalsAgainst ?? 0;
+  const venue = match.venue === 'away' ? 'Visitante' : 'Local';
+  const dateFormatted = formatLongDate(match.date) || 'Hoy';
+  const playedMinutes = Math.round((match.playedSeconds || 0) / 60);
+
+  // Goles a favor
+  const goalEvents = Array.isArray(match.goals) ? match.goals : (Array.isArray(match.details?.goals) ? match.details.goals : []);
+  const scorerCounts = {};
+  for (const g of goalEvents) {
+    if (g.isOwnGoal || g.team === 'own' || g.team === 'rival') {
+      if (g.isOwnGoal && (g.team === 'for' || g.team === 'us')) {
+        scorerCounts['Gol en propia meta'] = (scorerCounts['Gol en propia meta'] || 0) + 1;
+      }
+      continue;
+    }
+    const p = state.players.find((x) => x.id === g.playerId);
+    const name = p ? p.name : (g.playerName || 'Compañero');
+    scorerCounts[name] = (scorerCounts[name] || 0) + 1;
+  }
+  let summaryGoals = '';
+  const scorersList = Object.entries(scorerCounts);
+  if (scorersList.length > 0) {
+    summaryGoals = '⚽ Goles: ' + scorersList.map(([name, count]) => `${name}${count > 1 ? ` (${count})` : ''}`).join(', ');
+  } else if (gf > 0) {
+    summaryGoals = `⚽ Goles: ${gf} ${gf === 1 ? 'gol marcado' : 'goles marcados'}`;
+  } else {
+    summaryGoals = '⚽ Sin goles a favor';
+  }
+
+  // Minutos por jugador convocado
+  const availableIds = callup?.availableIds || Object.keys(match.minuteTotals || {});
+  const minuteTotals = match.minuteTotals || {};
+  const calledPlayers = state.players.filter((p) => availableIds.includes(p.id));
+  calledPlayers.sort((a, b) => (cleanPlayerNumber(a.number) - cleanPlayerNumber(b.number)) || a.name.localeCompare(b.name));
+
+  const summaryMins = calledPlayers.length
+    ? '⏱️ Minutos: ' + calledPlayers.map((p) => {
+        const mins = Math.round((minuteTotals[p.id] || 0) / 60);
+        const dorsal = p.number ? `${cleanPlayerNumber(p.number)} · ` : '';
+        return `${dorsal}${p.name} ${mins}′`;
+      }).join(' · ')
+    : 'Sin minutos registrados';
+
+  // Panel de puntuaciones para el entrenador
+  const isOwner = roleCanUseOwnerFeatures(state.role);
+  let ratingsHtml = '';
+  if (isOwner && calledPlayers.length) {
+    const rateRows = calledPlayers.map((p) => {
+      const currentRating = Number(match.ratings?.[p.id] || 0);
+      const dorsal = p.number ? `${cleanPlayerNumber(p.number)} · ` : '';
+      const stars = [1, 2, 3, 4, 5].map((val) => {
+        const active = currentRating === val;
+        return `<button type="button" class="cbx-star-btn ${active ? 'is-active' : ''}" data-player-id="${p.id}" data-rating="${val}" aria-label="${val} estrellas">${val}</button>`;
+      }).join('');
+      return `<div class="cbx-rating-row"><span class="cbx-rating-name">${escapeHtml(dorsal)}${escapeHtml(p.name)}</span><div class="cbx-stars-group">${stars}</div></div>`;
+    }).join('');
+
+    ratingsHtml = `
+      <article class="cbx-ratings-card">
+        <div class="cbx-ratings-head">
+          <h3>Puntuar convocados</h3>
+          <span>Opcional · puedes hacerlo después</span>
+        </div>
+        <div class="cbx-rating-grid">${rateRows}</div>
+        <div class="cbx-ratings-actions">
+          <button type="button" class="cbx-ratings-save-btn" id="postmatch-save-ratings">Guardar puntuaciones</button>
+          <button type="button" class="cbx-ratings-later-btn" id="postmatch-later-ratings">Puntuar más tarde</button>
+        </div>
+      </article>
+    `;
+  }
+
+  root.innerHTML = `
+    <div class="cbx-postmatch-view">
+      <section class="cbx-postmatch-hero">
+        <span class="cbx-postmatch-badge">✓ Partido Finalizado</span>
+        <div class="cbx-postmatch-score">${escapeHtml(myTeam)} ${gf} : ${ga} ${escapeHtml(opponent)}</div>
+        <div class="cbx-postmatch-meta">${escapeHtml(dateFormatted)} · ${venue} · Tiempo jugado: ${playedMinutes} min</div>
+      </section>
+
+      <article class="cbx-family-summary-card">
+        <div class="cbx-family-subtitle">Resumen para las familias</div>
+        <div class="cbx-family-title">${escapeHtml(myTeam)} ${gf} – ${ga} ${escapeHtml(opponent)}</div>
+        <div class="cbx-family-goals">${escapeHtml(summaryGoals)}</div>
+        <div class="cbx-family-minutes">${escapeHtml(summaryMins)}</div>
+        <button type="button" class="cbx-family-wa-btn" id="postmatch-wa-btn">
+          <span>📲 Enviar resumen por WhatsApp</span>
+        </button>
+      </article>
+
+      ${ratingsHtml}
+
+      <div class="cbx-postmatch-actions">
+        <button type="button" class="secondary" id="postmatch-print-plan">🖨️ Imprimir plan y acta</button>
+        <button type="button" class="secondary" id="postmatch-go-calendar">📅 Ver en Calendario</button>
+        ${isOwner ? `<button type="button" class="secondary" id="postmatch-reopen-btn">🔄 Reabrir partido</button>` : ''}
+        <button type="button" class="secondary" id="postmatch-close-btn">✕ Cerrar y salir</button>
+      </div>
+    </div>
+  `;
+
+  // WhatsApp
+  $('#postmatch-wa-btn')?.addEventListener('click', () => {
+    const text = buildWhatsAppMatchFamilySummary({ match, players: state.players, callup, teamName: myTeam });
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    window.open(waUrl, '_blank');
+    toast('Resumen copiado y abriendo WhatsApp...');
+  });
+
+  // Puntuaciones
+  root.querySelectorAll('.cbx-star-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const row = e.currentTarget.closest('.cbx-rating-row');
+      const val = Number(e.currentTarget.dataset.rating);
+      const isAlreadyActive = e.currentTarget.classList.contains('is-active');
+      row.querySelectorAll('.cbx-star-btn').forEach((b) => b.classList.remove('is-active'));
+      if (!isAlreadyActive) {
+        e.currentTarget.classList.add('is-active');
+      }
+    });
+  });
+
+  $('#postmatch-save-ratings')?.addEventListener('click', async () => {
+    const ratings = { ...(match.ratings || {}) };
+    root.querySelectorAll('.cbx-rating-row').forEach((row) => {
+      const activeBtn = row.querySelector('.cbx-star-btn.is-active');
+      const pId = activeBtn?.dataset.playerId || row.querySelector('.cbx-star-btn')?.dataset.playerId;
+      if (pId) {
+        if (activeBtn) {
+          ratings[pId] = Number(activeBtn.dataset.rating);
+        } else {
+          delete ratings[pId];
+        }
+      }
+    });
+    const playersToUpdate = state.players.filter((p) => availableIds.includes(p.id));
+    const rated = replacePlayerRatings(playersToUpdate, ratings, { role: state.role, matchId: match.id, date: match.date, opponent: match.opponent });
+    const updatedMatch = { ...match, ratings: rated.ratings };
+    await putBatch({ players: rated.players, matches: [updatedMatch] });
+    toast('Puntuaciones guardadas en el partido y en cada ficha.');
+    await refresh(true);
+    renderPostMatchSummary(updatedMatch);
+  });
+
+  $('#postmatch-later-ratings')?.addEventListener('click', () => {
+    toast('Podrás puntuar desde el detalle del partido en Calendario.');
+    state.recentFinishedMatchId = null;
+    renderLive();
+  });
+
+  // Imprimir
+  $('#postmatch-print-plan')?.addEventListener('click', () => {
+    if (typeof window.__campobase?.printMatchPlan === 'function') {
+      window.__campobase.printMatchPlan(match.id, state);
+    }
+  });
+
+  // Calendario
+  $('#postmatch-go-calendar')?.addEventListener('click', () => {
+    state.recentFinishedMatchId = null;
+    showView('calendario');
+  });
+
+  // Reabrir
+  $('#postmatch-reopen-btn')?.addEventListener('click', () => {
+    reopenLiveMatch(match.id).catch(handleError);
+  });
+
+  // Cerrar y salir
+  $('#postmatch-close-btn')?.addEventListener('click', () => {
+    state.recentFinishedMatchId = null;
+    renderLive();
+  });
+}
+
+async function reopenLiveMatch(matchId) {
+  const match = state.matches.find((m) => m.id === matchId);
+  if (!match) return;
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede reabrir el partido.');
+  const callup = callupForMatch(match);
+  if (!callup) return toast('No se encontró la convocatoria para este partido.');
+
+  const season = seasonKey(match.date);
+  const isPreseason = isPreseasonMatch(match);
+  const updatedPlayers = state.players.map((p) => {
+    if (!callup.availableIds.includes(p.id)) return p;
+    const playerMin = Math.round((match.minuteTotals?.[p.id] ?? 0) / 60);
+    if (!playerMin) return p;
+    const seasonMinutes = { ...(p.seasonMinutes ?? {}) };
+    const preseasonMinutes = { ...(p.preseasonMinutes ?? {}) };
+    if (isPreseason) {
+      preseasonMinutes[season] = Math.max(0, (preseasonMinutes[season] ?? 0) - playerMin);
+    } else {
+      seasonMinutes[season] = Math.max(0, (seasonMinutes[season] ?? 0) - playerMin);
+    }
+    const minuteReasons = (p.minuteReasons ?? []).filter((r) => r.matchId !== match.id);
+    return {
+      ...p,
+      totalMinutes: Math.max(0, (p.totalMinutes ?? 0) - playerMin),
+      seasonMinutes,
+      preseasonMinutes,
+      minuteReasons,
+    };
+  });
+
+  const durationSec = match.playedSeconds || 70 * 60;
+  const rawEvents = Array.isArray(match.substitutionEvents) ? [...match.substitutionEvents] : [];
+  state.timer = {
+    matchId: match.id,
+    phase: 'second_half',
+    elapsed: durationSec,
+    runningSince: null,
+    autoPaused: false,
+    initialOnField: callup.availableIds.slice(0, 7),
+    onField: [...(rawEvents.at(-1)?.inIds || callup.availableIds.slice(0, 7))],
+    events: rawEvents,
+    firstKeeper: match.goalkeeperRotation?.firstKeeper || callup.availableIds[0] || '',
+    secondKeeper: match.goalkeeperRotation?.secondKeeper || callup.availableIds[0] || '',
+    details: {
+      goalsFor: match.goalsFor ?? 0,
+      goalsAgainst: match.goalsAgainst ?? 0,
+      goals: match.goals ? [...match.goals] : [],
+      cards: match.cards ? [...match.cards] : [],
+      injuries: match.injuries ? [...match.injuries] : [],
+      incidents: match.incidents ? [...match.incidents] : [],
+      comments: match.comments || '',
+      minuteReasons: match.minuteReasons ? { ...match.minuteReasons } : {},
+    },
+    delegateUnlocked: true,
+  };
+  state.recentFinishedMatchId = null;
+  const inProgressMatch = { ...match, status: 'in_progress' };
+  await putBatch({ players: updatedPlayers, matches: [inProgressMatch], settings: [{ id: 'live', timer: state.timer, updatedAt: Date.now() }] });
+  await refresh(true);
+  showView('partido');
+  toast('Partido reabierto en el 2.º tiempo.');
+}
+
 function renderLive() {
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
+    if (state.recentFinishedMatchId) {
+      const finishedMatch = state.matches.find((m) => m.id === state.recentFinishedMatchId);
+      if (finishedMatch && finishedMatch.status === 'finished') {
+        return renderPostMatchSummary(finishedMatch);
+      }
+    }
     // Si hay una preparación guardada para un partido próximo no finalizado, cargarla automáticamente para no perder el trabajo de Migue
     const savedPrep = state.preparaciones?.find((p) => {
       if (!p.team?.length) return false;
@@ -3383,9 +3638,10 @@ async function finishMatch() {
       ));
     }
     await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
+    state.recentFinishedMatchId = match.id;
     state.timer = null; clearInterval(state.tick); liveTactic = null; await refresh();
     closeDelegateMode(); showView('partido');
-    toast('Partido finalizado. Puedes puntuar a los jugadores desde el detalle del partido cuando quieras.');
+    toast('Partido finalizado.');
   } finally {
     state.finishing = false;
   }
@@ -9636,7 +9892,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
   window.__campobaseState = state;
 }
 
