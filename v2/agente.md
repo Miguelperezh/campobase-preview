@@ -1151,3 +1151,41 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Carpeta formal de especificación en `specs/007-partido-en-vivo-pizarra-hero-y-controles/` (`spec.md`, `plan.md`, `tasks.md`).
    - Nueva suite de pruebas en `tests/partido-en-vivo-pizarra-hero.test.js` verificando el layout hero de 640px, ausencia de `<details>` cerrados, dimensiones de popup a 340px y colores tácticos.
    - **618/618 tests en verde al 100%** y `npm run check` con 0 errores de sintaxis.
+
+### 25. Entrega v65 (01/10/2026) — Plan de Partido: Impresión Profesional en Ficha A4 y Explicación Detallada (Spec 008)
+
+1. **Ficha Oficial A4 y Explicación Didáctica del Plan de Partido (`js/print-match-plan.js`):**
+   - **Módulo Dedicado de Impresión:** Se implementó `buildMatchPlanHtml(matchOrId, state, options)` y `printMatchPlan(matchOrId, state, options)` integrándose de forma limpia con la infraestructura de impresión `executePrint(html)` de `js/print-session-export.js`.
+   - **Cabecera Oficial:** Escudo oficial del club (`state.settings.crest` o `icons/escudo.png`), nombre del equipo (`Unión Viera`), rival (`vs [Rival]`), condición (`Local / Visitante`), jornada / competición, fecha formateada en lenguaje natural, hora de inicio, campo de juego y datos del cuerpo técnico (entrenador y delegado).
+   - **Alineación Inicial (0′):** Formación táctica de partida (ej. 1-3-2-1), cuadrícula de los 7 titulares con posición asignada, dorsal en distintivo circular y nombre completo (resaltando el portero con clase e icono `.is-gk`), acompañado de la lista visible de suplentes de inicio en banquillo con dorsal y nombre.
+   - **Cronograma Didáctico y Detallado de Sustituciones ("muy bien explicado"):**
+     - Desglose cronológico momento a momento (ej. minuto 12′, descanso 25′, minuto 38′...).
+     - 🟢 **ENTRA:** Dorsal + Nombre del convocado que ingresa + Posición táctica donde va a jugar.
+     - 🔴 **SALE:** Dorsal + Nombre del jugador que descansa al banquillo.
+     - 🔄 **REUBICACIÓN:** Jugadores en el campo que rotan de posición interna (ej. central a lateral, mediocentro a punta).
+     - 🧤 **PORTERÍA:** Detección y destaque automático del relevo de portero en descanso o tiempo programado.
+     - **Foto fija de la ventana:** Resumen explícito de los 7 jugadores que quedan en el césped con su puesto y los suplentes que descansan en el banquillo durante esa fase.
+   - **Tabla de Reparto de Minutos Formativos:**
+     - Tabla ordenada por dorsal con todos los convocados: dorsal, nombre, posición habitual, rol inicial (titular 0′ / suplente inicio), minutos totales previstos, barra de porcentaje visual del partido y **tramos exactos en el césped** calculados (ej. `0′–12′, 25′–50′`), garantizando transparencia y equidad formativa.
+   - **Pautas de Banquillo y Acta para Bolígrafo:**
+     - Pautas clave del cuerpo técnico: regla del portero (un tiempo cada uno si hay 2 porteros), gestión de imprevistos / golpes (reemplazo hombre por hombre) y auto-pausa de reloj.
+     - Acta de campo con casillas recuadradas para anotar a mano con bolígrafo: resultado final, goleadores / asistencias, incidencias y notas técnicas de Migue.
+   - **Soporte de Borradores en Vivo:** Si el entrenador está ajustando momentos en `#preparacion-editor`, el botón de impresión captura el borrador activo (`momentsDraft`, `teamDraft`, `formacionDraft`) sin obligar a guardar previamente.
+
+2. **Puntos de Acceso e Integración de Botones en la Interfaz (`js/app.js`):**
+   - **En Lista de Preparación (`#preparacion-list`):** Botón `🖨️ Imprimir plan` en las tarjetas de partidos con preparación guardada.
+   - **En Editor de Preparación (`#preparacion-editor`):** Botón `🖨️ Imprimir plan` junto al botón principal de Guardar.
+   - **En Pestaña de Momentos (`#prep-moments`):** Botón `🖨️ Imprimir plan de partido` ubicado junto a «Copiar cambios del reparto automático».
+   - **En Partido en Vivo y Vista Delegado (`.cbx-live-plan`):** Botón `🖨️ Imprimir` integrado en la barra de resumen del plan con llamada a `stopPropagation()` para no plegar el acordeón al pulsar.
+   - **Exposición Global:** Registrado en `window.__campobase.printMatchPlan`.
+
+3. **Estilos de Pantalla e Impresión A4 (`css/claude-partido.css`):**
+   - Reglas completas para `.cb-print-match-plan-root` y `.cb-print-sheet.cbx-pmp-sheet` (794px × auto, padding 28px 34px).
+   - Estilizado de tarjetas de titulares, etiquetas cromáticas para entradas/salidas/reubicaciones/portería, tabla de minutos y cajas de notas para bolígrafo.
+   - Configuración `@media print`: fondo blanco eco-ink, eliminación de sombras, márgenes limpios y evitación de saltos de página huérfanos (`page-break-inside: avoid`).
+
+4. **Especificación SDD 008 y Validación:**
+   - Carpeta formal en `specs/008-plan-partido-impresion-explicada/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/print-match-plan.test.js` (4 tests pasando).
+   - **622/622 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+

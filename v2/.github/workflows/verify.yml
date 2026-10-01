@@ -1,0 +1,29 @@
+name: CampoBase verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Verificar sintaxis y tests
+        run: npm run check && npm test
+      - name: Browser smoke crítico
+        if: github.event_name == 'pull_request'
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          npm install --no-save playwright-core@1.55.0
+          CHROME_BIN="$CHROME_BIN" node tests/browser-v19-smoke.mjs

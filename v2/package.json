@@ -1,0 +1,16 @@
+{
+  "name": "campobase",
+  "version": "2.44.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check js/reparto-plan.js && node --check js/ejercicios-nuevos-lotes.js && node --check js/demo-session.js && node --check js/domain.js && node --check js/training-domain.js && node --check js/exercise-planning.js && node --check js/real-exercises.js && node --check js/ejercicios-validados.js && node --check js/ejercicio-viewer.js && node --check js/ejercicio-videos.js && node --check js/media-lightbox.js && node --check js/session-visual-planner.js && node --check js/session-materials.js && node --check js/session-top-actions.js && node --check js/session-picker-compat.js && node --check js/session-planner-ui.js && node --check js/attendance-linked-sources.js && node --check js/attendance-session-manual-state.js && node --check js/player-data-sync.js && node --check js/frame-durations.js && node --check js/tactics.js && node --check js/live-tactics.js && node --check js/tacticas-interactivas.js && node --check js/tactica-viewer.js && node --check js/tactica-frame-durations.js && node --check js/tactica-1231-frames.js && node --check js/tactica-1213-frames.js && node --check js/tactica-1321-frames.js && node --check js/tactica-1222-frames.js && node --check js/tactica-1132-frames.js && node --check js/tactica-133-frames.js && node --check js/tactica-1312-frames.js && node --check js/tactica-final-frames.js && node --check js/tactica-11311-frames.js && node --check js/tactica-1141-frames.js && node --check js/tactica-1411-frames.js && node --check js/tactica-12211-frames.js && node --check js/tactic-board-controller.js && node --check js/tactica-guia-viewer.js && node --check js/sync-core.js && node --check js/plantilla-stats-sync.js && node --check js/match-calendar-sync.js && node --check js/match-postgame-editor.js && node --check js/calendar-substitutions-v2.js && node --check js/calendar-substitutions-entry.js && node --check js/today-dashboard.js && node --check js/runtime-refresh.js && node --check js/auth-manager.js && node --check js/saas-session-guard.js && node --check js/saas-auth-ui.js && node --check js/saas-auth-ui-v2.js && node --check js/supabase-client.js && node --check js/billing-manager.js && node --check js/team-access.js && node --check js/saas-auth-ui-v2.js && node --check js/plan-catalog.js && node --check js/db.js && node --check js/staff-management.js && node --check js/redesign-nav.js && node --check js/whatsapp-suite.js && node --check js/print-session-export.js && node --check js/print-match-plan.js && node --check js/app.js && node --check sw.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.57.4"
+  }
+}

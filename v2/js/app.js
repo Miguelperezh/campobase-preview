@@ -18,6 +18,7 @@ import { initTacticBoard } from './tactic-board-controller.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 import { buildAutoPlan } from './reparto-plan.js';
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
+import { printMatchPlan } from './print-match-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
@@ -3617,7 +3618,7 @@ function renderPreparaciones() {
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
+    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
 }
 
@@ -3744,7 +3745,7 @@ function savedPlanMarkup(prep) {
     const number = playerById(state.players, slot.playerId)?.number;
     return `<div class="cbx-live-plan-starter"><small>${escapeHtml(slot.pos)}</small><strong>${number ? `<b>${escapeHtml(number)}</b>` : ''}${escapeHtml(playerName(slot.playerId))}</strong></div>`;
   }).join('');
-  return `<details class="cbx-live-plan"><summary><span><strong>Plan de partido</strong><small>${count} ${count === 1 ? 'momento' : 'momentos'} de cambio${summary ? ` · ${escapeHtml(summary)}` : ''}</small></span><b>Ver</b></summary><div class="cbx-live-plan-list"><section class="cbx-live-plan-start"><strong>Inicio · ${escapeHtml(moments[0].formation)}</strong><div class="cbx-live-plan-starters">${starters}</div></section>${moments.slice(1).map((moment, index) => {
+  return `<details class="cbx-live-plan"><summary><span><strong>Plan de partido</strong><small>${count} ${count === 1 ? 'momento' : 'momentos'} de cambio${summary ? ` · ${escapeHtml(summary)}` : ''}</small></span><div class="cbx-live-plan-summary-actions"><button type="button" class="cbx-plan-print secondary" data-match-id="${escapeHtml(prep.matchId)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir</button><b>Ver</b></div></summary><div class="cbx-live-plan-list"><section class="cbx-live-plan-start"><strong>Inicio · ${escapeHtml(moments[0].formation)}</strong><div class="cbx-live-plan-starters">${starters}</div></section>${moments.slice(1).map((moment, index) => {
     const status = done.has(moment.id) ? 'Hecho ✓' : deferred.has(moment.id) ? 'Aplazado' : now >= moment.minute ? 'Toca ahora' : now === moment.minute - 1 ? 'En 1′' : 'Previsto';
     const lines = momentLines(moments[index], moment);
     return `<section class="cbx-live-plan-moment"><header><strong>${moment.minute}′ · ${escapeHtml(moment.formation)}</strong><span>${status}</span></header><ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('') || '<li>Sin cambios.</li>'}</ul>${done.has(moment.id) || state.timer?.phase === 'ready' ? '' : `<button type="button" class="cbx-plan-apply primary" data-moment-id="${escapeHtml(moment.id)}">Hacer estos cambios ahora</button><button type="button" class="cbx-plan-defer secondary" data-moment-id="${escapeHtml(moment.id)}">Ahora no</button>`}</section>`;
@@ -3872,7 +3873,10 @@ function renderPrepMoments() {
     <div class="cbx-moment-adjust"><strong>${prepMomentIndex ? `Minuto ${selected.minute}` : 'Alineación inicial'}</strong>${prepMomentIndex ? `<div><button type="button" data-prep-minute="-1" aria-label="Adelantar un minuto">−</button><button type="button" data-prep-minute="1" aria-label="Retrasar un minuto">+</button><button type="button" id="prep-remove-moment">Quitar</button></div>` : '<span>Elige a los siete titulares en la pizarra.</span>'}</div>
     <div class="cbx-moment-summary"><strong>${prepMomentIndex ? `Qué pasa en el ${selected.minute}′` : 'Inicio'}</strong>${prepMomentIndex ? `<ul>${(momentLines(prepMomentsDraft[prepMomentIndex - 1], selected).map((line) => `<li>${escapeHtml(line)}</li>`).join('')) || '<li>Sin cambios respecto al momento anterior.</li>'}</ul>` : '<p>Los titulares serán la base de todos los cambios posteriores.</p>'}</div>
     <details class="cbx-moment-minutes"><summary>Minutos con este plan</summary><div>${names.map(([id, value]) => `<span>${escapeHtml(playerName(id))}<b>${value}′</b></span>`).join('')}</div></details>
-    <button type="button" id="prep-copy-auto" class="secondary">Copiar cambios del reparto automático</button>`;
+    <div class="button-row" style="margin-top:0.5rem;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" id="prep-print-moments" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan de partido</button>
+      <button type="button" id="prep-copy-auto" class="secondary">Copiar cambios del reparto automático</button>
+    </div>`;
   panel.querySelector('#prep-show-plan').addEventListener('change', (event) => { panel.dataset.showPlan = String(event.target.checked); });
 }
 
@@ -4013,7 +4017,7 @@ async function openPreparacionEditor(matchId) {
       <div class="live-tactics-legend compact"><strong>Leyenda:</strong><span><i class="dot mi"></i>equipo</span><span><i class="dot rival"></i>rival</span><span><i class="dot ball"></i>balón</span><span>toque = elegir jugador</span></div>
     </div>
     <div class="panel" style="margin-top:1rem"><p class="eyebrow" style="margin-bottom:.4rem">Convocados (desde Convocatoria)</p><div class="suplente-list">${convocados || '<span class="meta">Sin convocados.</span>'}</div></div>
-    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-back" class="secondary">← Volver a partidos</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
+    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-print-current" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" id="prep-back" class="secondary">← Volver a partidos</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
     <p class="meta" id="prep-hint">Toca una ficha de la pizarra o usa «Elegir jugadores y cambiar posiciones». Completa los 7 titulares y guarda la preparación.</p>
     <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>
     <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-board" style="display:none;flex-direction:column;align-items:center;gap:.5rem;width:100%"><svg id="prep-board-full" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación ampliada" style="background:#0c3b2e;border-radius:12px;touch-action:none;width:min(92vw,calc(100dvh - 10rem));max-width:760px;aspect-ratio:1"></svg></div><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
@@ -4200,6 +4204,14 @@ function wirePrepEditor() {
       moment.minute = next; renderPrepMoments();
     }
     if (target.id === 'prep-copy-auto') copyAutoPrepMoments();
+    if (target.id === 'prep-print-moments') {
+      capturePrepMoment();
+      printMatchPlan(prepMatchId, state, {
+        momentsDraft: prepMomentsDraft,
+        teamDraft: prepDraft,
+        formacionDraft: $('#prep-formacion')?.value,
+      });
+    }
   });
   const closeEditor = () => {
     $('#preparacion-editor').classList.add('hidden');
@@ -4215,6 +4227,17 @@ function wirePrepEditor() {
   if (backHead) backHead.addEventListener('click', closeEditor);
   const save = $('#prep-save');
   if (save) save.addEventListener('click', () => savePreparacion());
+  const printCurrent = $('#prep-print-current');
+  if (printCurrent) {
+    printCurrent.addEventListener('click', () => {
+      capturePrepMoment();
+      printMatchPlan(prepMatchId, state, {
+        momentsDraft: prepMomentsDraft,
+        teamDraft: prepDraft,
+        formacionDraft: $('#prep-formacion')?.value,
+      });
+    });
+  }
   const delegate = $('#prep-delegate');
   if (delegate) delegate.addEventListener('click', () => togglePrepDelegate());
   const del = $('#prep-delete');
@@ -9070,6 +9093,7 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id).catch(handleError);
+    if (target.matches('.prep-print-plan')) printMatchPlan(target.dataset.id, state);
     if (target.matches('.prep-open-from-cal')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.prep-view-live')) {
       const prep = prepForMatch(target.dataset.id);
@@ -9159,6 +9183,14 @@ function wireEvents() {
     }
     if (target.matches('.delete-session')) await deleteTrainingSession(target.dataset.id);
     if (target.id === 'prepare-live') await prepareLive();
+    const planPrintBtn = target.closest('.cbx-plan-print');
+    if (planPrintBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const matchId = planPrintBtn.dataset.matchId || state.timer?.matchId;
+      printMatchPlan(matchId, state);
+      return;
+    }
     if (target.matches('.cbx-plan-apply')) await applySavedPlanMoment(target.dataset.momentId);
     if (target.matches('.cbx-plan-defer') && state.timer) {
       state.timer.planDeferred = [...new Set([...(state.timer.planDeferred || []), target.dataset.momentId])];
@@ -9512,7 +9544,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
   window.__campobaseState = state;
 }
 

@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta name="robots" content="noindex,nofollow">
+  <!-- VALIDACIÓN AISLADA: Preparar partido, + Ejercicio y guardado. No fusionado a producción. -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
+  <meta name="theme-color" content="#173f35">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CampoBase · Validación botones críticos</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=2503">
+  <link rel="stylesheet" href="styles-redesign.css?v=2503">
+  <style>
+    #network-label { display: none !important; }
+    body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
+  </style>
+  <script>
+    try {
+      const t = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+      const r = document.documentElement;
+      if (t.themeBg && t.themeBg !== 'default') {
+        r.setAttribute('data-theme-bg', t.themeBg);
+      }
+      if (t.fontFamily && t.fontFamily !== 'system') r.setAttribute('data-theme-family', t.fontFamily);
+      if (t.fontScale && t.fontScale !== 'normal') {
+        r.setAttribute('data-font-scale', t.fontScale);
+        const scaleMap = { compact: '14.5px', large: '19.2px', xlarge: '22.4px', huge: '25.6px', enormous: '28.8px', ultra: '32px' };
+        if (scaleMap[t.fontScale]) r.style.fontSize = scaleMap[t.fontScale];
+      }
+      if (t.fontWeight && t.fontWeight !== 'normal') r.setAttribute('data-font-weight', t.fontWeight);
+      if (t.textColor && t.textColor !== 'dark-slate') r.setAttribute('data-theme-font', t.textColor);
+      const textMap = { 'dark-slate': '#0f172a', 'pure-black': '#000000', 'high-contrast': '#000000', 'navy': '#0a1c36', 'pure-white': '#ffffff' };
+      const effectiveFontColor = t.fontColor || (t.textColor && textMap[t.textColor] ? textMap[t.textColor] : null);
+      if (effectiveFontColor) {
+        r.setAttribute('data-has-custom-font-color', 'true');
+        r.style.setProperty('--cb-font-custom-color', effectiveFontColor);
+        r.style.setProperty('--ink', effectiveFontColor);
+        r.style.setProperty('--cb-slate-950', effectiveFontColor);
+        r.style.setProperty('--cb-slate-900', effectiveFontColor);
+        r.style.setProperty('--cb-slate-800', effectiveFontColor);
+        r.style.setProperty('--cb-slate-700', effectiveFontColor);
+        r.style.setProperty('--cb-slate-600', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-950', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-900', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-800', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-700', effectiveFontColor);
+      }
+      if (t.accentColor) {
+        r.style.setProperty('--cb-pitch-600', t.accentColor);
+        r.style.setProperty('--cb-pitch-700', t.accentColor);
+        r.style.setProperty('--cb-brand', t.accentColor);
+      }
+    } catch (e) {}
+    (function() {
+      function sanitizeNetworkLabel() {
+        const el = document.getElementById('network-label');
+        if (!el) return;
+        if (el.textContent.includes('Supabase') || (!document.body.classList.contains('offline') && !document.body.classList.contains('demo-mode'))) {
+          el.textContent = '';
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', sanitizeNetworkLabel);
+      } else {
+        sanitizeNetworkLabel();
+      }
+      try {
+        new MutationObserver(sanitizeNetworkLabel).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+      } catch (e) {}
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(function(reg) {
+          if (reg) reg.update();
+        }).catch(function() {});
+      }
+    })();
+  </script>
+</head>
+<body class="auth-locked">
+  <header class="topbar">
+    <div class="topbar-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1 id="topbar-team-name">CampoBase</h1></div></div>
+    <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label"></span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
+  </header>
+  <div class="search-bar"><input id="global-search" type="search" placeholder="Buscar por nombre o palabra…" aria-label="Buscar en la pestaña actual" autocomplete="off"></div>
+
+  <main id="app" tabindex="-1">
+    <section id="hoy" class="view active" aria-labelledby="title-hoy">
+      <div class="section-head today-section-head">
+        <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
+      </div>
+      <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>
+    </section>
+
+    <section id="plantilla" class="view" aria-labelledby="title-plantilla">
+      <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><button data-dialog="player-dialog" class="primary">+ Jugador</button></div>
+      <article id="demo-team-panel" class="panel hidden"><h3>Equipo de demostración</h3><p class="meta">Esta información es temporal, no se sincroniza y se elimina al cerrar la demo o al cumplirse dos horas.</p><form id="demo-team-form"><label>Nombre del equipo de prueba<input name="teamName" maxlength="100" required placeholder="Ej. Equipo de prueba"></label><label>Formato<select name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo de prueba</button></form></article>
+      <div id="plantilla-staff-top" class="plantilla-staff-top"></div>
+      <div id="squad-stats" class="stats"></div><div id="players-list" class="card-grid"></div>
+    </section>
+
+    <section id="cuerpo-tecnico" class="view" aria-labelledby="title-cuerpo-tecnico">
+      <div class="section-head">
+        <div><p class="eyebrow">Equipo · Estructura técnica</p><h2 id="title-cuerpo-tecnico">Cuerpo Técnico</h2></div>
+        <div class="button-row">
+          <span class="badge staff-count-badge" id="staff-total-count">0 miembros</span>
+          <button type="button" id="new-staff-btn" class="primary">+ Añadir técnico</button>
+        </div>
+      </div>
+      <div id="staff-list-container" class="staff-container"></div>
+    </section>
+
+    <section id="convocatorias" class="view" aria-labelledby="title-callups">
+      <div class="section-head"><div><p class="eyebrow">Rotación justa</p><h2 id="title-callups">Convocatorias</h2></div><button id="new-callup" class="primary">+ Convocatoria</button></div>
+      <div id="callup-builder" class="panel hidden"></div><div id="callups-list" class="stack"></div>
+    </section>
+
+    <section id="partido" class="view" aria-labelledby="title-live">
+      <div class="section-head"><div><p class="eyebrow">Calculadora en tiempo real</p><h2 id="title-live">Partido en vivo</h2></div></div>
+      <div id="live-match" class="panel"></div>
+    </section>
+
+    <section id="delegado" class="view delegate-view" aria-label="Vista delegado">
+      <div id="delegate-match"></div>
+    </section>
+
+    <section id="preparacion" class="view" aria-labelledby="title-preparacion">
+      <div class="section-head"><div><p class="eyebrow">Alineación previa</p><h2 id="title-preparacion">Preparación de partido</h2></div></div>
+      <div id="preparacion-list" class="stack"></div>
+      <div id="preparacion-editor" class="panel hidden"></div>
+    </section>
+
+    <section id="calendario" class="view" aria-labelledby="title-calendar">
+      <div class="section-head"><div><p class="eyebrow">Temporada</p><h2 id="title-calendar">Calendario y resultados</h2></div><button data-dialog="match-dialog" class="primary">+ Partido</button></div>
+      <div id="matches-list" class="stack"></div>
+    </section>
+
+    <section id="asistencia" class="view" aria-labelledby="title-training">
+      <div class="section-head"><div><p class="eyebrow">Entrenos y partidos</p><h2 id="title-training">Asistencia</h2></div><button id="new-training" class="primary">+ Registro</button></div>
+      <div id="attendance-stats" class="stack"></div>
+      <div id="training-builder" class="panel hidden"></div><div id="trainings-list" class="stack"></div>
+    </section>
+
+    <section id="ejercicios" class="view" aria-labelledby="title-exercises">
+      <div class="section-head"><div><p class="eyebrow">Planificación de entrenamientos</p><h2 id="title-exercises">Ejercicios</h2></div><div class="button-row"><button type="button" id="new-exercise" data-dialog="exercise-dialog" class="primary">+ Ejercicio</button><button id="new-session-exercises" class="secondary">+ Sesión</button></div></div>
+      <div class="exercise-library-tabs" role="tablist" aria-label="Tipo de biblioteca de ejercicios">
+        <button type="button" class="exercise-library-tab active" data-exercise-library-mode="all" role="tab" aria-selected="true">Biblioteca</button>
+        <button type="button" class="exercise-library-tab" data-exercise-library-mode="mine" role="tab" aria-selected="false">Mis ejercicios <span id="my-exercises-count" class="exercise-library-tab-count"></span></button>
+      </div>
+      <form id="exercise-filters" class="panel exercise-filters">
+        <label>Formato<select name="formato_juego" id="filter-formato-juego"><option value="todos" selected>Todos</option><option value="futbol_7">Fútbol 7</option><option value="futbol_11">Fútbol 11</option></select></label>
+        <label>Categoría<select name="category"><option value="">Todas las categorías</option></select></label>
+        <label>N.º de jugadores<select name="players"><option value="">Cualquier número</option></select></label>
+        <label>Material<select name="material"><option value="">Todos los materiales</option></select></label>
+        <label>Dificultad<select name="difficulty"><option value="">Todas las dificultades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
+        <label class="favorite-filter"><input name="favorites" type="checkbox"> Solo favoritos</label>
+        <label class="favorite-filter"><input name="video" type="checkbox"> Solo con video</label>
+      </form>
+      <div id="exercises-list" class="exercise-grid"></div>
+    </section>
+
+    <section id="sesiones" class="view" aria-labelledby="title-sessions">
+      <div class="section-head"><div><p class="eyebrow">Fecha y bloques</p><h2 id="title-sessions">Sesiones de entrenamiento</h2></div><div class="button-row"><button id="new-session" class="primary">+ Sesión</button></div></div>
+      <div id="session-builder" class="panel hidden"></div>
+      <div id="sessions-list" class="stack"></div>
+    </section>
+
+    <section id="tacticas" class="view" aria-labelledby="title-tactics">
+      <div class="section-head"><div><p class="eyebrow">Pizarra táctica</p><h2 id="title-tactics">Tácticas</h2></div><div class="button-row"><button id="new-tactic" class="primary">+ Táctica</button></div></div>
+      <div id="tactic-builder" class="panel hidden"></div>
+      <div id="tactics-list" class="stack"></div>
+      <form id="tactica-filters" class="panel exercise-filters">
+        <label>Selecciona una táctica<select name="formacion"><option value="">Elige una táctica…</option></select></label>
+      </form>
+      <div id="tacticas-interactivas" class="exercise-grid"></div>
+    </section>
+
+    <section id="ajustes" class="view" aria-labelledby="title-settings">
+      <div class="section-head"><div><p class="eyebrow">Nube y caché local</p><h2 id="title-settings">Ajustes</h2></div></div>
+      <div class="settings-grid">
+        <article class="panel">
+          <h3>Identidad del club</h3>
+          <p class="meta">Personaliza el escudo y nombre de tu equipo para toda la aplicación.</p>
+          <div class="club-identity-customizer">
+            <div class="crest-preview-box">
+              <img id="preview-crest-thumb" src="icons/escudo.png" alt="Escudo actual" class="crest-preview-img">
+            </div>
+            <div class="crest-actions-col">
+              <input type="file" id="crest-file-input" accept="image/*" class="hidden">
+              <input type="hidden" id="club-crest-value" value="icons/escudo.png">
+              <div class="button-row" style="margin:0;gap:0.45rem;display:flex;flex-wrap:wrap;">
+                <button type="button" class="secondary compact" id="upload-crest-btn" style="flex:1;">Subir escudo (PNG / JPG)</button>
+                <button type="button" class="primary compact" id="save-crest-btn" style="flex:1;">Guardar escudo</button>
+              </div>
+              <button type="button" class="ghost compact" id="reset-crest-btn">Restaurar escudo por defecto</button>
+            </div>
+          </div>
+        </article>
+        <article class="panel">
+          <h3>Preferencias visuales y tema</h3>
+          <p class="meta">Adapta el aspecto visual según tus condiciones de uso en el campo o despacho.</p>
+          <form id="theme-settings-form">
+            <div class="theme-field-group">
+              <label>Tono de fondo de la app</label>
+              <div class="theme-bg-chips" role="radiogroup" aria-label="Fondo de la app">
+                <button type="button" class="theme-bg-btn active" data-bg="default"><span class="theme-chip-dot" style="background:#0a251b"></span>Campo Esmeralda</button>
+                <button type="button" class="theme-bg-btn" data-bg="dark"><span class="theme-chip-dot" style="background:#040806"></span>Noche OLED Profundo</button>
+                <button type="button" class="theme-bg-btn" data-bg="pitch-vivid"><span class="theme-chip-dot" style="background:#021e12"></span>Césped Intenso</button>
+                <button type="button" class="theme-bg-btn" data-bg="navy"><span class="theme-chip-dot" style="background:#061021"></span>Pizarra Azul Marino</button>
+                <button type="button" class="theme-bg-btn" data-bg="ocean"><span class="theme-chip-dot" style="background:#03141f"></span>Azul Océano Profundo</button>
+                <button type="button" class="theme-bg-btn" data-bg="charcoal"><span class="theme-chip-dot" style="background:#0f1113"></span>Gris Carbón Pro</button>
+                <button type="button" class="theme-bg-btn" data-bg="steel"><span class="theme-chip-dot" style="background:#171d24"></span>Gris Acero Deportivo</button>
+                <button type="button" class="theme-bg-btn" data-bg="burgundy"><span class="theme-chip-dot" style="background:#170408"></span>Rojo Burdeos</button>
+                <button type="button" class="theme-bg-btn" data-bg="purple"><span class="theme-chip-dot" style="background:#110722"></span>Púrpura Táctico</button>
+                <button type="button" class="theme-bg-btn" data-bg="light"><span class="theme-chip-dot" style="background:#ffffff;border:1px solid #cbd5e1"></span>Luz Solar / Blanco</button>
+                <button type="button" class="theme-bg-btn" data-bg="warm"><span class="theme-chip-dot" style="background:#f6f3eb;border:1px solid #dcd7cb"></span>Arena Marfil Cálida</button>
+                <button type="button" class="theme-bg-btn" data-bg="sepia"><span class="theme-chip-dot" style="background:#eee6d8;border:1px solid #d7cbb6"></span>Papiro / Sepia Táctico</button>
+                <button type="button" class="theme-bg-btn" data-bg="high-vis"><span class="theme-chip-dot" style="background:#000000;border:1px solid #facc15"></span>Negro Contraste Sol</button>
+              </div>
+              <input type="hidden" id="theme-bg-select" name="themeBg" value="default">
+            </div>
+
+            <div class="theme-field-group">
+              <label>Color de acento del club</label>
+              <div class="theme-color-swatches">
+                <button type="button" class="color-swatch-btn active" data-color="#10b981" data-preset="emerald" style="background:#10b981" title="Verde Viera"></button>
+                <button type="button" class="color-swatch-btn" data-color="#2563eb" data-preset="blue" style="background:#2563eb" title="Azul Real"></button>
+                <button type="button" class="color-swatch-btn" data-color="#e02444" data-preset="red" style="background:#e02444" title="Rojo Pasión"></button>
+                <button type="button" class="color-swatch-btn" data-color="#f59e0b" data-preset="gold" style="background:#f59e0b" title="Dorado Campeón"></button>
+                <button type="button" class="color-swatch-btn" data-color="#ea580c" data-preset="orange" style="background:#ea580c" title="Naranja Fuego"></button>
+                <button type="button" class="color-swatch-btn" data-color="#7c3aed" data-preset="purple" style="background:#7c3aed" title="Morado / Violeta"></button>
+                <button type="button" class="color-swatch-btn" data-color="#0284c7" data-preset="cyan" style="background:#0284c7" title="Celeste Unión"></button>
+                <button type="button" class="color-swatch-btn" data-color="#18181b" data-preset="black" style="background:#18181b" title="Negro Ónix"></button>
+                <input type="color" id="theme-accent-color" name="accentColor" value="#10b981" title="Color personalizado">
+              </div>
+              <input type="hidden" id="theme-accent-preset" name="accentPreset" value="emerald">
+            </div>
+
+            <div class="form-row">
+              <label>Familia tipográfica / Fuente
+                <select id="theme-font-family" name="fontFamily">
+                  <option value="system" selected>Sistema moderna (San Francisco / Roboto)</option>
+                  <option value="sport">Deportiva de estadio (Barlow Condensed / Oswald)</option>
+                  <option value="readable">Máxima legibilidad (Inter / Nitidez en campo)</option>
+                  <option value="modern">Moderna geométrica (Outfit / Pro)</option>
+                  <option value="technical">Pizarra técnica (JetBrains Mono / Táctico)</option>
+                  <option value="classic">Clásica editorial (Merriweather / Georgia)</option>
+                </select>
+              </label>
+              <label>Tamaño de texto en listas y fichas
+                <select id="theme-font-scale" name="fontScale">
+                  <option value="normal" selected>Normal / Estándar (100%)</option>
+                  <option value="large">Grande (+20% lectura cómoda)</option>
+                  <option value="xlarge">Muy grande (+40% banquillo)</option>
+                  <option value="huge">Gigante para sol directo (+60%)</option>
+                  <option value="enormous">Enorme / Super legible (+80%)</option>
+                  <option value="ultra">Ultra accesible (+100% / Doble tamaño)</option>
+                  <option value="compact">Compacto (-10%)</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <label>Grosor de texto y negrita
+                <select id="theme-font-weight" name="fontWeight">
+                  <option value="normal">Normal / Equilibrado (400)</option>
+                  <option value="semibold">Seminegrita reforzada (600)</option>
+                  <option value="bold" selected>Negrita de campo (700 - Recomendado sol)</option>
+                  <option value="extrabold">Extra negrita potente (800)</option>
+                  <option value="ultra-bold">Ultra negrita máxima (900 - Máximo impacto)</option>
+                </select>
+              </label>
+              <label>Legibilidad y contraste de fuentes
+                <select id="theme-text-color" name="textColor">
+                  <option value="dark-slate" selected>Contraste óptimo (Gris pizarra)</option>
+                  <option value="pure-black">Negro puro 100% (Máxima nitidez exterior)</option>
+                  <option value="high-contrast">Contraste extremo para sol directo</option>
+                  <option value="navy">Azul noche técnico (#0a1c36)</option>
+                  <option value="pure-white">Blanco puro (Para fondos oscuros)</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="theme-option-group" style="margin-top:0.75rem;">
+              <label class="group-label" style="display:block;font-size:0.85rem;font-weight:700;margin-bottom:0.35rem;">Color de fuente / Texto de la app</label>
+              <div class="color-swatches-grid" id="theme-font-color-swatches">
+                <button type="button" class="font-color-swatch-btn" data-color="#0f172a" style="background:#0f172a" title="Gris pizarra oscuro (Estándar)"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#000000" style="background:#000000" title="Negro puro (Sol directo)"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#1e293b" style="background:#1e293b" title="Grafito noche"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#ffffff" style="background:#ffffff;border:1px solid #cbd5e1" title="Blanco puro"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#f8fafc" style="background:#f8fafc;border:1px solid #cbd5e1" title="Blanco tiza suave"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#f59e0b" style="background:#f59e0b" title="Dorado deportivo"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#10b981" style="background:#10b981" title="Verde esmeralda"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#0284c7" style="background:#0284c7" title="Azul técnico"></button>
+                <button type="button" class="font-color-swatch-btn" data-color="#e02444" style="background:#e02444" title="Rojo atlético"></button>
+              </div>
+              <div class="custom-color-row" style="display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;">
+                <label for="theme-font-color-picker" style="font-size:0.85rem;margin:0;">Selector libre de color:</label>
+                <input type="color" id="theme-font-color-picker" name="fontColorPicker" value="#0f172a" style="width:36px;height:32px;padding:0;border:none;border-radius:4px;cursor:pointer;">
+                <input type="hidden" id="theme-font-color" name="fontColor" value="#0f172a">
+              </div>
+            </div>
+
+            <button class="primary" type="submit">Guardar preferencias visuales</button>
+          </form>
+        </article>
+        <article class="panel"><h3>Equipo y modalidad</h3><form id="team-settings-form"><label>Nombre de mi equipo<input name="teamName" maxlength="100" required placeholder="Ej. Unión Viera Alevín D"></label><label>Formato<select id="format" name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo</button></form><p class="meta">F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p></article>
+        <article class="panel">
+          <h3>Equipaciones y Petos de Juego</h3>
+          <p class="meta">Configura los colores de tu club para las convocatorias de partidos y avisos de entrenamiento.</p>
+          <form id="kit-settings-form">
+            <div class="form-row">
+              <label>1.ª Equipación (Local / Principal)
+                <input name="primaryKit" maxlength="80" placeholder="Ej. Roja y Negra (Oficial)" value="1.ª Oficial (Roja y Negra)">
+              </label>
+              <label>2.ª Equipación (Visitante / Alternativa)
+                <input name="secondaryKit" maxlength="80" placeholder="Ej. Blanca y Negra" value="2.ª Alternativa (Blanca y Negra)">
+              </label>
+            </div>
+            <div class="form-row">
+              <label>Equipación de entrenamiento
+                <input name="trainingKit" maxlength="100" placeholder="Ej. Oficial de entrenamiento" value="Equipación oficial de entrenamiento">
+              </label>
+              <label>Petos para partidos y entreno
+                <input name="bibsConfig" maxlength="100" placeholder="Ej. 7 verdes y 7 amarillos" value="Petos verdes y amarillos">
+              </label>
+            </div>
+            <button class="primary" type="submit">Guardar equipaciones</button>
+          </form>
+        </article>
+        <article class="panel"><h3>Copia de seguridad</h3><p>La sincronización en la nube conecta tus dispositivos y la aplicación conserva una copia local para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
+        <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
+        <article class="panel"><h3>PIN de demostración</h3><p>Solo Migue puede crear o cambiar este PIN. Abre una prueba aislada durante un máximo de dos horas, sin acceso a tus datos ni a Ajustes.</p><form id="demo-pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de demo<input name="demoPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Guardar PIN de demo</button></form></article>
+        <article class="panel" id="sync-status-panel">
+          <h3>Sincronización</h3>
+          <p id="sync-status-text" class="meta">Comprobando estado…</p>
+          <div class="button-row">
+            <button type="button" id="sync-now" class="primary">Sincronizar ahora</button>
+            <button type="button" id="recover-local-pending" class="secondary hidden">Recuperar cambios locales pendientes</button>
+          </div>
+          <p id="sync-status-detail" class="meta"></p>
+        </article>
+        <article class="panel">
+          <h3>Sesión y sistema</h3>
+          <p class="meta">Gestiona tu sesión de usuario o recarga la aplicación para asegurarte de sincronizar la última versión disponible.</p>
+          <div class="button-row">
+            <button type="button" id="settings-logout" class="secondary">Cerrar sesión</button>
+            <button type="button" id="settings-reload" class="primary">🔄 Recargar / Actualizar app</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button data-view="plantilla" class="active">Plantilla</button><button data-view="asistencia">Asistencia</button><button data-view="sesiones">Sesiones</button><button data-view="ejercicios">Ejercicios</button><button data-view="tacticas">Tácticas</button><button data-view="calendario">Calendario</button><button data-view="convocatorias">Convocatoria</button><button data-view="preparacion">Preparación de partido</button><button data-view="partido">Partido en vivo</button><button data-view="ajustes" id="settings-nav">Ajustes</button>
+  </nav>
+
+  <dialog id="player-dialog"><form id="player-form"><div class="dialog-head"><h2>Ficha de jugador</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><input name="existingPhoto" type="hidden"><input name="photoRemoved" type="hidden" value="0"><div class="form-row"><div class="photo-cropper-field"><label>Foto (cámara o galería)<input name="photo" type="file" accept="image/*" capture="environment"></label><div class="photo-preview-wrapper"><img id="player-photo-preview" src="" alt="Vista previa" class="avatar-preview-img hidden"><div id="player-photo-placeholder" class="avatar-preview-placeholder">👤</div><div class="photo-adjust-controls hidden" id="player-photo-controls"><button type="button" class="secondary compact" id="player-crop-up-btn" title="Subir encuadre al rostro">▲ Rostro</button><button type="button" class="secondary compact" id="player-crop-down-btn" title="Bajar encuadre">▼ Bajar</button><button type="button" class="ghost-danger compact" id="player-remove-photo-btn">Eliminar foto</button></div></div></div></div><label>Nombre<input name="name" required maxlength="80" autocomplete="off"></label><div class="form-row"><label>Dorsal<input name="number" type="number" min="0" max="99"></label><label>Pierna dominante<select name="foot"><option>Derecha</option><option>Izquierda</option><option>Ambas</option></select></label></div><fieldset class="positions"><legend>Posiciones (puedes marcar varias)</legend><div class="position-groups"><div><strong>Portero</strong><label><input type="checkbox" name="positions" value="Portero"> Portero</label></div><div><strong>Defensa</strong><label><input type="checkbox" name="positions" value="Central"> Central</label><label><input type="checkbox" name="positions" value="Lateral derecho"> Lateral derecho</label><label><input type="checkbox" name="positions" value="Lateral izquierdo"> Lateral izquierdo</label><label><input type="checkbox" name="positions" value="Carrilero"> Carrilero</label></div><div><strong>Centrocampista</strong><label><input type="checkbox" name="positions" value="Pivote/Mediocentro defensivo"> Pivote/Mediocentro defensivo</label><label><input type="checkbox" name="positions" value="Interior"> Interior</label><label><input type="checkbox" name="positions" value="Mediapunta"> Mediapunta</label><label><input type="checkbox" name="positions" value="Extremo"> Extremo</label></div><div><strong>Delantero</strong><label><input type="checkbox" name="positions" value="Delantero centro"> Delantero centro</label><label><input type="checkbox" name="positions" value="Segundo delantero"> Segundo delantero</label></div></div></fieldset><fieldset class="player-family-group"><legend>Contacto de progenitores (WhatsApp para convocatorias)</legend><div class="form-row"><label>Padre (Nombre)<input name="fatherName" maxlength="80" placeholder="Ej. Carlos Hernández" autocomplete="off"></label><label>Teléfono Padre (WhatsApp)<input name="fatherPhone" type="tel" maxlength="30" placeholder="Ej. 600111222" autocomplete="tel"></label></div><div class="form-row"><label>Madre (Nombre)<input name="motherName" maxlength="80" placeholder="Ej. Elena Santana" autocomplete="off"></label><label>Teléfono Madre (WhatsApp)<input name="motherPhone" type="tel" maxlength="30" placeholder="Ej. 600333444" autocomplete="tel"></label></div></fieldset><label>Notas internas<textarea name="notes" maxlength="1000"></textarea></label><div class="button-row"><button class="primary" type="submit">Guardar jugador</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="player-stats-dialog"><form id="player-stats-form"><div class="dialog-head"><h2 id="player-stats-title">Editar estadísticas</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="playerId" type="hidden"><input name="scope" type="hidden"><p id="player-stats-help" class="meta"></p><div class="stats-edit-grid"><label>Goles<input name="goals" type="number" min="0" step="1" required></label><label>Amarillas<input name="yellowCards" type="number" min="0" step="1" required></label><label>Rojas<input name="redCards" type="number" min="0" step="1" required></label><label>Lesiones<input name="injuries" type="number" min="0" step="1" required></label><label>Incidencias<input name="incidents" type="number" min="0" step="1" required></label><label>Convocatorias<input name="callups" type="number" min="0" step="1" required></label><label>Rotaciones<input name="rotations" type="number" min="0" step="1" required></label><label>Tarde<input name="late" type="number" min="0" step="1" required></label><label>Ausente<input name="absent" type="number" min="0" step="1" required></label><label>Minutos<input name="minutes" type="number" min="0" step="1" required></label><label>Media<input name="averageRating" type="number" min="0" max="5" step="0.1" required></label></div><p class="meta">Esta corrección cambia el total mostrado sin modificar los partidos, convocatorias ni asistencias originales.</p><div class="button-row"><button class="primary" type="submit">Guardar estadísticas</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="match-dialog"><form id="match-form"><div class="dialog-head"><h2>Partido</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend><div class="date-24"><select name="dateDay" required aria-label="Día del partido"></select><span>/</span><select name="dateMonth" required aria-label="Mes del partido"></select><span>/</span><select name="dateYear" required aria-label="Año del partido"></select></div><div class="time-24"><select name="dateHour" required aria-label="Hora del partido, de 00 a 23"></select><span aria-hidden="true">:</span><select name="dateMinute" required aria-label="Minuto del partido"></select></div></fieldset><div class="form-row"><label>Jornada<input name="round" maxlength="30" placeholder="Ej. 8"></label><label>Tipo de partido<select name="type"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label></div><div class="form-row"><label>Local / Visitante<select name="venue" required><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label><label>Lugar<input name="location" maxlength="120"></label></div><label>Rival<input name="opponent" required maxlength="100"></label><div class="form-row"><label>Goles a favor<input name="goalsFor" type="number" min="0"></label><label>Goles en contra<input name="goalsAgainst" type="number" min="0"></label></div><div class="button-row"><button class="primary" type="submit">Guardar partido</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="exercise-dialog"><form id="exercise-form"><div class="dialog-head"><h2>Ejercicio</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><label>Nombre<input name="name" required maxlength="120"></label><div class="form-row"><label>Categoría<select name="category" required></select></label><label>Formato<select name="formato_juego"><option value="futbol_11" selected>Fútbol 11 (F11)</option><option value="futbol_7">Fútbol 7 (F7)</option></select></label><label>Dificultad<select name="difficulty" required><option>Baja</option><option selected>Media</option><option>Alta</option></select></label></div><div class="form-row"><label>N.º de jugadores<input name="players" maxlength="40" required placeholder="Ej. 8-12"></label><label>Duración (min)<input name="duration" type="number" min="1" max="240" required></label></div><div class="form-row"><label>Material<input name="material" maxlength="200" required placeholder="Ej. Balones, conos y petos"></label><label>Añadir material<select id="exercise-form-material-helper"><option value="">Seleccionar de la lista…</option></select></label></div><label>Espacio<input name="space" maxlength="120" required placeholder="Ej. 20x20 m"></label><label>Descripción / desarrollo<textarea name="description" maxlength="2000" required></textarea></label><label>Variantes<textarea name="variants" maxlength="1000"></textarea></label><div class="button-row"><button class="primary" type="submit">Guardar ejercicio</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="add-session-dialog"><form id="add-session-form"><div class="dialog-head"><h2>Añadir ejercicio a sesión</h2><button type="button" data-close aria-label="Cerrar">×</button></div><fieldset><legend>Destino</legend><div class="choice-row"><label><input type="radio" name="destination" value="new" checked> Crear sesión nueva</label><label><input type="radio" name="destination" value="existing"> Añadir a sesión existente</label></div></fieldset><label>Sesión existente<select name="existingSessionId"></select></label><div class="form-row"><label>Fecha de la nueva sesión<div class="date-24"><select name="dateDay" required aria-label="Día de la sesión"></select><span>/</span><select name="dateMonth" required aria-label="Mes de la sesión"></select><span>/</span><select name="dateYear" required aria-label="Año de la sesión"></select></div></label><label>Hora de la nueva sesión<div class="time-24"><select name="timeHour" aria-label="Hora de la sesión, de 00 a 23"></select><span>:</span><select name="timeMinute" aria-label="Minuto de la sesión"></select></div></label></div><div class="form-row"><label>Campo de entrenamiento<input name="pitch" maxlength="80" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><label>Duración programada (min)<input name="targetDuration" type="number" min="1" max="240" value="75" placeholder="Ej. 75"></label></div><label>Nombre de la nueva sesión<input name="name" maxlength="120" placeholder="Ej. Pase, apoyo y finalización"></label><p class="meta">El bloque entra como calentamiento, parte principal o juego final según la categoría del ejercicio. Después podrás ajustar minutos, reordenarlo o quitarlo.</p><div class="button-row"><button class="primary" type="submit">Continuar</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="urgent-dialog"><div class="dialog-head"><h2>Cambio recomendado</h2><button type="button" data-close aria-label="Cerrar">×</button></div><p id="urgent-message"></p><div class="button-row"><button id="urgent-change" type="button" class="primary">Cambio</button><button type="button" class="secondary" data-close>Ahora no</button></div></dialog>
+
+  <dialog id="rating-dialog"><form id="rating-form"><div class="dialog-head"><h2 id="rating-match-name">Puntuación del partido</h2><button type="button" data-close aria-label="Cerrar">×</button></div><p>Puntúa a cada jugador del 1 al 5. Las notas se guardarán en el partido y en sus fichas.</p><div id="rating-players" class="rating-grid"></div><div class="button-row"><button class="primary" type="submit">Guardar puntuaciones y finalizar</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="match-detail-dialog"><div class="dialog-head"><h2 id="match-detail-title">Detalle del partido</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="match-detail-body"></div><div class="dialog-sticky-footer"><button type="button" class="dialog-close-prominent-btn" data-close>✕ Cerrar partido</button></div></dialog>
+
+  <dialog id="exercise-detail-dialog"><div class="dialog-head"><h2 id="exercise-detail-title">Ejercicio</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="exercise-detail-body"></div><div class="dialog-sticky-footer"><button type="button" class="dialog-close-prominent-btn" data-close>✕ Cerrar ejercicio</button></div></dialog>
+
+  <dialog id="session-detail-dialog"><div class="dialog-head"><h2 id="session-detail-title">Sesión</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="session-detail-body"></div><div class="dialog-sticky-footer"><button type="button" class="dialog-close-prominent-btn" data-close>✕ Cerrar sesión</button></div></dialog>
+
+  <dialog id="tactic-detail-dialog"><div class="dialog-head"><h2 id="tactic-detail-title">Táctica</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="tactic-detail-body"></div><div class="dialog-sticky-footer"><button type="button" class="dialog-close-prominent-btn" data-close>✕ Cerrar táctica</button></div></dialog>
+
+  <div id="tactica-interactiva-overlay" class="tactica-overlay hidden"><div class="tactica-overlay-head"><h2 id="tactica-interactiva-title">Táctica interactiva</h2><button type="button" id="tactica-interactiva-close" aria-label="Cerrar">×</button></div><div id="tactica-interactiva-body"></div></div>
+
+  <dialog id="auth-dialog" class="auth-dialog">
+    <form id="auth-form">
+      <h2 id="auth-title">Acceso a CampoBase</h2>
+      <p id="auth-help">Introduce tu PIN.</p>
+      <div id="initial-pin-fields" class="hidden">
+        <label>Crear PIN de Migue (acceso total)
+          <input name="newOwnerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password">
+        </label>
+        <label>Crear PIN del delegado (acceso al partido)
+          <input name="newDelegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password">
+        </label>
+      </div>
+      <label id="login-pin-field">PIN de Migue, delegado o demo
+        <input name="pin" type="password" inputmode="text" minlength="3" maxlength="8" autocomplete="current-password" placeholder="PIN de 4 cifras o escribe demo">
+      </label>
+      <div class="auth-button-stack">
+        <button class="primary" type="submit" id="auth-submit-btn">Entrar</button>
+        <button type="button" class="secondary" id="auth-demo-btn">Modo Demo</button>
+      </div>
+      <p id="auth-error" class="error" role="alert"></p>
+      <div class="auth-footer-actions">
+        <button type="button" id="auth-reload-btn" class="ghost compact">🔄 Recargar app</button>
+        <button type="button" id="auth-reset-btn" class="ghost compact" style="color:var(--danger, #dc2626);">¿Olvidaste el PIN?</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirmation-dialog"><div class="dialog-head"><h2 id="confirmation-title">Confirmar acción</h2></div><p id="confirmation-message"></p><div class="button-row"><button id="confirmation-accept" type="button" class="primary">Confirmar</button><button id="confirmation-cancel" type="button" class="secondary">Cancelar</button></div></dialog>
+
+  <dialog id="staff-dialog">
+    <form id="staff-form">
+      <div class="dialog-head">
+        <h2>Ficha de Cuerpo Técnico</h2>
+        <button type="button" data-close aria-label="Cerrar">×</button>
+      </div>
+      <input name="id" type="hidden">
+      <input name="existingPhoto" type="hidden">
+
+      <div class="form-row">
+        <div class="staff-photo-field photo-cropper-field">
+          <label>Foto (cámara o galería)
+            <input name="photoFile" type="file" accept="image/*" capture="environment">
+          </label>
+          <div class="staff-preview-wrapper photo-preview-wrapper">
+            <img id="staff-photo-preview" src="" alt="Vista previa" class="staff-preview-img avatar-preview-img hidden">
+            <div id="staff-photo-placeholder" class="avatar-preview-placeholder">👔</div>
+            <div class="photo-adjust-controls hidden" id="staff-photo-controls">
+              <button type="button" class="secondary compact" id="staff-crop-up-btn" title="Subir encuadre al rostro">▲ Rostro</button>
+              <button type="button" class="secondary compact" id="staff-crop-down-btn" title="Bajar encuadre">▼ Bajar</button>
+              <button type="button" id="staff-remove-photo-btn" class="ghost-danger compact">Eliminar foto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Nombre y apellidos
+          <input name="name" required maxlength="80" placeholder="Ej. Carlos Morales" autocomplete="off">
+        </label>
+        <label>Cargo / Rol
+          <select name="role" required>
+            <option value="head_coach">Primer Entrenador</option>
+            <option value="assistant_coach">Segundo Entrenador</option>
+            <option value="goalkeeper_coach">Preparador de Porteros</option>
+            <option value="fitness_coach">Preparador Físico</option>
+            <option value="team_delegate">Delegado de Equipo</option>
+            <option value="pitch_delegate">Delegado de Campo</option>
+            <option value="physio">Fisioterapeuta / Médico</option>
+            <option value="rehab">Readaptador Físico</option>
+            <option value="analyst">Analista Táctico</option>
+            <option value="kitman">Encargado de Material</option>
+            <option value="other">Otro cargo (personalizado)</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="staff-custom-role-group" class="form-row hidden">
+        <label>Especificar cargo personalizado
+          <input name="customRole" maxlength="60" placeholder="Ej. Coach Emocional / Nutricionista">
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>Teléfono móvil (llamadas y WhatsApp)
+          <input name="phone" type="tel" maxlength="30" placeholder="Ej. +34 600 000 000" autocomplete="tel">
+        </label>
+      </div>
+
+      <label>Notas internas / Titulación / Licencia
+        <textarea name="notes" maxlength="1000" placeholder="Ej. UEFA Pro, contacto de emergencia, disponibilidad horaria..."></textarea>
+      </label>
+
+      <div class="button-row">
+        <button class="primary" type="submit">Guardar perfil</button>
+        <button type="button" class="secondary" data-close>Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="whatsapp-dialog" class="whatsapp-dialog">
+    <div class="dialog-head">
+      <h2>📱 Comunicador WhatsApp</h2>
+      <button type="button" data-close aria-label="Cerrar">×</button>
+    </div>
+    <form id="whatsapp-form" onsubmit="event.preventDefault()">
+      <div class="whatsapp-type-tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-wa-type="callup">🏆 Convocatoria de Partido</button>
+        <button type="button" class="tab-btn" data-wa-type="training">⚽ Sesión de Entrenamiento</button>
+        <button type="button" class="tab-btn" data-wa-type="week">📅 Planificación Semanal</button>
+      </div>
+
+      <div class="form-row whatsapp-target-selectors">
+        <label id="wa-event-selector-label">Partido / Convocatoria
+          <select id="wa-event-select"></select>
+        </label>
+        <label>Destinatario
+          <select id="wa-recipient-select">
+            <option value="group">👥 Grupo general de familias</option>
+            <optgroup label="Mensaje privado por jugador" id="wa-parents-group"></optgroup>
+          </select>
+        </label>
+        <label id="wa-tone-col" style="flex:1;">Tratamiento (Entrenador)
+          <select id="wa-tone-select">
+            <option value="canary" selected>🇮🇨 Canario (Les / Te comunico)</option>
+            <option value="peninsular">🇪🇸 Peninsular singular (Os / Te comunico)</option>
+            <option value="peninsular_plural">🇪🇸 Peninsular plural (Os comunicamos)</option>
+            <option value="canary_plural">🇮🇨 Canario plural (Les comunicamos)</option>
+            <option value="formal">👔 Formal (Les / Le comunico)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row hidden" id="wa-parent-selection-row">
+        <label style="flex:1.2;">Enviar mensaje a:
+          <select id="wa-parent-type-select">
+            <option value="both">👨‍👩‍👦 Padre y Madre (ambos)</option>
+            <option value="father">👨 Solo Padre</option>
+            <option value="mother">👩 Solo Madre</option>
+          </select>
+        </label>
+        <label id="wa-callup-status-col" style="flex:1.2;">Estado en convocatoria:
+          <select id="wa-callup-status-select">
+            <option value="auto">⚡ Automático (según lista oficial)</option>
+            <option value="called">✅ Convocado (enviar citación y campo)</option>
+            <option value="excluded">❌ NO Convocado (comunicar baja)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row hidden" id="wa-family-contacts-row" style="background:var(--cb-surface-soft, rgba(255,255,255,0.03));border:1px solid var(--cb-border, rgba(255,255,255,0.1));border-radius:8px;padding:0.75rem 0.9rem;gap:0.75rem;align-items:flex-end;">
+        <div style="flex:1;min-width:180px;">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--cb-accent,#00E5FF);display:block;margin-bottom:0.25rem;">👨 Contacto Padre</span>
+          <div style="display:flex;gap:0.4rem;">
+            <input id="wa-father-name-input" placeholder="Nombre (ej. Carlos)" style="flex:1;" title="Nombre del Padre">
+            <input id="wa-father-phone-input" placeholder="Teléfono (ej. 611 110 011)" style="flex:1;" title="Teléfono WhatsApp Padre">
+          </div>
+        </div>
+        <div style="flex:1;min-width:180px;">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--cb-accent,#00E5FF);display:block;margin-bottom:0.25rem;">👩 Contacto Madre</span>
+          <div style="display:flex;gap:0.4rem;">
+            <input id="wa-mother-name-input" placeholder="Nombre (ej. Elena)" style="flex:1;" title="Nombre de la Madre">
+            <input id="wa-mother-phone-input" placeholder="Teléfono (ej. 622 110 011)" style="flex:1;" title="Teléfono WhatsApp Madre">
+          </div>
+        </div>
+        <button type="button" id="wa-save-family-contacts-btn" class="secondary compact" style="white-space:nowrap;margin-bottom:0.1rem;" title="Guardar estos nombres y teléfonos en la ficha oficial del jugador">💾 Guardar en ficha</button>
+      </div>
+
+      <div class="form-row hidden" id="wa-exclusion-reason-row" style="background:var(--cb-surface-soft, rgba(255,255,255,0.04));border-radius:8px;padding:0.6rem 0.8rem;border:1px dashed var(--cb-danger, #ef4444);gap:0.75rem;">
+        <label style="flex:1.4;">Motivo de no convocatoria:
+          <select id="wa-exclusion-reason-select">
+            <option value="rotation">🔄 Por rotación</option>
+            <option value="injured">🩹 Por lesión</option>
+            <option value="cards">🟨 Por tarjetas / sanción</option>
+            <option value="training">🏃 Por no haber venido a entrenar</option>
+            <option value="sick">🤒 Por enfermedad / indisposición</option>
+            <option value="coach_decision">📋 Por decisión técnica</option>
+            <option value="personal">🏠 Por motivos personales</option>
+            <option value="custom">✏️ Otro motivo personalizado...</option>
+          </select>
+        </label>
+        <label style="flex:1.6;" id="wa-exclusion-note-col" class="hidden">Aclaración / detalle del motivo:
+          <input id="wa-exclusion-custom-note" maxlength="150" placeholder="Ej. Esguince leve de tobillo">
+        </label>
+      </div>
+
+      <div class="form-row" id="wa-match-details-row">
+        <label>Equipación de juego
+          <select id="wa-kit-select">
+            <option value="primary">1.ª Oficial (Roja y Negra)</option>
+            <option value="secondary">2.ª Alternativa (Blanca y Negra)</option>
+            <option value="training">Equipación de entrenamiento</option>
+          </select>
+        </label>
+        <label class="checkbox-label" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.6rem;">
+          <input type="checkbox" id="wa-include-bibs"> Llevar petos de juego
+        </label>
+      </div>
+
+      <div class="form-row" id="wa-location-row">
+        <label style="flex:1.5;">Campo / Instalación
+          <input id="wa-field-name" maxlength="120" placeholder="Ej. Campo Alfonso Silva (La Ballena)">
+        </label>
+        <label style="flex:2;">Enlace Google Maps (automático y editable)
+          <div style="display:flex;gap:0.4rem;">
+            <input id="wa-maps-url" type="url" placeholder="https://maps.google.com/?q=..." style="flex:1;">
+            <button type="button" id="wa-test-maps-btn" class="secondary compact" title="Comprobar enlace en pestaña nueva">🗺️ Probar</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="form-row" id="wa-times-row">
+        <label>Hora de citación
+          <input id="wa-call-time" maxlength="5" placeholder="08:15" value="08:15">
+        </label>
+        <label>Hora de inicio
+          <input id="wa-game-time" maxlength="5" placeholder="09:00" value="09:00">
+        </label>
+      </div>
+
+      <div class="form-row hidden" id="wa-week-tactical-row">
+        <label>Objetivo formativo / táctico de la semana
+          <input id="wa-week-tactical" maxlength="200" placeholder="Ej. Presión tras pérdida y repliegue ordenado">
+        </label>
+      </div>
+
+      <label>Mensaje para WhatsApp (puedes editarlo libremente antes de enviar):
+        <textarea id="whatsapp-preview-text" rows="11" spellcheck="false" style="font-family:monospace;font-size:0.9rem;line-height:1.45;"></textarea>
+      </label>
+
+      <div class="button-row" style="margin-top:1rem;" id="wa-button-row">
+        <button type="button" id="whatsapp-copy-btn" class="secondary">📋 Copiar mensaje</button>
+        <div id="wa-dynamic-open-buttons" style="display:inline-flex;gap:0.5rem;flex-wrap:wrap;">
+          <button type="button" id="whatsapp-open-btn" class="primary wa-open-action-btn" style="background:#25D366;border-color:#25D366;color:#fff;">📱 Abrir WhatsApp</button>
+        </div>
+        <button type="button" class="secondary" data-close>Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="whistle-dialog" class="whistle-dialog">
+    <div class="dialog-head">
+      <h2 id="whistle-dialog-title">⏱️ Modo Silbato & Cronómetro de Campo</h2>
+      <button type="button" data-close aria-label="Cerrar">×</button>
+    </div>
+    <div class="whistle-body">
+      <div class="whistle-timer-hero">
+        <div class="whistle-time-display" id="whistle-time-display">00:00</div>
+        <div class="whistle-block-info">
+          <h3 id="whistle-block-title">Selecciona un bloque</h3>
+          <p class="meta" id="whistle-block-meta">Duración: -- min</p>
+        </div>
+        <div class="whistle-progress-bar">
+          <div class="whistle-progress-fill" id="whistle-progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="whistle-controls-row">
+        <button type="button" id="whistle-prev-btn" class="secondary compact" title="Bloque anterior">⏮️ Anterior</button>
+        <button type="button" id="whistle-toggle-btn" class="primary" style="font-size:1.1rem;padding:0.6rem 1.4rem;">▶️ Iniciar</button>
+        <button type="button" id="whistle-next-btn" class="secondary compact" title="Siguiente bloque">Siguiente ⏭️</button>
+        <button type="button" id="whistle-complete-btn" class="secondary compact">✅ Completar bloque</button>
+      </div>
+
+      <div class="whistle-sound-row">
+        <button type="button" id="whistle-sound-btn" class="ghost-compact active">🔊 Silbato Fox 40: Activado</button>
+        <button type="button" id="whistle-vibrate-btn" class="ghost-compact active">📳 Vibración: Activada</button>
+        <button type="button" id="whistle-blow-btn" class="secondary compact" style="background:#e02444;color:#fff;border-color:#e02444;">📢 Pitar ahora</button>
+      </div>
+
+      <div class="whistle-blocks-list-container">
+        <h4 style="margin:0.75rem 0 0.4rem;">Tareas y bloques del entrenamiento:</h4>
+        <ul id="whistle-blocks-list" class="plain-list whistle-blocks-list"></ul>
+      </div>
+
+      <div class="button-row" style="margin-top:1rem;">
+        <button type="button" class="secondary" data-close>Cerrar cronómetro</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="vendor/supabase.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@56627d11dfc6002e094779c50a3ae9f10ca282c0/js/app.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@56627d11dfc6002e094779c50a3ae9f10ca282c0/js/redesign-nav.js"></script>
+  <script>
+    // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
+    window.addEventListener('load', () => {
+      window.setTimeout(() => {
+        const app = window.__campobase;
+        if (app?.state?.role) return;
+        const dialog = document.getElementById('auth-dialog');
+        if (!dialog) return;
+        document.body.classList.add('auth-locked');
+        const saasShell = document.getElementById('saas-auth-shell');
+        const localForm = document.getElementById('auth-form');
+        if (!saasShell) localForm?.classList.remove('hidden');
+        if (!dialog.open) dialog.showModal();
+      }, 2500);
+    });
+  </script>
+</body>
+</html>

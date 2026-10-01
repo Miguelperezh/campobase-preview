@@ -359,3 +359,654 @@ body.cb-redesign-active #calendario .cbx-calendar-played { display: grid; gap: 1
 body.cb-redesign-active #calendario .cbx-calendar-played > summary { margin-bottom: 9px; color: #64748b; cursor: pointer; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
 body.cb-redesign-active #calendario .cbx-calendar-played .cbx-calendar-group { margin-bottom: 15px; }
 @media(max-width:620px){body.cb-redesign-active #calendario > .cbx-banner { display: grid; gap: 10px; justify-items: start; }body.cb-redesign-active #calendario > .cbx-banner h2 { font-size: 26px !important; }body.cb-redesign-active #calendario .cbx-calendar-match { grid-template-columns: 51px minmax(0,1fr) auto; gap: 8px; padding: 9px; }body.cb-redesign-active #calendario .cbx-calendar-score { min-width: 54px; padding: 7px 5px; font-size: 13px; }body.cb-redesign-active #calendario .cbx-calendar-month { padding: 12px; }}
+
+/* ==========================================================
+   PLAN DE PARTIDO: BOTONES DE IMPRESIÓN EN LA INTERFAZ
+   ========================================================== */
+.prep-print-plan,
+#prep-print-current,
+#prep-print-moments,
+.cbx-plan-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.cbx-live-plan summary .cbx-live-plan-summary-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.cbx-live-plan summary .cbx-plan-print {
+  font-size: 11px;
+  padding: 3px 8px;
+  min-height: 26px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.cbx-live-plan summary .cbx-plan-print:hover {
+  background: #e2e8f0;
+}
+
+/* ==========================================================
+   PLAN DE PARTIDO: FICHA DE IMPRESIÓN A4 (PANTALLA E IMPRESIÓN)
+   ========================================================== */
+.cb-print-root.cb-print-match-plan-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background: #0f172a;
+  min-height: 100vh;
+  padding: 20px 0 60px 0;
+  box-sizing: border-box;
+}
+
+.cb-print-sheet.cbx-pmp-sheet {
+  width: 794px;
+  min-height: 1123px;
+  max-height: none;
+  height: auto;
+  overflow: visible;
+  padding: 28px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #ffffff;
+  color: #0f172a;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  margin: 0 auto;
+}
+
+/* Cabecera Oficial */
+.cbx-pmp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2.5px solid #0f172a;
+  padding-bottom: 12px;
+  gap: 16px;
+}
+
+.cbx-pmp-head-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cbx-pmp-crest-box {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cbx-pmp-crest-img {
+  max-width: 50px;
+  max-height: 50px;
+  object-fit: contain;
+}
+
+.cbx-pmp-head-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cbx-pmp-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cbx-pmp-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.cbx-pmp-match-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.cbx-pmp-rival strong {
+  color: #0f172a;
+}
+
+.cbx-pmp-dot {
+  color: #94a3b8;
+  font-weight: 900;
+}
+
+.cbx-pmp-head-right {
+  flex-shrink: 0;
+}
+
+.cbx-pmp-info-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 11px;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+/* Secciones de la Ficha */
+.cbx-pmp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+}
+
+.cbx-pmp-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cbx-pmp-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cbx-pmp-sec-title h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f172a;
+}
+
+.cbx-pmp-badge-accent {
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.cbx-pmp-badge-sys {
+  font-size: 11px;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.cbx-pmp-sec-desc {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Bloque 1: Titulares y Suplentes */
+.cbx-pmp-starters-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cbx-pmp-starter-card {
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 6px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cbx-pmp-starter-card.is-gk {
+  border-color: #f59e0b;
+  background: #fefce8;
+}
+
+.cbx-pmp-starter-pos {
+  font-size: 9.5px;
+  font-weight: 850;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.cbx-pmp-starter-card.is-gk .cbx-pmp-starter-pos {
+  color: #b45309;
+}
+
+.cbx-pmp-starter-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.cbx-pmp-starter-dorsal {
+  font-size: 11px;
+  font-weight: 900;
+  color: #0f172a;
+  background: #e2e8f0;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.cbx-pmp-starter-card.is-gk .cbx-pmp-starter-dorsal {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.cbx-pmp-starter-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.cbx-pmp-bench-banner {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.cbx-pmp-bench-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cbx-pmp-bench-pill {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  color: #1e293b;
+}
+
+/* Bloque 2: Cronograma de Sustituciones */
+.cbx-pmp-moments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cbx-pmp-no-moments {
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+  padding: 6px 0;
+}
+
+.cbx-pmp-moment-card {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.cbx-pmp-moment-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cbx-pmp-moment-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cbx-pmp-min-pill {
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.cbx-pmp-period-pill {
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cbx-pmp-moment-sys {
+  font-size: 11px;
+  color: #475569;
+}
+
+.cbx-pmp-moment-changes {
+  display: flex;
+  flex-direction: column;
+}
+
+.cbx-pmp-change-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cbx-pmp-change-row:last-child {
+  border-bottom: none;
+}
+
+.cbx-pmp-tag-in {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 900;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.cbx-pmp-tag-out {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 900;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.cbx-pmp-tag-arrow {
+  color: #64748b;
+  font-weight: 900;
+}
+
+.cbx-pmp-tag-move {
+  background: #fef3c7;
+  color: #b45309;
+  font-weight: 900;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.cbx-pmp-tag-gk {
+  background: #ffedd5;
+  color: #c2410c;
+  font-weight: 900;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.cbx-pmp-pos-badge {
+  font-size: 10.5px;
+  color: #0369a1;
+  font-weight: 700;
+}
+
+.cbx-pmp-moment-snapshot {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  color: #475569;
+}
+
+.cbx-pmp-snap-col strong {
+  color: #0f172a;
+}
+
+/* Bloque 3: Tabla de Reparto */
+.cbx-pmp-table-container {
+  overflow-x: auto;
+}
+
+.cbx-pmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.cbx-pmp-table th {
+  background: #f1f5f9;
+  border-bottom: 2px solid #cbd5e1;
+  padding: 5px 6px;
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.cbx-pmp-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.cbx-pmp-td-num {
+  font-weight: 900;
+  color: #64748b;
+  text-align: center;
+}
+
+.cbx-pmp-td-name strong {
+  color: #0f172a;
+}
+
+.cbx-pmp-role-pill {
+  font-size: 9.5px;
+  font-weight: 750;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.cbx-pmp-role-pill.is-start {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.cbx-pmp-role-pill.is-sub {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.cbx-pmp-pct-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cbx-pmp-pct-bar-wrap > div {
+  width: 48px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.cbx-pmp-pct-bar-fill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 3px;
+}
+
+.cbx-pmp-pct-bar-wrap span {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #334155;
+  min-width: 26px;
+}
+
+.cbx-pmp-td-spans {
+  font-size: 10px;
+  color: #334155;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Bloque 4: Pautas y Acta Bolígrafo */
+.cbx-pmp-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.cbx-pmp-rules-col h4,
+.cbx-pmp-pen-col h4 {
+  margin: 0 0 6px 0;
+  font-size: 10.5px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0f172a;
+}
+
+.cbx-pmp-rules-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 10.5px;
+  color: #334155;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cbx-pmp-pen-boxes {
+  border: 1.5px dashed #94a3b8;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cbx-pmp-result-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cbx-pmp-box-slot {
+  display: inline-block;
+  width: 22px;
+  height: 20px;
+  border: 1.5px solid #0f172a;
+  background: #ffffff;
+  border-radius: 3px;
+}
+
+.cbx-pmp-pen-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: #334155;
+}
+
+.cbx-pmp-dots {
+  flex: 1;
+  border-bottom: 1px dotted #94a3b8;
+  height: 10px;
+}
+
+/* Pie de Página */
+.cbx-pmp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #cbd5e1;
+  padding-top: 6px;
+  font-size: 9.5px;
+  color: #64748b;
+  margin-top: auto;
+}
+
+/* Media Print */
+@media print {
+  .cb-print-root.cb-print-match-plan-root {
+    background: #ffffff !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+  .cb-print-sheet.cbx-pmp-sheet {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 16px 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+  }
+  .cbx-pmp-moment-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .cbx-pmp-section {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+}
+
