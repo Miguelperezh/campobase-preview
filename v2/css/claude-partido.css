@@ -106,8 +106,9 @@ body.cb-redesign-active #preparacion .cbx-moment-minutes summary { cursor: point
 body.cb-redesign-active #preparacion .cbx-moment-minutes div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; margin-top: 8px; }
 body.cb-redesign-active #preparacion .cbx-moment-minutes span { display: flex; justify-content: space-between; gap: 5px; padding: 6px; border-radius: 7px; background: #f1f5f9; color: var(--cbx-ink); font-size: 10px; }
 body.cb-redesign-active #preparacion #prep-copy-auto { justify-self: start; min-height: 34px; }
-body.cb-redesign-active #preparacion .cbx-prep-editor-layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
-body.cb-redesign-active #preparacion .cbx-prep-controls { display: grid; gap: 11px; min-width: 0; }
+body.cb-redesign-active #preparacion .cbx-prep-editor-layout { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; max-width: 720px; margin: 0 auto; }
+@media(min-width: 1280px) { body.cb-redesign-active #preparacion .cbx-prep-editor-layout { grid-template-columns: minmax(560px, 640px) minmax(360px, 1fr); max-width: 1180px; margin: 0; } }
+body.cb-redesign-active #preparacion .cbx-prep-controls { display: grid; gap: 12px; min-width: 0; }
 body.cb-redesign-active #preparacion .keeper-selectors { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 0; }
 body.cb-redesign-active #preparacion .keeper-selectors label { display: grid; gap: 5px; min-width: 0; padding: 9px; border: 1px solid #f5d486; border-radius: 10px; background: #fff9e8; color: #8a4d00; font-size: 11px; font-weight: 800; }
 body.cb-redesign-active #preparacion .keeper-selectors select { min-width: 0; width: 100%; min-height: 40px; margin: 0; background: #fff; font-size: 13px; font-weight: 600; }
@@ -136,11 +137,12 @@ body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board { display: bloc
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-field { fill: #205f43; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player circle { fill: #fff; stroke: #cbd5e1; stroke-width: .6; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player .num { fill: #0b2d20; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details { margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--cbx-line); border-radius: 14px; background: #f8fafc; color: var(--cbx-muted); font-size: 12px; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details > summary { cursor: pointer; color: var(--cbx-ink); font-weight: 850; font-size: 13px; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details > p { margin: 6px 0 0; line-height: 1.45; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details .live-tactics-slots { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
-body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot { min-width: 0; padding: 8px 12px; border: 1px solid var(--cbx-line, #e2e8f0); border-radius: 10px; background: #fff; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details { margin: 0; padding: 14px 16px; border: 1px solid var(--cbx-line); border-radius: 14px; background: #f8fafc; color: var(--cbx-muted); font-size: 12px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details h4 { margin: 0 0 4px; color: var(--cbx-ink); font: 900 15px/1.2 var(--cbx-disp); text-transform: uppercase; letter-spacing: .02em; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details p { margin: 0 0 10px; line-height: 1.45; color: var(--cbx-muted); font-size: 11.5px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .live-tactics-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-top: 6px; }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .suplentes { grid-column: 1 / -1; margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--cbx-line, #e2e8f0); }
+body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot { min-width: 0; padding: 8px 12px; border: 1px solid var(--cbx-line, #e2e8f0); border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot .slot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot .pos { font-size: 12px; font-weight: 800; color: var(--cbx-ink, #0f172a); }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details .slot select { min-width: 0; width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid var(--cbx-line, #cbd5e1); border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--cbx-ink, #0f172a); background: #fff; text-overflow: ellipsis; white-space: nowrap; }
@@ -158,7 +160,7 @@ body.cb-redesign-active .live-tactics-popup select,
 #calendar-substitutions-v2-dialog .v2-lineup-row .form-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
 #calendar-substitutions-v2-dialog select,
 #calendar-substitutions-v2-dialog input { min-height: 44px; font-size: 13.5px; font-weight: 600; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--cbx-line, #cbd5e1); text-overflow: ellipsis; }
-@media(max-width:900px){body.cb-redesign-active #preparacion .cbx-prep-editor-layout { grid-template-columns: 1fr; }body.cb-redesign-active #preparacion .cbx-prep-pitch { grid-row: 1; }body.cb-redesign-active #preparacion .cbx-prep-controls { grid-row: 2; }body.cb-redesign-active #preparacion #preparacion-list { grid-template-columns: 1fr; }}
+@media(max-width:900px){body.cb-redesign-active #preparacion #preparacion-list { grid-template-columns: 1fr; }}
 @media(max-width:620px){body.cb-redesign-active #preparacion .keeper-selectors { grid-template-columns: repeat(2,minmax(0,1fr)); }body.cb-redesign-active #preparacion #preparacion-editor { padding: 14px 12px; }body.cb-redesign-active #preparacion #preparacion-editor > .section-head { flex-wrap: wrap; }}
 
 /* Partido en vivo: disposición de Claude sobre el reloj, marcador y controles actuales. */

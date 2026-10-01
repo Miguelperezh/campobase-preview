@@ -1103,6 +1103,30 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de pruebas en `tests/cambios-pizarra-desplegables.test.js` verificando el límite de 640px en la pizarra, maquetación a 1 columna de `#prep-slots`, dimensiones de popup a 340px y modal de calendario a 820px.
    - Batería de **614/614 tests pasando al 100%** y `npm run check` totalmente limpio.
 
+### 23. Entrega v63 (01/10/2026) — Pizarra Hero de 640px en Pantallas Estándar y Desplegables de Puestos Siempre Visibles (Spec 006)
+
+1. **Pizarra Hero de 640px en Pantallas Portátiles y Estándar (1024px):**
+   - **Diagnóstico de Causa Raíz (`media_1790858964644.png`):** En portátiles MacBook (resolución viewport 1024×886px), con la barra lateral de 220px, el ancho disponible en `#preparacion` es de ~768px. Al estar el breakpoint en `@media(max-width: 900px)`, la pantalla de 1024px activaba la maquetación de 2 columnas (`minmax(300px, 360px) minmax(0, 1fr)`). La columna de controles consumía 360px a la izquierda, forzando a la columna de la pizarra a reducirse a escasos ~330px-360px y haciendo que el campo se viese comprimido.
+   - **Solución Implementada:**
+     - En `css/claude-partido.css`, `.cbx-prep-editor-layout` se estableció por defecto (< 1280px) a una sola columna centrada con ancho máximo de 720px (`grid-template-columns: 1fr; max-width: 720px; margin: 0 auto;`).
+     - Esto permite que `.cbx-prep-pitch .board-wrap` y `#prep-board` alcancen su tamaño hero completo de **640px × 640px** en cualquier portátil, tablet o pantalla estándar, multiplicando por más de 3.1 su superficie visual útil respecto a los 360px anteriores.
+     - En pantallas ultra-anchas (`@media(min-width: 1280px)`), se activa la doble columna con `grid-template-columns: minmax(560px, 640px) minmax(360px, 1fr); max-width: 1180px;`, garantizando que la pizarra nunca descienda de 560px-640px.
+     - En `js/app.js` (`arrangeClaudePrepEditor`), se antepuso la pizarra en el orden del DOM (`layout.append(pitch, controls)`), de modo que el campo táctico se presenta de inmediato como elemento estelar.
+
+2. **Desplegables de Puestos Permanentemente Visibles («los desplegables ya no salen»):**
+   - **Diagnóstico de Causa Raíz:** En la versión anterior, los 7 selectores de puesto (`#prep-slots`) se envolvieron dentro de un `<details class="cbx-prep-slots-details">` con `details.open = prepDraft.some(pos => !pos.playerId)`. Debido a que el sistema auto-asigna a los 7 titulares de inicio, `details.open` evaluaba a `false`. El acordeón aparecía cerrado por defecto (`▶ Elegir jugadores y cambiar posiciones`), ocultando totalmente los 7 desplegables de la vista del usuario.
+   - **Solución Implementada:**
+     - Se eliminó el elemento `<details>` plegable y su atributo `open` condicional.
+     - Los desplegables se alojan en un contenedor abierto y permanente `<section class="cbx-prep-slots-details cbx-prep-slots-panel panel">` con encabezado claro (`<h4>Elegir jugadores y cambiar posiciones</h4><p>...</p>`), antepuesto en `controls` (`controls.prepend(slotsPanel)`).
+     - Los 7 selectores quedan siempre desplegados, accesibles e inmediatamente visibles sin requerir clics previos.
+     - Se maquetó `.live-tactics-slots` con cuadrícula adaptativa `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;`. En el contenedor de 640px forma 2 columnas holgadas de ~300px por selector, permitiendo leer dorsales y nombres completos sin solapamientos ni truncamientos, y adaptándose a 1 columna en pantallas móviles (<580px). Los suplentes se expanden a ancho completo (`grid-column: 1 / -1`).
+
+3. **Especificación SDD 006 y Validación de Calidad:**
+   - Carpeta formal en `specs/006-pizarra-hero-640px-desplegables-visibles/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas actualizada en `tests/cambios-pizarra-desplegables.test.js` verificando el layout de 1 columna por defecto, dimensiones de 640px, ausencia de `<details>` plegables y orden `pitch` antes de `controls`.
+   - **614/614 tests pasando al 100%** y `npm run check` con cero errores.
+
+
 
 
 

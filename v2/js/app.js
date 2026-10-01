@@ -3930,7 +3930,7 @@ function arrangeClaudePrepEditor() {
   controls.className = 'cbx-prep-controls';
   const pitch = document.createElement('div');
   pitch.className = 'cbx-prep-pitch';
-  layout.append(controls, pitch);
+  layout.append(pitch, controls);
   head.after(layout);
   layout.before(editor.querySelector('#prep-moments'));
   controls.append(keepers, keeperHelp, squad, hint, actions);
@@ -3938,12 +3938,11 @@ function arrangeClaudePrepEditor() {
   if (back) actions.insertBefore(back, actions.children[1] || null);
   pitch.append(live);
   const slots = live.querySelector('#prep-slots');
-  const details = document.createElement('details');
-  details.className = 'cbx-prep-slots-details';
-  details.innerHTML = '<summary>Elegir jugadores y cambiar posiciones</summary><p>Puedes colocar a cualquier convocado en otro puesto, también si su ficha indica otra posición. Si ya está alineado, se intercambia con el jugador de ese puesto.</p>';
-  details.open = prepDraft.some((position) => !position.playerId);
-  controls.insertBefore(details, hint);
-  details.append(slots);
+  const slotsPanel = document.createElement('section');
+  slotsPanel.className = 'cbx-prep-slots-details cbx-prep-slots-panel panel';
+  slotsPanel.innerHTML = '<div class="cbx-prep-slots-head"><h4>Elegir jugadores y cambiar posiciones</h4><p>Puedes colocar a cualquier convocado en otro puesto, también si su ficha indica otra posición. Si ya está alineado, se intercambia con el jugador de ese puesto.</p></div>';
+  slotsPanel.append(slots);
+  controls.prepend(slotsPanel);
   const select = $('#prep-formacion');
   const pills = document.createElement('div');
   pills.className = 'cbx-formation-pills';
