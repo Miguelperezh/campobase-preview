@@ -1,0 +1,149 @@
+{
+  "id": "TEC-CON-CAMBIOS-DIRECCION",
+  "nombre": "Circuito de conducción con cambios de dirección",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+
+  "vista_rapida": {
+    "tipo_principal": "Tecnificación individual",
+    "que_se_trabaja": [
+      "Conducción",
+      "Control",
+      "Cambio de dirección",
+      "Interior",
+      "Exterior",
+      "Suela",
+      "Recorte"
+    ],
+    "tiempo_estimado_15": "14-16 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 circuitos x 5"
+    },
+    "material": "8 conos + 5 balones / circuito",
+    "series": [
+      {
+        "nombre": "Serie 1 · Interior",
+        "instruccion": "Conducción usando el interior, alternando ambos pies."
+      },
+      {
+        "nombre": "Serie 2 · Exterior",
+        "instruccion": "Conducción usando el exterior del pie en cada cambio."
+      },
+      {
+        "nombre": "Serie 3 · Suela / Recorte",
+        "instruccion": "Frenar/acomodar con suela y salir con recorte en cada cambio."
+      }
+    ],
+    "explicacion_breve": "Recorrido en zigzag entre dos filas de conos; al llegar, regreso por fuera con el balón.",
+    "animacion": {
+      "gif": "Animacion_Conduccion_Cambios_Direccion_VALIDADA.gif",
+      "leyenda": "Azul: jugador · Balón junto al poseedor · Cono naranja/rojo · Negro: conducción · Azul discontinua: regreso con balón"
+    }
+  },
+
+  "detalle": {
+    "objetivos": [
+      "Dominar el balón con ambos pies.",
+      "Mejorar los cambios de dirección y de ritmo.",
+      "Coordinar desplazamiento y balón.",
+      "Mantener el balón cerca y bajo control."
+    ],
+    "claves_entrenador": [
+      "Empujar el balón, no patearlo.",
+      "Cabeza arriba al salir de cada cambio.",
+      "Apoyos equilibrados y rodillas semiflexionadas.",
+      "La técnica manda sobre la velocidad."
+    ],
+    "montaje": [
+      "Colocar 8 conos en dos filas alternadas que formen un único zigzag.",
+      "Separar aproximadamente 2 m las dos filas.",
+      "Dejar aproximadamente 2-2,5 m entre cambios consecutivos.",
+      "Colocar 5 jugadores con balón en cada circuito.",
+      "Montar 3 circuitos iguales para trabajar con 15 jugadores."
+    ],
+    "desarrollo": [
+      "A sale desde la salida con su balón.",
+      "Conduce al primer cono de un lado y lo supera por fuera.",
+      "Cambia hacia el siguiente cono de la fila contraria.",
+      "Repite izquierda-derecha hasta superar el último cono.",
+      "Realiza la serie técnica indicada: interior, exterior o suela + recorte.",
+      "En la llegada termina el zigzag y sale por el lateral.",
+      "Regresa por fuera con su propio balón, sin cruzar el circuito.",
+      "Se coloca al final de la cola. El siguiente sale cuando hay espacio."
+    ],
+    "que_buscamos": [
+      "Balón cerca del pie.",
+      "Cambios de dirección cortos.",
+      "Uso consciente de superficies."
+    ],
+    "que_observar": [
+      "Usa ambos pies.",
+      "Cabeza arriba al salir del cambio.",
+      "No pierde equilibrio ni balón."
+    ],
+    "correcciones": [
+      "Balón cerca.",
+      "Interior / Exterior.",
+      "Suela y recorta.",
+      "Mira al frente."
+    ],
+    "reglas": [
+      "Cada jugador lleva su balón.",
+      "El balón debe permanecer controlado.",
+      "No se permite lanzar el balón largo y correr detrás.",
+      "El regreso se hace por fuera del circuito.",
+      "El siguiente no sale hasta que exista separación suficiente."
+    ],
+    "si_sale_mal": [
+      "Aumentar separación.",
+      "Reducir velocidad.",
+      "Más tiempo entre salidas."
+    ],
+    "si_sale_bien": [
+      "Reducir separación.",
+      "Acelerar tras el cambio.",
+      "Añadir pase final."
+    ],
+    "variantes": [],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Fútbol - Controla Club",
+      "ejercicio_original": "Circuito de conducción con cambios de dirección",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Se mantiene un único recorrido en zigzag formado por dos filas alternadas de conos.",
+        "Para 15 jugadores se organizan 3 circuitos de 5 jugadores.",
+        "En la adaptación validada, el jugador regresa por fuera con su propio balón."
+      ]
+    }
+  },
+
+  "logica_animacion": {
+    "formas_reproduccion": ["automatica", "paso_a_paso"],
+    "series_en_orden": [
+      "Serie 1 Interior",
+      "Serie 2 Exterior",
+      "Serie 3 Suela / Recorte"
+    ],
+    "acciones_permitidas": ["conduccion", "regreso_con_balon"],
+    "reglas": [
+      "Durante la conducción, jugador y balón se desplazan juntos.",
+      "El regreso se representa por fuera del circuito y con balón.",
+      "No introducir texto explicativo dentro de la pizarra, salvo etiquetas funcionales como SALIDA y LLEGADA.",
+      "Las series se muestran fuera de la pizarra, de forma clara y visual."
+    ]
+  },
+
+  "layout_visual": {
+    "paleta_plantilla": ["blanco", "negro", "rojo"],
+    "pizarra": "verde",
+    "sin_texto_explicativo_dentro_del_campo": true,
+    "series_fuera_del_campo": true,
+    "series_destacadas": [
+      "Serie 1 Interior",
+      "Serie 2 Exterior",
+      "Serie 3 Suela / Recorte"
+    ],
+    "no_enumerar_ejercicios": true
+  }
+}

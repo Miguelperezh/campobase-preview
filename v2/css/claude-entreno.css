@@ -1681,6 +1681,23 @@ body.cb-redesign-active .tac-arrow.tiq {
 .tactic-tool-icon .tac-arrow.dri { stroke-width: 1.5px !important; }
 .tactic-tool-icon .tac-arrow.tiq { stroke-width: 1.6px !important; }
 
+/* Leyenda de la pizarra táctica: iconos siempre compactos e inline (28x14) */
+body.cb-redesign-active .board-legend svg,
+body.cb-redesign-active svg.tactic-legend-arrow,
+.board-legend svg,
+svg.tactic-legend-arrow {
+  display: inline-block !important;
+  width: 28px !important;
+  height: 14px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 14px !important;
+  max-height: 14px !important;
+  aspect-ratio: auto !important;
+  vertical-align: middle !important;
+  flex: none !important;
+}
+
 /* ==========================================================
    IMPRESIÓN OFICIAL CLAUDE (SESIÓN Y EJERCICIO A4)
    ========================================================== */

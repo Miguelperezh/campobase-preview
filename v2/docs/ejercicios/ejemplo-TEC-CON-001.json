@@ -1,0 +1,214 @@
+{
+  "id": "TEC-CON-001",
+  "nombre": "Conducción en zig-zag",
+  "estado": "borrador",
+
+  "clasificacion": {
+    "categoria_principal": "Tecnificación individual",
+    "subcategorias": [
+      "Conducción",
+      "Control",
+      "Cambio de dirección",
+      "Coordinación"
+    ],
+    "momento_juego": "Técnico aislado"
+  },
+
+  "nivel": "Principiante",
+
+  "edad": {
+    "min": 6,
+    "max": 12,
+    "recomendada": "Alevín 10-11",
+    "apto_alevin": "si"
+  },
+
+  "apto_alevin_10_11": {
+    "estado": "si",
+    "motivo": "Carga técnica baja, mucho balón, sin contacto físico."
+  },
+
+  "jugadores": {
+    "min": 4,
+    "max": 16,
+    "por_grupo": 1,
+    "numero_grupos": null
+  },
+
+  "duracion": {
+    "total_min": 15,
+    "total_max": 20,
+    "series": null,
+    "repeticiones": null,
+    "descanso_seg": null
+  },
+
+  "intensidad": "Media",
+
+  "espacio": {
+    "ancho_m": 10,
+    "largo_m": 20
+  },
+
+  "material": [
+    { "tipo": "cono", "cantidad": 8 },
+    { "tipo": "balon", "cantidad": "1 por jugador" }
+  ],
+
+  "objetivos": [
+    "Dominar el balón con ambos pies",
+    "Mejorar los cambios de dirección",
+    "Coordinar desplazamiento y balón",
+    "Mantener el balón bajo control"
+  ],
+
+  "que_se_trabaja": [
+    "Conducción",
+    "Control de balón",
+    "Interior y exterior del pie",
+    "Cambios de dirección",
+    "Coordinación",
+    "Percepción visual"
+  ],
+
+  "que_buscamos": "Que el jugador conduzca manteniendo el balón cerca, utilice ambos pies y pueda cambiar de dirección sin perder el control.",
+
+  "montaje": [
+    "Crear un espacio de 10 x 20 metros.",
+    "Colocar 8 conos formando una línea en zig-zag.",
+    "Separar los conos aproximadamente 2-2,5 metros.",
+    "Marcar una zona de salida.",
+    "Colocar a los jugadores en fila detrás de la salida.",
+    "Cada jugador comienza con un balón."
+  ],
+
+  "desarrollo": [
+    { "paso": 1, "texto": "Jugador A parte desde la salida con balón." },
+    { "paso": 2, "texto": "Conduce hacia el primer cono." },
+    { "paso": 3, "texto": "Supera cada cono alternando cambios de dirección." },
+    { "paso": 4, "texto": "Utiliza interior o exterior del pie según el lado del cambio." },
+    { "paso": 5, "texto": "Al superar el último cono termina la conducción." },
+    { "paso": 6, "texto": "Regresa por fuera del circuito sin interferir con el siguiente jugador." }
+  ],
+
+  "reglas": [
+    "No derribar los conos.",
+    "Mantener el balón bajo control.",
+    "No golpear el balón demasiado lejos.",
+    "El regreso se realiza por fuera del circuito."
+  ],
+
+  "rotacion": "A → fila de A (cada jugador repite el circuito y vuelve a la fila)",
+
+  "que_observar": [
+    "Distancia del balón respecto al jugador",
+    "Uso de ambos pies",
+    "Superficie utilizada para cada cambio",
+    "Cabeza levantada cuando sea posible",
+    "Equilibrio corporal",
+    "Calidad del cambio de dirección"
+  ],
+
+  "errores_habituales": [
+    "Balón demasiado alejado",
+    "Utilizar siempre el mismo pie",
+    "Mirar continuamente al suelo",
+    "Entrar demasiado rápido al cono",
+    "Realizar cambios de dirección muy abiertos"
+  ],
+
+  "correcciones": [
+    "Balón cerca",
+    "Mira al frente",
+    "Los dos pies",
+    "Toque corto",
+    "Cambia y acelera"
+  ],
+
+  "si_sale_mal": [
+    "Aumentar la distancia entre conos",
+    "Reducir la velocidad",
+    "Permitir inicialmente el uso del pie dominante"
+  ],
+
+  "si_sale_bien": [
+    "Reducir la distancia entre conos",
+    "Aumentar progresivamente la velocidad",
+    "Obligar a alternar superficies",
+    "Añadir una aceleración después del último cono"
+  ],
+
+  "variantes": [
+    "Solo pie derecho",
+    "Solo pie izquierdo",
+    "Alternar interior y exterior",
+    "Competición por equipos",
+    "Añadir un pase final",
+    "Añadir un defensor pasivo al finalizar"
+  ],
+
+  "origen": {
+    "tipo": "propio",
+    "fuente": "ChatGPT (propuesta de estructura)",
+    "ejercicio_original": "Conducción en zig-zag",
+    "pagina": null,
+    "url": null,
+    "adaptado_a": "Alevín 10-11 F7",
+    "notas_adaptacion": "Ejemplo de referencia para validar el esquema de datos."
+  },
+
+  "diagramas": [
+    {
+      "id": "montaje",
+      "titulo": "Gráfico 1 · Montaje inicial",
+
+      "campo": {
+        "ancho_m": 10,
+        "largo_m": 20,
+        "orientacion": "vertical",
+        "mostrar_medidas": true
+      },
+
+      "elementos": [
+        { "id": "cono_1", "tipo": "cono", "posicion": { "x": 4.0, "y": 3.5 } },
+        { "id": "cono_2", "tipo": "cono", "posicion": { "x": 6.0, "y": 5.5 } },
+        { "id": "cono_3", "tipo": "cono", "posicion": { "x": 4.0, "y": 7.5 } },
+        { "id": "cono_4", "tipo": "cono", "posicion": { "x": 6.0, "y": 9.5 } },
+        { "id": "cono_5", "tipo": "cono", "posicion": { "x": 4.0, "y": 11.5 } },
+        { "id": "cono_6", "tipo": "cono", "posicion": { "x": 6.0, "y": 13.5 } },
+        { "id": "cono_7", "tipo": "cono", "posicion": { "x": 4.0, "y": 15.5 } },
+        { "id": "cono_8", "tipo": "cono", "posicion": { "x": 6.0, "y": 17.5 } },
+
+        { "id": "jugador_A", "tipo": "jugador", "equipo": "atacante", "etiqueta": "A", "rol": "poseedor", "posicion": { "x": 5.0, "y": 1.5 } },
+
+        { "id": "balon_A", "tipo": "balon", "poseedor": "jugador_A", "posicion": { "x": 5.25, "y": 1.7 } },
+
+        { "id": "salida", "tipo": "texto", "texto": "SALIDA", "posicion": { "x": 5, "y": 0.7 } },
+        { "id": "llegada", "tipo": "texto", "texto": "LLEGADA", "posicion": { "x": 5, "y": 19.2 } }
+      ],
+
+      "acciones": [
+        {
+          "id": "accion_1",
+          "tipo": "flecha",
+          "accion": "conduccion",
+          "origen": { "x": 5.0, "y": 1.5 },
+          "puntos": [
+            { "x": 5.0, "y": 1.5 },
+            { "x": 3.6, "y": 3.5 },
+            { "x": 6.4, "y": 5.5 },
+            { "x": 3.6, "y": 7.5 },
+            { "x": 6.4, "y": 9.5 },
+            { "x": 3.6, "y": 11.5 },
+            { "x": 6.4, "y": 13.5 },
+            { "x": 3.6, "y": 15.5 },
+            { "x": 6.4, "y": 17.5 },
+            { "x": 5.0, "y": 18.7 }
+          ],
+          "trayectoria": "curva",
+          "orden": 1
+        }
+      ]
+    }
+  ]
+}

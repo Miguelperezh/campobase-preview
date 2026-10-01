@@ -383,11 +383,25 @@ const arrowStyle = (kind) => {
   return styles[kind] ?? { cls: 'tac-arrow pac', stroke: '#2b6cb0', dash: 'none', weight: 1.4 };
 };
 
+export function renderLegendArrow(kind) {
+  const meta = {
+    pass:    { stroke: '#2563eb', dash: 'none',  w: 1.4, cls: 'pac' },
+    move:    { stroke: '#4b5563', dash: '4 2.5', w: 1.2, cls: 'mov' },
+    dribble: { stroke: '#8b5cf6', dash: '3 1.5', w: 1.8, cls: 'dri' },
+    shot:    { stroke: '#dc2626', dash: 'none',  w: 2.0, cls: 'tiq' },
+    sprint:  { stroke: '#f59e0b', dash: '2.5 1.5', w: 1.6, cls: 'spr' },
+  };
+  const s = meta[kind] || meta.pass;
+  const dashAttr = s.dash !== 'none' ? ` stroke-dasharray="${s.dash}"` : '';
+  const inlineStyle = 'display:inline-block!important;width:28px!important;height:14px!important;min-width:28px!important;max-width:28px!important;min-height:14px!important;max-height:14px!important;aspect-ratio:auto!important;vertical-align:middle!important;flex:none!important;';
+  return `<svg class="tactic-legend-arrow" width="28" height="14" viewBox="0 0 28 14" style="${inlineStyle}" aria-hidden="true" focusable="false"><line x1="2" y1="7" x2="19" y2="7" stroke="${s.stroke}" stroke-width="${s.w}"${dashAttr} stroke-linecap="butt"/><polygon points="18,3.5 26,7 18,10.5" fill="${s.stroke}"/></svg>`;
+}
+
 const actionLabel = (kind) => {
   const defs = {
     pass: 'Pase', move: 'Movimiento sin balón', dribble: 'Conducción', shot: 'Disparo', sprint: 'Sprint',
   };
-  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${renderTacticToolIcon(kind)}${defs[kind] ?? 'Pase'}</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${renderLegendArrow(kind)}<span>${defs[kind] ?? 'Pase'}</span></span>`;
 };
 
 // Herramientas de la pizarra interactiva.
