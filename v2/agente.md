@@ -1196,4 +1196,32 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de pruebas en `tests/print-match-plan.test.js` (6 tests pasando).
    - **624/624 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
 
+### 26. Entrega v66 (01/10/2026) — Partido en Vivo: Goles por Tipo, Penaltis con Especialistas, Asistencias, Celebraciones y Cronología en Vivo (Spec 009)
+
+1. **Goles por Tipo y Asistencias (`js/app.js`):**
+   - **Tipos de gol propio:** Registro asistido con diferenciación explícita entre `De jugada` (`us-play`), `De penalti` (`us-penalty`), `De falta directa` (`us-free`) y `En propia puerta del rival` (`us-own`).
+   - **Goles rivales:** Desglose entre `De jugada`, `De penalti`, `De falta` y `En propia puerta nuestra` (`rival-own`), solicitando qué jugador propio cometió la acción fortuita para reflejarlo en el acta sin distorsionar el casillero rival.
+   - **Asistencias opcionales:** Selector dinámico de asistentes en goles propios (excluyendo automáticamente al anotador) para alimentar las estadísticas de la plantilla.
+
+2. **Penaltis con Doctrina Táctica y Regla del Portero (`js/app.js`):**
+   - **Penaltis a favor con Especialistas Prioritarios:** Lectura en tiempo real de `state.settings.setPieces.penalties`. El lanzador primario y secundario encabezan la lista con insignia visual `🎯 1.º Especialista` y `🎯 2.º Especialista`.
+   - **Faltas directas:** Lectura de especialistas de falta (`freeKicksLeft` y `freeKicksRight`) con insignia `⚡ Falta`.
+   - **Penaltis en contra con Regla del Portero:** Identificación y aviso automático del portero activo bajo palos (`🧤 Portero bajo palos: [Nombre] [Dorsal]`) según la formación táctica y los cambios en el césped.
+   - **Desenlaces de penalti:** Opciones `Gol`, `Parado`, `Fuera` y `Al palo`. Los penaltis fallados (fuera o poste) no incrementan el marcador.
+
+3. **Celebraciones Visuales Enriquecidas (`js/app.js`, `css/claude-partido.css`):**
+   - **Celebración `¡GOOOL!`:** Pantalla completa inmersiva con fondo esmeralda semitransparente (`rgba(5, 44, 32, 0.94)`), tipografía heroica Barlow/Outfit, nombre del anotador, marcador actualizado (`X : Y`) y minuto de juego en tiempo real.
+   - **Celebración `¡PARADÓN!`:** Pantalla en tono dorado/ámbar (`rgba(120, 53, 15, 0.94)`) reconociendo la parada del meta en penaltis o intervenciones clave.
+   - Cierre táctil inmediato al tocar la pantalla o tras 2,8 segundos automáticos.
+
+4. **Cronología Enriquecida y Reversión Inmediata (Deshacer):**
+   - Filas de evento con iconos específicos (`⚽`, `🎯⚽`, `⚡⚽`, `🥅`, `❌🎯`, `🧤🚫`, `🧤⚽`, `🟨`, `🟥`, `🩹`, `📋`).
+   - Botón directo `✕ Anular` conectado a `removeLiveEvent`: descuenta inmediatamente el gol del marcador (`goalsFor` o `goalsAgainst`), persiste en IndexedDB (`put('timers', state.timer)`) y repinta la vista sin efectos secundarios.
+
+5. **Especificación SDD 009 y Validación:**
+   - Carpeta formal en `specs/009-partido-en-vivo-goles-penaltis-eventos-cronologia/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/partido-en-vivo-eventos.test.js` (3 tests pasando).
+   - **627/627 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+
 

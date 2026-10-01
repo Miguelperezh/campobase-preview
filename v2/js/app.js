@@ -1709,7 +1709,8 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   const events = [
     ...details.goals.map((item) => {
       const assist = item.assistantId ? ` (asist. ${playerName(item.assistantId)})` : '';
-      const label = item.isPenalty ? '🎯 Gol de penalti' : (item.isOwnGoal ? '🥅 Gol P.P.' : '⚽ Gol');
+      const isFree = item.note && item.note.toLowerCase().includes('falta directa');
+      const label = item.isPenalty ? '🎯⚽ Gol de penalti' : (item.isOwnGoal ? '🥅 Gol P.P.' : (isFree ? '⚡⚽ Gol de falta' : '⚽ Gol de jugada'));
       return {
         id: item.id,
         second: item.second || 0,
@@ -1731,11 +1732,16 @@ function liveDetailsMarkup(prefix, availableIds, match) {
       if (item.type === 'penalty_miss') iconLabel = '❌🎯 Penalti fallado';
       else if (item.type === 'penalty_saved') iconLabel = '🧤🚫 Penalti parado';
       else if (item.type === 'penalty_conceded') iconLabel = '🧤⚽ Penalti encajado';
-      else if (item.type === 'opponent_goal') iconLabel = '⚽ Gol rival';
+      else if (item.type === 'opponent_goal') {
+        if (item.note && item.note.toLowerCase().includes('propia puerta')) iconLabel = '🥅 Gol P.P. nuestro';
+        else if (item.note && item.note.toLowerCase().includes('falta')) iconLabel = '⚡⚽ Gol de falta rival';
+        else if (item.note && item.note.toLowerCase().includes('penalti')) iconLabel = '🎯⚽ Gol de penalti rival';
+        else iconLabel = '⚽ Gol rival';
+      }
       return {
         id: item.id,
         second: item.second || 0,
-        text: `${formatMatchClock(item.second)} · ${iconLabel}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
+        text: `${formatMatchClock(item.second)} · ${iconLabel}: ${item.playerId === '__rival__' ? 'Rival' : playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
       };
     }),
   ];
@@ -3803,24 +3809,80 @@ function renderClaudeLiveAction() {
   const bench = available.filter((id) => !field.includes(id));
   const titles = { 'goal-us': 'Gol nuestro', 'goal-rival': 'Gol rival', penalty: 'Penalti', change: 'Cambio', card: 'Tarjeta', injury: 'Lesión', incident: 'Incidencia' };
   const tile = (label, value, selected = false) => `<button type="button" class="cbx-la-tile ${selected ? 'is-selected' : ''}" data-la-type="${escapeHtml(value)}">${escapeHtml(label)}</button>`;
-  const playerTiles = (ids) => `<div class="cbx-la-players">${ids.map((id) => `<button type="button" class="cbx-la-player" data-la-player="${escapeHtml(id)}"><b>${escapeHtml(playerById(state.players, id)?.number || '—')}</b><span>${escapeHtml(playerName(id))}</span></button>`).join('')}</div>`;
+
+  const sp = state.settings?.setPieces || {};
+  const activeTacticSlots = liveTactic?.team || [];
+  const getPlayerPos = (id) => {
+    const slot = activeTacticSlots.find((s) => s.playerId === id);
+    if (slot?.pos) return slot.pos;
+    const p = playerById(state.players, id);
+    return p?.positions?.[0] || '';
+  };
+
+  const sortPlayersForAction = (ids) => {
+    const list = [...ids];
+    if (draft.type === 'penalty-us') {
+      const p1 = sp.penalties?.primary;
+      const p2 = sp.penalties?.secondary;
+      return list.sort((a, b) => {
+        const scoreA = a === p1 ? 2 : a === p2 ? 1 : 0;
+        const scoreB = b === p1 ? 2 : b === p2 ? 1 : 0;
+        return scoreB - scoreA;
+      });
+    }
+    if (draft.type === 'us-free') {
+      const fk = [sp.freeKicksLeft?.primary, sp.freeKicksRight?.primary].filter(Boolean);
+      return list.sort((a, b) => {
+        const scoreA = fk.includes(a) ? 1 : 0;
+        const scoreB = fk.includes(b) ? 1 : 0;
+        return scoreB - scoreA;
+      });
+    }
+    return list;
+  };
+
+  const playerTiles = (ids) => {
+    const sorted = sortPlayersForAction(ids);
+    return `<div class="cbx-la-players">${sorted.map((id) => {
+      const p = playerById(state.players, id);
+      const pos = getPlayerPos(id);
+      let badge = '';
+      if (draft.type === 'penalty-us') {
+        if (id === sp.penalties?.primary) badge = '<span class="cbx-la-sp-badge">🎯 1.º Especialista</span>';
+        else if (id === sp.penalties?.secondary) badge = '<span class="cbx-la-sp-badge">🎯 2.º Especialista</span>';
+      } else if (draft.type === 'us-free') {
+        if (id === sp.freeKicksLeft?.primary || id === sp.freeKicksRight?.primary) badge = '<span class="cbx-la-sp-badge">⚡ Falta</span>';
+      }
+      return `<button type="button" class="cbx-la-player ${badge ? 'is-specialist' : ''}" data-la-player="${escapeHtml(id)}"><b>${escapeHtml(p?.number || '—')}</b><div class="cbx-la-pinfo"><span class="cbx-la-pname">${escapeHtml(playerName(id))}</span>${pos ? `<small class="cbx-la-ppos">${escapeHtml(pos)}</small>` : ''}</div>${badge}</button>`;
+    }).join('')}</div>`;
+  };
+
   let content = '';
   if (draft.mode === 'change' && draft.step < 3) {
     content = `<p>${draft.step === 1 ? '¿Quién sale del campo?' : `Sale ${escapeHtml(playerName(draft.outId))}. ¿Quién entra?`}</p>${playerTiles(draft.step === 1 ? field : bench)}`;
   } else if (draft.step === 1) {
     const options = draft.mode === 'goal-us' ? [['De jugada', 'us-play'], ['De penalti', 'us-penalty'], ['De falta directa', 'us-free'], ['En propia puerta del rival', 'us-own']]
       : draft.mode === 'goal-rival' ? [['De jugada', 'rival-play'], ['De penalti', 'rival-penalty'], ['De falta', 'rival-free'], ['En propia puerta nuestra', 'rival-own']]
-      : draft.mode === 'penalty' ? [['A favor', 'penalty-us'], ['En contra', 'penalty-rival']]
+      : draft.mode === 'penalty' ? [['A favor (tira nuestro equipo)', 'penalty-us'], ['En contra (defiende nuestro portero)', 'penalty-rival']]
       : [['Amarilla', 'yellow'], ['Roja', 'red']];
     content = `<p>Elige el tipo de ${titles[draft.mode].toLowerCase()}.</p><div class="cbx-la-types">${options.map(([label, value]) => tile(label, value)).join('')}</div>`;
   } else if (draft.step === 2) {
-    const question = draft.type === 'penalty-us' ? '¿Quién tira el penalti?' : draft.type === 'rival-own' ? '¿Quién marcó en propia puerta?' : draft.mode === 'card' ? '¿Quién recibe la tarjeta?' : draft.mode === 'injury' ? '¿Quién se ha lesionado?' : draft.mode === 'incident' ? '¿A quién afecta?' : '¿Quién marca?';
+    const question = draft.type === 'penalty-us' ? '¿Quién tira el penalti? (Especialistas prioritarios)' : draft.type === 'us-free' ? '¿Quién marcó la falta directa?' : draft.type === 'rival-own' ? '¿Quién marcó en propia puerta?' : draft.mode === 'card' ? '¿Quién recibe la tarjeta?' : draft.mode === 'injury' ? '¿Quién se ha lesionado?' : draft.mode === 'incident' ? '¿A quién afecta?' : '¿Quién marca?';
     content = `<p>${question}</p>${playerTiles(draft.type === 'penalty-us' ? available : field)}`;
   } else {
-    const resultOptions = draft.mode === 'penalty' ? [['Gol', 'goal'], ['Parado', 'saved'], ['Fuera', 'wide'], ['Al palo', 'post']] : [];
+    const activeKeeperId = liveTactic?.team.find((slot) => slot.pos === 'Portero')?.playerId || state.timer?.firstKeeper;
+    let resultOptions = [];
+    if (draft.mode === 'penalty') {
+      if (draft.type === 'penalty-us') {
+        resultOptions = [['⚽ Gol', 'goal'], ['🧤 Parado por meta rival', 'saved'], ['❌ Fuera', 'wide'], ['🪵 Al palo', 'post']];
+      } else {
+        resultOptions = [['⚽ Gol rival', 'goal'], ['🧤 ¡PARADÓN! de nuestro meta', 'saved'], ['❌ Fuera del rival', 'wide'], ['🪵 Al palo del rival', 'post']];
+      }
+    }
     const summary = draft.mode === 'change' ? `Sale ${playerName(draft.outId)} · entra ${playerName(draft.inId)}` : draft.playerId ? playerName(draft.playerId) : titles[draft.mode];
+    const keeperNotice = draft.type === 'penalty-rival' ? `<div class="cbx-la-keeper-notice">🧤 <b>Portero bajo palos:</b> ${escapeHtml(playerName(activeKeeperId))} (Dorsal ${escapeHtml(playerById(state.players, activeKeeperId)?.number || '—')})</div>` : '';
     const assistant = draft.mode === 'goal-us' && draft.type !== 'us-own' ? `<label>Asistencia (opcional)<select id="cbx-la-assistant"><option value="">Sin asistencia</option>${available.filter((id) => id !== draft.playerId).map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(playerName(id))}</option>`).join('')}</select></label>` : '';
-    content = `<p>Confirma la acción</p><strong class="cbx-la-summary">${escapeHtml(summary)}</strong>${resultOptions.length ? `<div class="cbx-la-types">${resultOptions.map(([label, value]) => `<button type="button" class="cbx-la-tile ${draft.result === value ? 'is-selected' : ''}" data-la-result="${value}">${label}</button>`).join('')}</div>` : ''}${assistant}${draft.mode !== 'change' ? '<label>Detalle (opcional)<input id="cbx-la-note" maxlength="200" placeholder="Añade un detalle breve"></label>' : ''}<button type="button" class="cbx-la-confirm primary" data-la-confirm ${draft.mode === 'penalty' && !draft.result ? 'disabled' : ''}>Confirmar ${escapeHtml(titles[draft.mode].toLowerCase())}</button>`;
+    content = `<p>Confirma la acción</p>${keeperNotice}<strong class="cbx-la-summary">${escapeHtml(summary)}</strong>${resultOptions.length ? `<div class="cbx-la-types">${resultOptions.map(([label, value]) => `<button type="button" class="cbx-la-tile ${draft.result === value ? 'is-selected' : ''}" data-la-result="${value}">${label}</button>`).join('')}</div>` : ''}${assistant}${draft.mode !== 'change' ? '<label>Detalle (opcional)<input id="cbx-la-note" maxlength="200" placeholder="Añade un detalle breve"></label>' : ''}<button type="button" class="cbx-la-confirm primary" data-la-confirm ${draft.mode === 'penalty' && !draft.result ? 'disabled' : ''}>Confirmar ${escapeHtml(titles[draft.mode].toLowerCase())}</button>`;
   }
   dialog.innerHTML = `<div class="cbx-la-head"><div><small>Partido en vivo · paso ${draft.step} de 3</small><h3>${titles[draft.mode]}</h3></div><button type="button" data-la-close aria-label="Cerrar">✕</button></div><div class="cbx-la-content">${content}</div><footer><button type="button" data-la-back ${draft.step === 1 ? 'disabled' : ''}>← Volver</button><button type="button" data-la-close>Cerrar</button></footer>`;
 }
@@ -3833,6 +3895,7 @@ async function confirmClaudeLiveAction() {
   let kind = draft.type;
   let playerId = draft.playerId || '__rival__';
   let note = draft.note;
+  const activeKeeperId = liveTactic?.team.find((slot) => slot.pos === 'Portero')?.playerId || state.timer.firstKeeper;
   if (draft.mode === 'goal-us') {
     kind = draft.type === 'us-penalty' ? 'penalty_goal' : 'goal';
     if (draft.type === 'us-own') playerId = '__pp__';
@@ -3841,25 +3904,42 @@ async function confirmClaudeLiveAction() {
     kind = 'opponent_goal';
     note = `${draft.type === 'rival-own' ? 'Propia puerta nuestra' : draft.type === 'rival-penalty' ? 'Penalti rival' : draft.type === 'rival-free' ? 'Falta rival' : 'Jugada rival'}${note ? ` · ${note}` : ''}`;
   } else if (draft.mode === 'penalty') {
-    playerId = draft.type === 'penalty-rival' ? (liveTactic?.team.find((slot) => slot.pos === 'Portero')?.playerId || state.timer.firstKeeper) : draft.playerId;
+    playerId = draft.type === 'penalty-rival' ? activeKeeperId : draft.playerId;
     kind = draft.type === 'penalty-us' ? (draft.result === 'goal' ? 'penalty_goal' : 'penalty_miss') : (draft.result === 'goal' ? 'penalty_conceded' : draft.result === 'saved' ? 'penalty_saved' : 'incident');
     note = `${draft.result === 'saved' ? 'Parado' : draft.result === 'wide' ? 'Fuera' : draft.result === 'post' ? 'Al palo' : 'Gol'}${note ? ` · ${note}` : ''}`;
   } else if (draft.mode === 'card') kind = draft.type;
   else kind = draft.mode;
+
   state.timer.details = addPlayerMatchEvent(details, { id: uid(), kind, playerId, assistantId: draft.assistantId, second: timerSeconds(), note, isOwnGoal: draft.type === 'us-own' });
   await persistTimer(); renderLive(); renderDelegate();
-  if (kind === 'goal' || kind === 'penalty_goal') showLiveCelebration('¡GOOOL!', playerName(playerId));
-  if (kind === 'penalty_saved') showLiveCelebration('¡PARADÓN!', playerName(playerId), true);
+
+  const match = state.matches.find(({ id }) => id === state.timer?.matchId);
+  const teams = matchTeams(match);
+  const updatedDetails = ensureLiveDetails();
+  const gf = updatedDetails.goalsFor ?? 0;
+  const ga = updatedDetails.goalsAgainst ?? 0;
+  const homeScore = teams.mySide === 'home' ? gf : ga;
+  const awayScore = teams.mySide === 'away' ? gf : ga;
+  const scoreText = `${homeScore} : ${awayScore}`;
+  const minuteText = `${Math.max(1, Math.round(timerSeconds() / 60))}′`;
+
+  if (kind === 'goal' || kind === 'penalty_goal') {
+    showLiveCelebration('¡GOOOL!', playerName(playerId), false, scoreText, minuteText);
+  }
+  if (kind === 'penalty_saved') {
+    showLiveCelebration('¡PARADÓN!', playerName(playerId), true, scoreText, minuteText);
+  }
   toast(draft.mode === 'goal-us' ? '¡GOOOL!' : `${draft.mode === 'goal-rival' ? 'Gol rival' : draft.mode === 'penalty' ? 'Penalti' : draft.mode === 'card' ? 'Tarjeta' : draft.mode === 'injury' ? 'Lesión' : 'Incidencia'} registrado.`);
 }
 
-function showLiveCelebration(title, name, saved = false) {
+function showLiveCelebration(title, name, saved = false, scoreText = '', minuteText = '') {
   document.querySelector('.cbx-live-celebration')?.remove();
   const celebration = document.createElement('div');
   celebration.className = `cbx-live-celebration ${saved ? 'is-save' : ''}`;
-  celebration.innerHTML = `<strong>${escapeHtml(title)}</strong><span>${escapeHtml(name)}</span>`;
+  celebration.innerHTML = `<strong>${escapeHtml(title)}</strong><span class="cbx-celebration-hero-name">${escapeHtml(name)}</span>${scoreText ? `<b class="cbx-celebration-score">${escapeHtml(scoreText)}</b>` : ''}${minuteText ? `<small class="cbx-celebration-min">Minuto ${escapeHtml(minuteText)}</small>` : ''}`;
+  celebration.addEventListener('click', () => celebration.remove());
   document.body.append(celebration);
-  window.setTimeout(() => celebration.remove(), 2600);
+  window.setTimeout(() => celebration.remove(), 2800);
 }
 
 function renderPrepMoments() {
