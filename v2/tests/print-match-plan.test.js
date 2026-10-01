@@ -235,3 +235,27 @@ test('Integración en app.js y CSS para botones de impresión del plan de partid
   assert.match(stylesSource, /\.cbx-pmp-table/, 'claude-partido.css debe contener estilos para la tabla de minutos');
   assert.match(stylesSource, /@media print/, 'claude-partido.css debe contener reglas para @media print');
 });
+
+test('buildMatchPlanHtml maneja partidos pendientes sin convocatoria ni preparación previa', () => {
+  const emptyState = {
+    matches: [mockMatch],
+    players: mockPlayers,
+    preparaciones: [],
+    callups: [],
+    settings: mockState.settings,
+  };
+
+  const html = buildMatchPlanHtml(mockMatch, emptyState);
+  assert.ok(html.includes('cb-print-sheet cbx-pmp-sheet'), 'Debe generar la ficha A4 incluso sin preparación');
+  assert.ok(html.includes('UD Las Palmas B'), 'Debe reflejar el rival');
+  assert.ok(html.includes('TITULARES Y SISTEMA INICIAL'), 'Debe presentar titulares con la plantilla disponible');
+});
+
+test('app.js y HTML integran botones de impresión omnipresentes (cabecera, banner, calendario, vivo)', () => {
+  // Verificación de botones adicionales en app.js
+  assert.match(appSource, /id="prep-print-head"/, 'Cabecera de preparación debe incluir prep-print-head');
+  assert.match(appSource, /class="cbx-live-print-plan secondary"/, 'Cronómetro en vivo debe incluir cbx-live-print-plan');
+  assert.match(appSource, /#prep-print-banner/, 'Debe registrar listener para prep-print-banner');
+  assert.match(appSource, /\.cbx-live-print-plan/, 'Debe registrar delegación para cbx-live-print-plan');
+});
+

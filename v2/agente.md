@@ -1172,20 +1172,28 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
      - Acta de campo con casillas recuadradas para anotar a mano con bolígrafo: resultado final, goleadores / asistencias, incidencias y notas técnicas de Migue.
    - **Soporte de Borradores en Vivo:** Si el entrenador está ajustando momentos en `#preparacion-editor`, el botón de impresión captura el borrador activo (`momentsDraft`, `teamDraft`, `formacionDraft`) sin obligar a guardar previamente.
 
-2. **Puntos de Acceso e Integración de Botones en la Interfaz (`js/app.js`):**
-   - **En Lista de Preparación (`#preparacion-list`):** Botón `🖨️ Imprimir plan` en las tarjetas de partidos con preparación guardada.
-   - **En Editor de Preparación (`#preparacion-editor`):** Botón `🖨️ Imprimir plan` junto al botón principal de Guardar.
+2. **Puntos de Acceso Omnipresentes en la Interfaz (`js/app.js`, `index.html`):**
+   - **En Lista de Preparación (`#preparacion-list`):** Botón `🖨️ Imprimir plan` en **todas** las tarjetas de partidos (tanto preparados como pendientes o sin convocatoria previa con fallback inteligente).
+   - **En Banner Principal de Preparación (`#prep-print-banner`):** Botón de acceso directo en la cabecera general de la sección Preparación.
+   - **En Cabecera Superior del Editor (`#prep-print-head`):** Botón prominente en la barra superior junto al botón de retorno (`← Volver a partidos`).
+   - **En Barra de Acciones del Editor (`#prep-print-current`):** Botón `🖨️ Imprimir plan` junto al botón principal de Guardar.
    - **En Pestaña de Momentos (`#prep-moments`):** Botón `🖨️ Imprimir plan de partido` ubicado junto a «Copiar cambios del reparto automático».
-   - **En Partido en Vivo y Vista Delegado (`.cbx-live-plan`):** Botón `🖨️ Imprimir` integrado en la barra de resumen del plan con llamada a `stopPropagation()` para no plegar el acordeón al pulsar.
+   - **En Calendario (`#calendario`):** Botón `🖨️ Imprimir plan` en cada tarjeta de partido programado.
+   - **En Partido en Vivo (`#partido`):** Botón `🖨️ Imprimir plan` en la botonera de acciones del cronómetro en vivo y en la cabecera `.cbx-live-plan`.
    - **Exposición Global:** Registrado en `window.__campobase.printMatchPlan`.
 
 3. **Estilos de Pantalla e Impresión A4 (`css/claude-partido.css`):**
    - Reglas completas para `.cb-print-match-plan-root` y `.cb-print-sheet.cbx-pmp-sheet` (794px × auto, padding 28px 34px).
+   - **Overlay de Previsualización en Pantalla:** Configurado con `position: fixed; inset: 0; z-index: 999999; padding: 95px 20px 60px 20px; backdrop-filter: blur(6px);` para que la barra flotante de acciones («Imprimir», «Descargar PDF», «Cerrar») nunca tape ni solape la cabecera del documento.
    - Estilizado de tarjetas de titulares, etiquetas cromáticas para entradas/salidas/reubicaciones/portería, tabla de minutos y cajas de notas para bolígrafo.
    - Configuración `@media print`: fondo blanco eco-ink, eliminación de sombras, márgenes limpios y evitación de saltos de página huérfanos (`page-break-inside: avoid`).
 
-4. **Especificación SDD 008 y Validación:**
+4. **Sincronización PWA y Service Worker (`sw.js`, `index.html`):**
+   - Inclusión de `js/print-match-plan.js` y `css/claude-partido.css` en `ASSETS` y en `REVALIDATE_PATHS` con cache-busting para garantizar que los navegadores cliente en GitHub Pages reciban siempre los recursos actualizados sin bloqueos de caché.
+
+5. **Especificación SDD 008 y Validación:**
    - Carpeta formal en `specs/008-plan-partido-impresion-explicada/` (`spec.md`, `plan.md`, `tasks.md`).
-   - Suite de pruebas en `tests/print-match-plan.test.js` (4 tests pasando).
-   - **622/622 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+   - Suite de pruebas en `tests/print-match-plan.test.js` (6 tests pasando).
+   - **624/624 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
 

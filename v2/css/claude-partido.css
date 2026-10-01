@@ -399,14 +399,20 @@ body.cb-redesign-active #calendario .cbx-calendar-played .cbx-calendar-group { m
 /* ==========================================================
    PLAN DE PARTIDO: FICHA DE IMPRESIÓN A4 (PANTALLA E IMPRESIÓN)
    ========================================================== */
+body.cb-is-printing #cb-print-root.cb-print-match-plan-root,
 .cb-print-root.cb-print-match-plan-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  background: #0f172a;
   min-height: 100vh;
-  padding: 20px 0 60px 0;
+  padding: 95px 20px 60px 20px;
   box-sizing: border-box;
 }
 

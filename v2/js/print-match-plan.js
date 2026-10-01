@@ -75,7 +75,14 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
   const prep = options.prep || state?.preparaciones?.find((p) => String(p.matchId) === String(match.id)) || null;
   const callup = state?.callups?.find((c) => c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id)) || null;
   const players = state?.players || [];
-  const availableIds = options.availableIds || callup?.availableIds || prep?.team?.map((s) => s.playerId).filter(Boolean) || [];
+  const squadIds = players.map((p) => p.id);
+  const availableIds = (options.availableIds && options.availableIds.length)
+    ? options.availableIds
+    : (callup?.availableIds && callup.availableIds.length)
+      ? callup.availableIds
+      : (prep?.team && prep.team.length)
+        ? prep.team.map((s) => s.playerId).filter(Boolean)
+        : squadIds;
 
   const format = String(callup?.format || match?.format || state?.format || 'F7').toUpperCase();
   const isF11 = format === 'F11';
@@ -93,12 +100,15 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
   } else if (prep) {
     moments = normalizeMoments(prep);
   } else {
-    // Si aún no está preparado, usar formación base de 0′
+    // Si aún no está preparado, usar formación base de 0′ con puestos estándar
+    const basePositions = isF11
+      ? ['Portero', 'Lateral derecho', 'Central derecho', 'Central izquierdo', 'Lateral izquierdo', 'Pivote', 'Interior derecho', 'Interior izquierdo', 'Extremo derecho', 'Delantero', 'Extremo izquierdo']
+      : ['Portero', 'Lateral derecho', 'Central', 'Lateral izquierdo', 'Medio centro', 'Medio centro', 'Delantero'];
     moments = [{
       id: 'inicio',
       minute: 0,
       formation: isF11 ? '1-4-3-3' : '1-3-2-1',
-      team: (availableIds.slice(0, isF11 ? 11 : 7)).map((id, idx) => ({ pos: `P${idx + 1}`, playerId: id })),
+      team: (availableIds.slice(0, isF11 ? 11 : 7)).map((id, idx) => ({ pos: basePositions[idx] || `P${idx + 1}`, playerId: id })),
     }];
   }
 
