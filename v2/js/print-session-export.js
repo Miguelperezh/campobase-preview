@@ -628,25 +628,138 @@ export function printTrainingSession(sessionOrId, state) {
 }
 
 function generateStandalonePrintPage(htmlContent) {
+  const baseUrl = (typeof window !== 'undefined' && window.location) ? window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/') : './';
   return `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CampoBase - Ficha de Entrenamiento</title>
-  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v53-delegate-team-invite-layout-freeze-fix">
+  <base href="${baseUrl}">
+  <title>CampoBase - Ficha de Entrenamiento A4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles-redesign.css">
+  <link rel="stylesheet" href="./css/claude-entreno.css">
   <style>
-    @page { size: A4 portrait; margin: 8mm 10mm; }
-    body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    #cb-print-root { display: block !important; }
+    @page { size: A4 portrait; margin: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    html, body { background: #e2e8f0; color: #0f172a; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    .cb-standalone-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10000;
+      background: #0a251b;
+      color: #fff;
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .cb-standalone-toolbar-title {
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cb-standalone-toolbar-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .cb-standalone-btn-print {
+      background: #10b981;
+      color: #04120c;
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .cb-standalone-btn-print:hover { opacity: 0.9; }
+    .cb-standalone-btn-close {
+      background: #334155;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    
+    #cb-print-root {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0 60px;
+      background: #e2e8f0;
+      min-height: calc(100vh - 50px);
+    }
+    .cb-print-sheet {
+      width: 794px;
+      min-height: 1123px;
+      max-height: 1123px;
+      box-sizing: border-box;
+      background: #ffffff;
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,.35);
+      padding: 34px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      color: #0f172a;
+      margin: 0 auto 30px;
+      page-break-after: always;
+      break-after: page;
+    }
     .cb-print-floating-bar { display: none !important; }
+    
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+      .cb-standalone-toolbar { display: none !important; }
+      #cb-print-root {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+      }
+      .cb-print-sheet {
+        width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 10mm 12mm !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        overflow: hidden !important;
+      }
+    }
   </style>
 </head>
-<body class="cb-redesign-active cb-is-printing">
+<body class="cb-redesign-active cb-standalone-doc">
+  <div class="cb-standalone-toolbar">
+    <div class="cb-standalone-toolbar-title">
+      <span>⚽ CAMPOBASE · FORMATO A4 CLAUDE</span>
+    </div>
+    <div class="cb-standalone-toolbar-btns">
+      <button type="button" class="cb-standalone-btn-print" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button>
+      <button type="button" class="cb-standalone-btn-close" onclick="window.close()">✕ Cerrar pestaña</button>
+    </div>
+  </div>
   ${htmlContent}
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => { if (typeof window.print === 'function') window.print(); }, 300);
+      setTimeout(() => { if (typeof window.print === 'function') window.print(); }, 250);
     });
   </script>
 </body>
@@ -918,12 +1031,12 @@ export function executePrint(htmlContent) {
   floatingBar.innerHTML = `
     <div class="cb-print-floating-bar-inner">
       <div class="cb-print-floating-bar-info">
-        <strong>📄 Ficha Lista para Guardar / Imprimir</strong>
-        <span>Formato A4 compacto para móvil, WhatsApp y papel</span>
+        <strong>📄 Ficha Lista para Imprimir / Guardar</strong>
+        <span>Formato A4 oficial Claude (para papel, PDF y móvil)</span>
       </div>
       <div class="cb-print-floating-bar-actions">
-        <button type="button" class="btn secondary cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
-          ✕ Salir
+        <button type="button" class="btn primary cb-print-btn-print" id="cb-print-trigger-btn">
+          🖨️ Imprimir
         </button>
         <button type="button" class="btn primary cb-print-btn-open" id="cb-print-open-tab-btn" title="Abre la Ficha A4 en nueva pestaña para imprimir o guardar PDF con el navegador">
           📄 Abrir Ficha A4
@@ -934,13 +1047,14 @@ export function executePrint(htmlContent) {
         <button type="button" class="btn secondary cb-print-btn-download" id="cb-print-download-btn">
           📥 Guardar / Descargar PDF
         </button>
-        <button type="button" class="btn secondary cb-print-btn-print" id="cb-print-trigger-btn">
-          🖨️ Imprimir
+        <button type="button" class="btn secondary cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
+          ✕ Salir
         </button>
       </div>
     </div>
   `;
   container.prepend(floatingBar);
+  container.setAttribute('data-print', 'on');
   document.body.appendChild(container);
 
   let cleanedUp = false;
@@ -1059,8 +1173,6 @@ export function executePrint(htmlContent) {
     printBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       if (isMobileDevice() || (typeof window !== 'undefined' && window.navigator?.standalone)) {
-        // En móviles y PWA standalone, no disparar window.print() para evitar congelar el hilo de WebKit.
-        // En su lugar, generar y compartir el PDF directamente.
         const prevText = printBtn.textContent;
         printBtn.textContent = '⏳ Generando PDF...';
         try {
@@ -1103,9 +1215,6 @@ export function executePrint(htmlContent) {
     });
   }
 
-  // En escritorio o tests sintéticos, disparar window.print() de inmediato
-  // En móviles reales y PWA, dejar la vista abierta con los botones destacados
-  // para que Migue pueda elegir Guardar, Compartir por WhatsApp o Descargar PDF sin bloqueos.
   if (!isMobileDevice() && !(typeof window !== 'undefined' && window.navigator?.standalone)) {
     triggerBrowserPrint(container, cleanup);
   }

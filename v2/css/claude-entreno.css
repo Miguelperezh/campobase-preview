@@ -1449,7 +1449,8 @@ body.cb-redesign-active .btn-anim-claude:hover {
   background: #1e293b;
 }
 
-body.cb-redesign-active .cbx-guides-aspects-row {
+body.cb-redesign-active .cbx-guides-aspects-row,
+body.cb-redesign-active .cbx-tactics-aspects-row {
   display: flex;
   gap: 6px;
   overflow-x: auto;
@@ -1636,4 +1637,205 @@ body.cb-redesign-active .cbx-btn-view-tactic {
 body.cb-redesign-active .cbx-btn-view-tactic:hover {
   background: #f1f5f9;
 }
+
+/* Flechas tácticas réplica exacta manual / PDF */
+body.cb-redesign-active .tac-arrow {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+body.cb-redesign-active .tac-arrow.mov {
+  stroke: #4b5563 !important;
+  stroke-width: 2.8px !important;
+  stroke-dasharray: 6 4.5 !important;
+}
+
+body.cb-redesign-active .tac-arrow.spr {
+  stroke: #f59e0b !important;
+  stroke-width: 3.2px !important;
+  stroke-dasharray: 4 2.5 !important;
+}
+
+body.cb-redesign-active .tac-arrow.pac {
+  stroke: #2563eb !important;
+  stroke-width: 2.4px !important;
+}
+
+body.cb-redesign-active .tac-arrow.dri {
+  stroke: #8b5cf6 !important;
+  stroke-width: 2.8px !important;
+}
+
+body.cb-redesign-active .tac-arrow.tiq {
+  stroke: #dc2626 !important;
+  stroke-width: 3.2px !important;
+}
+
+/* ==========================================================
+   IMPRESIÓN OFICIAL CLAUDE (SESIÓN Y EJERCICIO A4)
+   ========================================================== */
+#cb-print-root {
+  display: block;
+}
+
+body.cb-is-printing #cb-print-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 20px 40px;
+}
+
+/* Floating bar on top inside CampoBase UI */
+.cb-print-floating-bar {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000000;
+  background: #0a251b;
+  color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 95vw;
+}
+
+.cb-print-floating-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.cb-print-floating-bar-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cb-print-floating-bar-info strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.cb-print-floating-bar-info span {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.cb-print-floating-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-print-floating-bar-actions button {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 0;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.cb-print-btn-print {
+  background: #10b981 !important;
+  color: #04120c !important;
+}
+
+.cb-print-btn-open {
+  background: #ffffff !important;
+  color: #0a251b !important;
+}
+
+.cb-print-btn-share {
+  background: #1e523d !important;
+  color: #ffffff !important;
+}
+
+.cb-print-btn-download {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+.cb-print-btn-close {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* Hoja A4 Claude individual */
+.cb-print-sheet {
+  width: 794px;
+  min-height: 1123px;
+  max-height: 1123px;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .35);
+  padding: 34px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  color: #0f172a;
+  margin-bottom: 24px;
+  page-break-after: always;
+  break-after: page;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #cb-print-root, #cb-print-root * {
+    visibility: visible !important;
+  }
+  #cb-print-root {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+  .cb-print-floating-bar {
+    display: none !important;
+  }
+  .cb-print-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    overflow: hidden !important;
+    padding: 10mm 12mm !important;
+  }
+}
+
 

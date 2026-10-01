@@ -341,19 +341,20 @@ export function matchesDimension(item, dim) {
   const name = clean(item.name || item.nombre).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const works = (Array.isArray(item.works) ? item.works : (Array.isArray(item.que_se_trabaja) ? item.que_se_trabaja : [])).join(' ').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const tags = (Array.isArray(item.tags) ? item.tags : (Array.isArray(item.etiquetas) ? item.etiquetas : [])).join(' ').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const text = `${cat} ${subcat} ${name} ${works} ${tags}`;
+  const desc = clean(item.description || item.descripcion || '').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const text = `${cat} ${subcat} ${name} ${works} ${tags} ${desc}`;
 
   if (d === 'tactica') {
-    return cat.includes('tactic') || cat.includes('defensa') || cat.includes('ataque') || cat.includes('transicion') || cat.includes('posesion') || cat.includes('rondo') || text.includes('tactic') || text.includes('presion') || text.includes('cobertura') || text.includes('bascul') || text.includes('desmarque') || text.includes('linea') || text.includes('salida de balon');
+    return cat.includes('tact') || cat.includes('defensa') || cat.includes('ataque') || cat.includes('transicion') || cat.includes('posesion') || cat.includes('rondo') || text.includes('tact') || text.includes('presion') || text.includes('cobertura') || text.includes('bascul') || text.includes('desmarque') || text.includes('linea') || text.includes('salida de balon');
   }
   if (d === 'tecnica') {
-    return cat.includes('tecnic') || cat.includes('tecnificacion') || cat.includes('pase') || cat.includes('combinativa') || text.includes('tecnic') || text.includes('pase') || text.includes('control') || text.includes('conduccion') || text.includes('regate') || text.includes('pared') || text.includes('remate');
+    return cat.includes('tecn') || cat.includes('pase') || cat.includes('combinativa') || text.includes('tecn') || text.includes('pase') || text.includes('control') || text.includes('conduccion') || text.includes('regate') || text.includes('pared') || text.includes('remate');
   }
   if (d === 'fisica') {
-    return cat.includes('fisic') || cat.includes('coordinacion') || cat.includes('agilidad') || cat.includes('motricidad') || text.includes('fisic') || text.includes('resistencia') || text.includes('velocidad') || text.includes('agilidad') || text.includes('coordinacion') || text.includes('fuerza') || text.includes('potencia');
+    return cat.includes('fisi') || cat.includes('coordinacion') || cat.includes('agilidad') || cat.includes('motricidad') || text.includes('fisi') || text.includes('resistencia') || text.includes('velocidad') || text.includes('agilidad') || text.includes('coordinacion') || text.includes('fuerza') || text.includes('potencia');
   }
   if (d === 'ludico') {
-    return Boolean(item.ludico) || cat.includes('juego') || cat.includes('rondo') || text.includes('ludico') || text.includes('juego') || text.includes('minipartido') || text.includes('partidillo') || text.includes('reducido');
+    return Boolean(item.ludico) || cat.includes('juego') || cat.includes('ludic') || cat.includes('rondo') || text.includes('ludic') || text.includes('juego') || text.includes('minipartido') || text.includes('partidillo') || text.includes('reducido');
   }
   if (d === 'finalizacion') {
     return cat.includes('finalizacion') || text.includes('finaliza') || text.includes('remate') || text.includes('tiro') || text.includes('definicion') || text.includes('disparo') || text.includes('gol');

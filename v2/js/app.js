@@ -2202,6 +2202,9 @@ function renderTacticsBoard(which) {
   arrangeClaudeLiveBoard(sc);
 }
 
+let liveTacticsShowOpponent = false;
+let prepShowRival = false;
+
 function arrangeClaudeLiveBoard(sc) {
   if (!document.body.classList.contains('cb-redesign-active')) return;
   const root = sc.root()?.querySelector('.live-tactics');
@@ -2211,14 +2214,25 @@ function arrangeClaudeLiveBoard(sc) {
   chips.className = 'cbx-live-formation-chips';
   chips.setAttribute('role', 'group');
   chips.setAttribute('aria-label', 'Sistema táctico');
-  chips.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-live-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('');
+  chips.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-live-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('') +
+    `<button type="button" class="cbx-live-rival-btn" id="live-rival-toggle-btn" aria-pressed="${String(liveTacticsShowOpponent)}" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer">${liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button>`;
   select.after(chips);
   chips.addEventListener('click', (event) => {
+    const rivalBtn = event.target.closest('#live-rival-toggle-btn');
+    if (rivalBtn) {
+      liveTacticsShowOpponent = !liveTacticsShowOpponent;
+      rivalBtn.textContent = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      rivalBtn.setAttribute('aria-pressed', String(liveTacticsShowOpponent));
+      renderTacticsBoardSvg(sc);
+      renderTacticsBoardSvg(sc, sc.boardFull());
+      toast(liveTacticsShowOpponent ? 'Rival visible en partido en vivo.' : 'Rival oculto.');
+      return;
+    }
     const button = event.target.closest('[data-live-formation]');
     if (!button) return;
     select.value = button.dataset.liveFormation;
     select.dispatchEvent(new Event('change', { bubbles: true }));
-    chips.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    chips.querySelectorAll('button[data-live-formation]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
   });
   const details = document.createElement('details');
   details.className = 'cbx-live-board-options';
@@ -2241,33 +2255,34 @@ function renderTacticsBoardSvg(sc, target) {
   const t = sc.state();
   const svg = target || sc.board();
   if (!svg || !t) return;
-  const portrait = document.body.classList.contains('cb-redesign-active') && !target;
-  const y = (value) => portrait ? 4 + value * 1.22 : value;
-  svg.setAttribute('viewBox', portrait ? '0 0 100 130' : '0 0 100 100');
+  svg.setAttribute('viewBox', '0 0 100 100');
   const markerId = `arrow-${svg.id}`;
   const parts = [renderTacticArrowDefs(markerId)];
-  parts.push(`<rect class="tac-field" x="4" y="4" width="92" height="${portrait ? 122 : 92}" rx="3"/>`);
-  parts.push(`<path class="tac-line" d="M50 4v${portrait ? 122 : 92} M4 ${y(50)}h92"/>`);
-  parts.push(`<circle class="tac-line" cx="50" cy="${y(50)}" r="9"/>`);
-  parts.push(`<rect class="tac-area" x="4" y="4" width="92" height="${portrait ? 21 : 16}"/>`);
-  parts.push(`<rect class="tac-area" x="4" y="${portrait ? 105 : 80}" width="92" height="${portrait ? 21 : 16}"/>`);
+  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
+  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
+  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
+  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
+  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
   parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
-  parts.push(`<rect class="tac-goal" x="40" y="${portrait ? 122 : 92}" width="20" height="4"/>`);
-  if (!portrait) t.moves.forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
-  t.team.forEach((p, i) => {
+  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
+  (t.moves || []).forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
+  (t.team || []).forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
-    const dorsal = pl ? pl.number : p.n;
-    const label = pl ? (portrait ? String(pl.name).split(' ')[0] : nombreCorto(pl.name)) : '';
-    const labelW = label ? label.length * (portrait ? 2.1 : 1.6) + 2 : 0;
+    const dorsal = pl ? pl.number : (p.n || (i + 1));
+    const label = pl ? nombreCorto(pl.name) : (p.pos || '');
+    const labelW = label ? label.length * 1.6 + 1.8 : 0;
     const rectX = p.x - labelW / 2;
-    const rectY = y(p.y) + (portrait ? 4.4 : 2.1);
-    const rectH = portrait ? 4.4 : 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${y(p.y)}" r="${portrait ? 5 : 4.2}"/><text x="${p.x}" y="${y(p.y) - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="1" fill="#0b2d20"/><text x="${p.x}" y="${y(p.y) + (portrait ? 7.7 : 3.6)}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    const rectY = p.y + 2.2;
+    const rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.8" fill="#0f172a"/><text x="${p.x}" y="${p.y + 3.7}" class="tac-player-label name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  if (!portrait) t.opponent.forEach((p, i) => {
-    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`);
-  });
-  if (!portrait) parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${t.ball.x}" cy="${t.ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
+  if (liveTacticsShowOpponent || t.showOpponent) {
+    (t.opponent || []).forEach((p, i) => {
+      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n || (i + 1))}</text></g>`);
+    });
+  }
+  const ball = t.ball || { x: 50, y: 50 };
+  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
   svg.innerHTML = parts.join('');
 }
 
@@ -2310,8 +2325,7 @@ function renderTacticsSlots(sc) {
 function tacticsBoardPoint(svg, e) {
   const rect = svg.getBoundingClientRect();
   const x = ((e.clientX - rect.left) / rect.width) * 100;
-  const portrait = document.body.classList.contains('cb-redesign-active') && !svg.id.endsWith('-board-full');
-  const y = portrait ? ((((e.clientY - rect.top) / rect.height) * 130) - 4) / 1.22 : ((e.clientY - rect.top) / rect.height) * 100;
+  const y = ((e.clientY - rect.top) / rect.height) * 100;
   return { x: Math.max(4, Math.min(96, x)), y: Math.max(4, Math.min(96, y)) };
 }
 
@@ -3865,13 +3879,22 @@ function arrangeClaudePrepEditor() {
   pills.className = 'cbx-formation-pills';
   pills.setAttribute('role', 'group');
   pills.setAttribute('aria-label', 'Formación');
-  pills.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-prep-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('');
+  pills.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-prep-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('') +
+    `<button type="button" id="prep-toggle-rival-pill" class="cbx-prep-rival-btn" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer">${prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button>`;
   select.after(pills);
   pills.addEventListener('click', (event) => {
+    const rivalBtn = event.target.closest('#prep-toggle-rival-pill');
+    if (rivalBtn) {
+      prepShowRival = !prepShowRival;
+      rivalBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      renderPrepBoard();
+      toast(prepShowRival ? 'Rival visible en la preparación.' : 'Rival oculto.');
+      return;
+    }
     const button = event.target.closest('[data-prep-formation]');
     if (!button) return;
     select.value = button.dataset.prepFormation;
-    pills.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    pills.querySelectorAll('button[data-prep-formation]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
     select.dispatchEvent(new Event('change', { bubbles: true }));
   });
 }
@@ -3903,7 +3926,7 @@ function openPreparacionEditor(matchId) {
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
-      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button></div>
+      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button><button type="button" id="prep-toggle-rival-btn" class="secondary">${prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button></div>
       <div class="board-wrap"><svg id="prep-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación"></svg></div>
       <div class="live-tactics-slots" id="prep-slots"></div>
       <div class="keeper-note"><strong>Regla del portero:</strong> 1 portero juega el partido completo; si hay 2 porteros, un tiempo cada uno. El portero del 1er tiempo entra en portería automáticamente.</div>
@@ -3928,31 +3951,28 @@ function openPreparacionEditor(matchId) {
 function renderPrepBoard() {
   const svg = $('#prep-board');
   if (!svg || !prepDraft) return;
-  const portrait = document.body.classList.contains('cb-redesign-active');
-  svg.setAttribute('viewBox', portrait ? '0 0 100 130' : '0 0 100 100');
-  const y = (value) => portrait ? 4 + value * 1.22 : value;
+  svg.setAttribute('viewBox', '0 0 100 100');
   const parts = [];
-  parts.push(`<rect class="tac-field" x="4" y="4" width="92" height="${portrait ? 122 : 92}" rx="3"/>`);
-  parts.push(`<path class="tac-line" d="M50 4v${portrait ? 122 : 92} M4 ${y(50)}h92"/>`);
-  parts.push(`<circle class="tac-line" cx="50" cy="${y(50)}" r="9"/>`);
-  parts.push(`<rect class="tac-area" x="4" y="4" width="92" height="${portrait ? 21 : 16}"/>`);
-  parts.push(`<rect class="tac-area" x="4" y="${portrait ? 105 : 80}" width="92" height="${portrait ? 21 : 16}"/>`);
+  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
+  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
+  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
+  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
+  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
   parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
-  parts.push(`<rect class="tac-goal" x="40" y="${portrait ? 122 : 92}" width="20" height="4"/>`);
+  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
   prepDraft.forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
     const dorsal = pl ? pl.number : '';
-    const label = pl ? nombreCorto(pl.name) : '';
+    const label = pl ? nombreCorto(pl.name) : (p.pos || '');
     const labelW = label ? label.length * 1.6 + 1.6 : 0;
-    const rectX = p.x - labelW / 2, rectY = y(p.y) + 2.1, rectH = 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${y(p.y)}" r="4.2"/><text x="${p.x}" y="${y(p.y) - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${y(p.y) + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    const rectX = p.x - labelW / 2, rectY = p.y + 2.2, rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.8" fill="#0f172a"/><text x="${p.x}" y="${p.y + 3.7}" class="tac-player-label name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  if (!portrait) {
-    // La pizarra original conserva su rival y balón; Claude muestra solo nuestra alineación.
+  if (prepShowRival) {
     const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
     OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
-    parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
   }
+  parts.push('<g class="tac-ball" data-piece="ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
   svg.innerHTML = parts.join('');
 }
 
@@ -4005,7 +4025,29 @@ function prepOpenPopup(idx, clientX, clientY) {
 }
 
 function wirePrepEditor() {
+  const toggleRivalBtn = $('#prep-toggle-rival-btn');
+  if (toggleRivalBtn) {
+    toggleRivalBtn.addEventListener('click', () => {
+      prepShowRival = !prepShowRival;
+      toggleRivalBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      const pillBtn = $('#prep-toggle-rival-pill');
+      if (pillBtn) pillBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      renderPrepBoard();
+      toast(prepShowRival ? 'Rival visible en la preparación.' : 'Rival oculto.');
+    });
+  }
   const svg = $('#prep-board');
+  if (svg) {
+    svg.addEventListener('pointerdown', (e) => {
+      const target = e.target.closest('[data-piece]');
+      if (target && target.dataset.piece === 'team') svg.dataset._prepIdx = target.dataset.idx;
+    });
+    svg.addEventListener('pointerup', (e) => {
+      const idx = svg.dataset._prepIdx;
+      svg.dataset._prepIdx = '';
+      if (idx !== undefined && idx !== '') prepOpenPopup(Number(idx), e.clientX, e.clientY);
+    });
+  }
   if (svg) {
     svg.addEventListener('pointerdown', (e) => {
       const target = e.target.closest('[data-piece]');
@@ -5271,7 +5313,7 @@ function renderClaudeTactics() {
   if (guidesTitle) {
     guidesTitle.textContent = `GUÍAS TÁCTICAS · SISTEMA ${claudeTacticFormation}`;
   }
-  $$('#cbx-guides-aspects-row .cbx-aspect-chip').forEach((chip) => {
+  $$('.cbx-aspect-chip[data-aspect]').forEach((chip) => {
     chip.classList.toggle('active', chip.dataset.aspect === claudeTacticAspect);
   });
 
@@ -5279,7 +5321,6 @@ function renderClaudeTactics() {
   if (contentEl) {
     const sys = getSistemaF7Pdf(claudeTacticFormation);
     const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
-    const aspectBoardHtml = renderTacticBoard(aspectData, { showOpponent: claudeTacticShowRival, interactive: false });
 
     let aspectTextHtml = '';
     if (claudeTacticAspect === 'estructura') {
@@ -5340,14 +5381,9 @@ function renderClaudeTactics() {
 
     contentEl.innerHTML = `
       <div class="cbx-guide-aspect-container">
-        <div class="cbx-guide-aspect-board-wrap">
-          <div class="cbx-guide-aspect-board-header">
-            <span class="cbx-guide-aspect-badge">${escapeHtml(aspectData.title || claudeTacticAspect.toUpperCase())}</span>
-            <span class="cbx-guide-aspect-meta">${claudeTacticShowRival ? 'Con rival' : 'Solo equipo'}</span>
-          </div>
-          <div class="cbx-guide-aspect-pitch">
-            ${aspectBoardHtml}
-          </div>
+        <div class="cbx-guide-aspect-header-text" style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #e2e8f0;margin-bottom:8px">
+          <span class="cbx-guide-aspect-badge" style="font-weight:800;color:#0f766e;text-transform:uppercase">${escapeHtml(aspectData.title || claudeTacticAspect.toUpperCase())}</span>
+          <span class="cbx-guide-aspect-formation" style="font-size:12px;font-weight:700;color:#64748b">SISTEMA ${escapeHtml(claudeTacticFormation)}</span>
         </div>
         <div class="cbx-guide-aspect-text">
           ${aspectTextHtml}

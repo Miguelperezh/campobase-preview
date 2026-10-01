@@ -375,10 +375,10 @@ const xml = (value) => clean(value).replace(/[&<>\"']/g, (c) => ({ '&': '&amp;',
 const arrowStyle = (kind) => {
   const styles = {
     pass:   { cls: 'tac-arrow pac',  stroke: '#2b6cb0', dash: 'none',    weight: 1.4 },
-    move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',    weight: 1.2 },
-    dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',    weight: 2.2 },
+    move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',     weight: 1.2 },
+    dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',     weight: 2.2 },
     shot:   { cls: 'tac-arrow tiq',  stroke: '#e8590c', dash: 'none',    weight: 2.6 },
-    sprint: { cls: 'tac-arrow spr',  stroke: '#f6cf4c', dash: '3 1.5',  weight: 2.0 },
+    sprint: { cls: 'tac-arrow spr',  stroke: '#f6cf4c', dash: '3 1.5',   weight: 2.0 },
   };
   return styles[kind] ?? { cls: 'tac-arrow pac', stroke: '#2b6cb0', dash: 'none', weight: 1.4 };
 };
@@ -427,7 +427,8 @@ export function createTacticMove(from, to, kind) {
 export function renderTacticArrow(from, to, kind, markerId = 'tac-arrow-shared', idx = '') {
   const s = arrowStyle(kind);
   const idxAttr = idx !== '' ? ` data-idx="${idx}"` : '';
-  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
+  const mid = `${markerId}-${s.stroke.replace('#', '')}`;
+  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="round" marker-end="url(#${mid})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
 }
 
 export function renderTacticArrowDefs(markerId = 'tac-arrow-shared') { return marker(markerId); }
@@ -485,17 +486,15 @@ export function renderTacticBoard(tactic = {}, options = {}) {
   return `<figure class="tactic-board"><svg viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica de ${xml(t.name || 'táctica')}">${marker(markerId)}${parts.join('')}</svg><p class="board-legend"><strong>Leyenda:</strong> ${swatches} ${arrowSwatches}</p></figure>`;
 }
 
-// Genera los markers SVG para las flechas. Usa fill="context-stroke" para que
-// el marker herede el color del trazo de la flecha padre (no negro fijo).
-// Tamaño reducido (2×2) para que la punta no sea enorme.
+// Genera los markers SVG para las flechas con color explícito para evitar bugs de context-stroke.
 const marker = (id) => {
-  const colors = ['#2b6cb0', '#6b6b6b', '#7c3aed', '#e8590c', '#f6cf4c'];
+  const colors = ['#2563eb', '#4b5563', '#8b5cf6', '#dc2626', '#f59e0b', '#2b6cb0', '#6b6b6b', '#7c3aed', '#e8590c', '#f6cf4c'];
   let defs = '<defs>';
   for (const color of colors) {
     const mid = `${id}-${color.replace('#', '')}`;
-    defs += `<marker id="${mid}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker>`;
+    defs += `<marker id="${mid}" markerWidth="3" markerHeight="3" refX="2.4" refY="1.5" orient="auto"><path d="M0 0.5 L2.4 1.5 L0 2.5z" fill="${color}"/></marker>`;
   }
-  defs += `<marker id="${id}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker>`;
+  defs += `<marker id="${id}" markerWidth="3" markerHeight="3" refX="2.4" refY="1.5" orient="auto"><path d="M0 0.5 L2.4 1.5 L0 2.5z" fill="context-stroke"/></marker>`;
   defs += '</defs>';
   return defs;
 };

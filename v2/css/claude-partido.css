@@ -126,7 +126,7 @@ body.cb-redesign-active #preparacion #prep-back { flex: 0 1 auto; min-height: 43
 body.cb-redesign-active #preparacion .cbx-prep-pitch { min-width: 0; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch .live-tactics { margin: 0 !important; padding: 0; border: 0; background: transparent; box-shadow: none; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch .board-wrap { max-width: 420px; margin-inline: auto; padding: 8px; border: 0; border-radius: 16px; background: #155438; }
-body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board { display: block; width: 100%; height: auto; aspect-ratio: 100/130; }
+body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board { display: block; width: 100%; max-width: 440px; margin: 0 auto; height: auto; aspect-ratio: 1 / 1; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-field { fill: #205f43; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player circle { fill: #fff; stroke: #cbd5e1; stroke-width: .6; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player .num { fill: #0b2d20; }
@@ -234,7 +234,7 @@ body.cb-redesign-active .cbx-live-formation-chips { display: flex; gap: 5px; ove
 body.cb-redesign-active .cbx-live-formation-chips button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--cbx-line); border-radius: 999px; background: #fff; color: var(--cbx-ink); font-size: 11px; font-weight: 850; }
 body.cb-redesign-active .cbx-live-formation-chips button[aria-pressed="true"] { background: var(--cbx-hero); color: #fff; }
 body.cb-redesign-active #partido #live-tactics .board-wrap,body.cb-redesign-active #delegado #delegate-tactics .board-wrap { width: 100%; max-width: 470px; margin: 8px auto; padding: 5px; border-radius: 14px; background: #205f43; }
-body.cb-redesign-active #partido #live-tactics .board-wrap svg,body.cb-redesign-active #delegado #delegate-tactics .board-wrap svg { display: block; width: 100%; height: auto; aspect-ratio: 100/130; }
+body.cb-redesign-active #partido #live-tactics .board-wrap svg,body.cb-redesign-active #delegado #delegate-tactics .board-wrap svg { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; }
 body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player circle,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player circle { fill: #fff; stroke: #10b981; stroke-width: .7; }
 body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player .num,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player .num { fill: #0b2d20; }
 body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player .name,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player .name { fill: #fff; font-size: 3.2px; font-weight: 850; }
