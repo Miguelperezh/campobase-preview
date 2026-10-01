@@ -1055,4 +1055,33 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
         - `plan.md`: Diseño de componentes de tarjeta, delegación de eventos e integración con el planificador de sesiones.
         - `tasks.md`: Verificación de tareas y paso de tests al 100%.
 
+### 21. Entrega v61 (01/10/2026) — Desbloqueo y Flujo Integral de Preparar Partido (Spec 004)
+
+1. **Desbloqueo Total de la Interfaz en Preparación (`#preparacion`):**
+   - **Diagnóstico de la Causa Raíz:** En `js/app.js`, la función `openPreparacionEditor(matchId)` contenía la condición invertida `if (!document.body.classList.contains('cb-redesign-active')) $('#preparacion-list').classList.add('hidden');`. Bajo el modo rediseño Claude (`cb-redesign-active`), la lista de partidos `#preparacion-list` nunca recibía la clase `hidden`, manteniéndose en el DOM con `display: grid` y empujando el editor `#preparacion-editor` varios cientos de píxeles por debajo del fold visible. Parecía que el botón "Preparar" no hacía nada.
+   - **Solución Implementada:**
+     - `openPreparacionEditor` ahora oculta incondicionalmente `#preparacion-list` (`$('#preparacion-list').classList.add('hidden')`), muestra `#preparacion-editor` (`$('#preparacion-editor').classList.remove('hidden')`), añade la clase `.is-editing` al contenedor `#preparacion` y ejecuta `window.scrollTo({ top: 0, behavior: 'instant' })`.
+     - En `css/claude-partido.css` se agregaron reglas de alta especificidad con `!important` para que `#preparacion-list` quede oculto bajo cualquier circunstancia cuando el editor esté activo (`body.cb-redesign-active #preparacion #preparacion-list.hidden`, `body.cb-redesign-active #preparacion.is-editing #preparacion-list`, y el selector de árbol `:has(#preparacion-editor:not(.hidden)) #preparacion-list`).
+
+2. **Acceso Inmediato a Preparar sin Fricción de Convocatoria Previa:**
+   - Anteriormente, los partidos sin convocatoria manual solo ofrecían `[Convocar y preparar]`, lo cual expulsaba al entrenador fuera de la pestaña hacia el módulo Convocatorias.
+   - Se añadió el botón directo `[Preparar partido]` en las tarjetas de partidos sin convocatoria en `renderPreparaciones()`.
+   - Se implementó la función `ensureCallupForMatch(match)`: si el partido no dispone de convocatoria en IndexedDB, la crea automáticamente con todos los jugadores disponibles de la plantilla activa y continúa directamente a la apertura del editor táctico en milisegundos.
+
+3. **Auto-población Inteligente del 7 Inicial (`prepBuildTeam`):**
+   - Anteriormente, al abrir un partido nuevo sin preparación previa, los 6 puestos de campo quedaban vacíos (`playerId: ''`), obligando al usuario a desplegar 6 selects o imposibilitando guardar la alineación.
+   - `prepBuildTeam(formation, keeperId)` ahora auto-asigna de forma inteligente al portero y a los 6 jugadores de campo según compatibilidad posicional y disponibilidad, entregando una pizarra táctica lista para usar, modificar o guardar de inmediato.
+
+4. **Navegación Fluida, Botones de Retorno y Cierre de Popups:**
+   - Se añadió el botón `[← Volver a partidos]` (`#prep-back-head`) en la cabecera superior de `#preparacion-editor`, además del botón `#prep-back` en las acciones inferiores.
+   - Ambos botones invocan `closeEditor()`, que retira `.is-editing`, repinta la lista de partidos con los estados actualizados (`✓ Preparado` / `Sin preparar`) y hace scroll suave al inicio.
+   - Se blindó el popup táctico flotante `#prep-popup` con eventos de cierre seguro mediante clic exterior y tecla `Escape`.
+   - Se añadió un botón directo `[Ir a Preparación de partido]` en el estado vacío de Partido en vivo (`#partido`) y botones `[Preparar]` directos en el Calendario.
+
+5. **Especificación SDD y Tests:**
+   - Carpeta de especificación formal `specs/004-preparar-partido-flujo-y-editor/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de tests en `tests/preparacion-flujo.test.js` verificando la eliminación de la condición limitante, auto-creación de convocatoria, auto-asignación de 7 jugadores, presencia de botones de retorno y exportación de API.
+   - Batería de 610 tests pasando al 100% y `npm run check` verificado sin errores.
+
+
 

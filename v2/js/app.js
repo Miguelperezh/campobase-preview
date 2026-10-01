@@ -1836,11 +1836,16 @@ function renderLive() {
       applyPreparacionToLive(savedPrep).catch(() => {});
       return;
     }
-    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
+    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : `<div class="empty-state"><p>Necesitas un partido con convocatoria para iniciar el control en vivo.</p><div class="button-row" style="margin-top:14px;justify-content:center"><button type="button" class="primary" id="live-go-prep">Ir a Preparación de partido</button></div></div>`;
     const prepBtn = $('#prepare-live');
     if (prepBtn && !prepBtn.dataset.directBound) {
       prepBtn.dataset.directBound = '1';
       prepBtn.addEventListener('click', () => prepareLive().catch(handleError));
+    }
+    const goPrepBtn = $('#live-go-prep');
+    if (goPrepBtn && !goPrepBtn.dataset.directBound) {
+      goPrepBtn.dataset.directBound = '1';
+      goPrepBtn.addEventListener('click', () => showView('preparacion'));
     }
     return;
   }
@@ -3140,8 +3145,13 @@ async function prepareLive() {
     await applyPreparacionToLive(prep);
     return;
   }
-  const firstKeeper = $('#first-keeper')?.value;
-  const secondKeeper = $('#second-keeper')?.value;
+  let firstKeeper = $('#first-keeper')?.value;
+  let secondKeeper = $('#second-keeper')?.value;
+  if (!firstKeeper || !secondKeeper) {
+    updateKeeperOptions(match.id);
+    firstKeeper = $('#first-keeper')?.value;
+    secondKeeper = $('#second-keeper')?.value;
+  }
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
   if (!availableIds.includes(firstKeeper) || !availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
@@ -3492,9 +3502,9 @@ function renderMatchCard(match) {
     const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(match.date || ''))?.[1] || '';
     const score = hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente');
     const resultClass = hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending';
-    return `<article class="cbx-calendar-match panel match-card" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></details></article>`;
+    return `<article class="cbx-calendar-match panel match-card" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></details></article>`;
   }
-  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
+  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
 }
 
 let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -3600,13 +3610,48 @@ function renderPreparaciones() {
   }
   root.innerHTML = matches.map((match) => {
     const callup = callupForMatch(match);
-    if (!callup) return `<article class="panel cbx-prep-card is-pending"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div><span class="pill">Necesita convocatoria</span></div><p class="meta">Elige los convocados y después asigna los jugadores a los puestos de la pizarra.</p><div class="button-row"><button type="button" class="prep-create-callup primary" data-id="${escapeHtml(match.id)}">Convocar y preparar</button></div></article>`;
+    if (!callup) {
+      return `<article class="panel cbx-prep-card is-pending"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div><span class="pill">Sin preparar</span></div><p class="meta">Prepara la alineación directamente con la plantilla o personaliza la convocatoria previa.</p><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">Preparar partido</button><button type="button" class="prep-create-callup secondary" data-id="${escapeHtml(match.id)}">Convocar y preparar</button></div></article>`;
+    }
     const prep = prepForMatch(match.id);
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
     return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
+}
+
+async function ensureCallupForMatch(match) {
+  if (!match) return null;
+  let callup = callupForMatch(match);
+  if (callup) return callup;
+  const availableIds = state.players.map((p) => p.id);
+  const format = String(match.format || state.format || 'F7').toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero'));
+  const targets = calculateMinuteTargets(availableIds, config.duration, config.players, keeperIds);
+  callup = {
+    id: uid(),
+    matchId: match.id,
+    date: match.date,
+    opponent: match.opponent,
+    matchType: match.type ?? 'league',
+    format,
+    availableIds,
+    selectedIds: [...availableIds],
+    excludedIds: [],
+    exclusions: [],
+    targets,
+    rotationDecisions: {},
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await putBatch({
+    callups: [callup],
+    matches: [{ ...match, callupId: callup.id, format }],
+  });
+  await refresh(true);
+  return callup;
 }
 
 async function togglePrepDelegateForMatch(matchId) {
@@ -3631,11 +3676,36 @@ async function togglePrepDelegateForMatch(matchId) {
 function prepAvailableIds(matchId) {
   const match = state.matches.find(({ id }) => id === matchId);
   const callup = callupForMatch(match);
-  return callup?.availableIds ?? [];
+  if (Array.isArray(callup?.availableIds) && callup.availableIds.length > 0) {
+    return callup.availableIds;
+  }
+  return state.players.map((p) => p.id);
 }
 
 function prepBuildTeam(formation, keeperId) {
-  return buildLiveState(state.players, prepAvailableIds(prepMatchId), formation, 'F7', keeperId).team;
+  const availableIds = prepAvailableIds(prepMatchId);
+  const baseTeam = buildLiveState(state.players, availableIds, formation, 'F7', keeperId).team;
+  if (!availableIds.length) return baseTeam;
+
+  const safeKeeper = availableIds.includes(keeperId) ? keeperId : (availableIds[0] || '');
+  const outfieldAvailable = availableIds.filter((id) => id !== safeKeeper);
+  const assigned = new Set();
+  if (safeKeeper) assigned.add(safeKeeper);
+
+  return baseTeam.map((slot) => {
+    if (slot.pos === 'Portero') return { ...slot, playerId: safeKeeper };
+    const candidate = outfieldAvailable.find((id) => {
+      if (assigned.has(id)) return false;
+      const pl = state.players.find((p) => p.id === id);
+      return Array.isArray(pl?.positions) && pl.positions.includes(slot.pos);
+    }) || outfieldAvailable.find((id) => !assigned.has(id));
+
+    if (candidate) {
+      assigned.add(candidate);
+      return { ...slot, playerId: candidate };
+    }
+    return { ...slot, playerId: '' };
+  });
 }
 
 function prepCargarFormacion(team, formation, keeperId) {
@@ -3899,14 +3969,25 @@ function arrangeClaudePrepEditor() {
   });
 }
 
-function openPreparacionEditor(matchId) {
+async function openPreparacionEditor(matchId) {
   prepMatchId = matchId;
-  const match = state.matches.find(({ id }) => id === matchId);
+  let match = state.matches.find(({ id }) => id === matchId);
+  if (!match) return;
+  let callup = callupForMatch(match);
+  if (!callup) {
+    if (!state.players.length) {
+      toast('Añade jugadores a la plantilla para preparar el partido.');
+      return;
+    }
+    callup = await ensureCallupForMatch(match);
+    match = state.matches.find(({ id }) => id === matchId) || match;
+  }
   const prep = prepForMatch(matchId);
   const availableIds = prepAvailableIds(matchId);
   const keeperOptions = availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
-  const firstKeeper = prep?.firstKeeper ?? availableIds.find((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero')) ?? availableIds[0] ?? '';
-  const secondKeeper = prep?.secondKeeper ?? firstKeeper;
+  const naturalKeepers = availableIds.filter((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero'));
+  const firstKeeper = prep?.firstKeeper ?? naturalKeepers[0] ?? availableIds[0] ?? '';
+  const secondKeeper = prep?.secondKeeper ?? naturalKeepers[1] ?? firstKeeper;
   const formacion = prep?.formacion ?? '1-3-2-1';
   prepDraft = prep?.team?.length
     ? prep.team.map((p) => ({ ...p }))
@@ -3921,7 +4002,7 @@ function openPreparacionEditor(matchId) {
     .map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`)
     .join('');
   $('#preparacion-editor').innerHTML = `
-    <div class="section-head"><div><p class="eyebrow">Preparando · ${escapeHtml(localDate(match.date))}</p><h3>${match.round ? `J${escapeHtml(match.round)} · ` : ''}${escapeHtml(match.opponent)}</h3></div><button type="button" id="prep-back" class="secondary">← Volver al plan</button></div>
+    <div class="section-head"><div><p class="eyebrow">Preparando · ${escapeHtml(localDate(match.date))}</p><h3>${match.round ? `J${escapeHtml(match.round)} · ` : ''}${escapeHtml(match.opponent)}</h3></div><button type="button" id="prep-back-head" class="secondary" title="Volver al listado de partidos">← Volver a partidos</button></div>
     <section class="cbx-prep-moments panel" id="prep-moments" data-show-plan="${prep?.showPlanInLive === false ? 'false' : 'true'}"></section>
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
@@ -3933,14 +4014,16 @@ function openPreparacionEditor(matchId) {
       <div class="live-tactics-legend compact"><strong>Leyenda:</strong><span><i class="dot mi"></i>equipo</span><span><i class="dot rival"></i>rival</span><span><i class="dot ball"></i>balón</span><span>toque = elegir jugador</span></div>
     </div>
     <div class="panel" style="margin-top:1rem"><p class="eyebrow" style="margin-bottom:.4rem">Convocados (desde Convocatoria)</p><div class="suplente-list">${convocados || '<span class="meta">Sin convocados.</span>'}</div></div>
-    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
+    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-back" class="secondary">← Volver a partidos</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
     <p class="meta" id="prep-hint">Toca una ficha de la pizarra o usa «Elegir jugadores y cambiar posiciones». Completa los 7 titulares y guarda la preparación.</p>
     <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>
     <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
   $('#prep-keeper2').value = secondKeeper;
-  if (!document.body.classList.contains('cb-redesign-active')) $('#preparacion-list').classList.add('hidden');
+  $('#preparacion-list').classList.add('hidden');
   $('#preparacion-editor').classList.remove('hidden');
+  $('#preparacion')?.classList.add('is-editing');
+  window.scrollTo({ top: 0, behavior: 'instant' });
   arrangeClaudePrepEditor();
   renderPrepBoard();
   renderPrepSlots();
@@ -4048,17 +4131,6 @@ function wirePrepEditor() {
       if (idx !== undefined && idx !== '') prepOpenPopup(Number(idx), e.clientX, e.clientY);
     });
   }
-  if (svg) {
-    svg.addEventListener('pointerdown', (e) => {
-      const target = e.target.closest('[data-piece]');
-      if (target && target.dataset.piece === 'team') svg.dataset._prepIdx = target.dataset.idx;
-    });
-    svg.addEventListener('pointerup', (e) => {
-      const idx = svg.dataset._prepIdx;
-      svg.dataset._prepIdx = '';
-      if (idx !== undefined && idx !== '') prepOpenPopup(Number(idx), e.clientX, e.clientY);
-    });
-  }
   const formacion = $('#prep-formacion');
   if (formacion) formacion.addEventListener('change', () => {
     prepDraft = prepCargarFormacion(prepDraft, formacion.value, prepDraft.find((slot) => slot.pos === 'Portero')?.playerId || $('#prep-keeper1').value);
@@ -4081,6 +4153,22 @@ function wirePrepEditor() {
     if (slot.pos === 'Portero' && prepMomentIndex === 0) $('#prep-keeper1').value = popupSelect.value;
     capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
   });
+  const closePopup = (e) => {
+    const popup = $('#prep-popup');
+    if (!popup || !popup.classList.contains('open')) return;
+    if (e.type === 'keydown' && e.key === 'Escape') {
+      popup.classList.remove('open');
+      return;
+    }
+    if (e.type === 'pointerdown' && !popup.contains(e.target) && !e.target.closest('#prep-board')) {
+      popup.classList.remove('open');
+    }
+  };
+  document.removeEventListener('pointerdown', closePopup);
+  document.removeEventListener('keydown', closePopup);
+  document.addEventListener('pointerdown', closePopup);
+  document.addEventListener('keydown', closePopup);
+
   $('#prep-moments')?.addEventListener('click', (event) => {
     const target = event.target.closest('button');
     if (!target) return;
@@ -4109,12 +4197,18 @@ function wirePrepEditor() {
     }
     if (target.id === 'prep-copy-auto') copyAutoPrepMoments();
   });
-  const back = $('#prep-back');
-  if (back) back.addEventListener('click', () => {
+  const closeEditor = () => {
     $('#preparacion-editor').classList.add('hidden');
     $('#preparacion-list').classList.remove('hidden');
+    $('#preparacion')?.classList.remove('is-editing');
     prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
-  });
+    renderPreparaciones();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const back = $('#prep-back');
+  if (back) back.addEventListener('click', closeEditor);
+  const backHead = $('#prep-back-head');
+  if (backHead) backHead.addEventListener('click', closeEditor);
   const save = $('#prep-save');
   if (save) save.addEventListener('click', () => savePreparacion());
   const delegate = $('#prep-delegate');
@@ -4200,9 +4294,11 @@ async function savePreparacion() {
   await applyPreparacionToLive(record);
   $('#preparacion-editor')?.classList.add('hidden');
   $('#preparacion-list')?.classList.remove('hidden');
+  $('#preparacion')?.classList.remove('is-editing');
   prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
   renderPreparaciones();
   toast('Preparación guardada.');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 async function deletePreparacion() {
@@ -4217,8 +4313,11 @@ async function deletePreparacionById(matchId) {
   await refresh();
   $('#preparacion-editor').classList.add('hidden');
   $('#preparacion-list').classList.remove('hidden');
+  $('#preparacion')?.classList.remove('is-editing');
   prepDraft = null; prepMatchId = null;
+  renderPreparaciones();
   toast('Preparación borrada.');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 async function togglePrepDelegate() {
@@ -8935,7 +9034,7 @@ function wireEvents() {
     const deletePlayerBtn = target.closest('.delete-player');
     if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(true); renderPlayers(); }
     if (target.matches('[data-callup-plan-mode]')) { callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
-    if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id); }
+    if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
@@ -8948,7 +9047,8 @@ function wireEvents() {
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
-    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id).catch(handleError);
+    if (target.matches('.prep-open-from-cal')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.prep-view-live')) {
       const prep = prepForMatch(target.dataset.id);
       if (state.timer && state.timer.phase !== 'ready' && state.timer.matchId !== target.dataset.id) return toast('Hay otro partido en juego. Termínalo antes de abrir este plan.');
@@ -8958,7 +9058,7 @@ function wireEvents() {
       if (plan) plan.open = true;
     }
     if (target.matches('.prep-create-callup')) { pendingPrepAfterCallupMatchId = target.dataset.id; showView('convocatorias'); callupBuilder(target.dataset.id); }
-    if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id); $('#prep-gif')?.click(); }
+    if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id).then(() => $('#prep-gif')?.click()).catch(handleError); }
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }
@@ -9390,7 +9490,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
   window.__campobaseState = state;
 }
 
