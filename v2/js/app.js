@@ -3758,19 +3758,25 @@ function renderMatchCard(match) {
   const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
+  const isOwner = roleCanUseOwnerFeatures(state.role);
+  const isLive = Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(match.id)) || match.status === 'in_progress');
+
   if (document.body.classList.contains('cb-redesign-active')) {
     const date = new Date(`${String(match.date).slice(0, 10)}T12:00:00`);
     const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
     const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
     const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(match.date || ''))?.[1] || '';
-    const score = hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente');
-    const resultClass = hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending';
-    return `<article class="cbx-calendar-match panel match-card" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></details></article>`;
+    const liveScore = isLive && state.timer?.details ? `${teams.mySide === 'home' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}–${teams.mySide === 'away' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}` : '';
+    const score = isLive ? (liveScore || '0–0') : (hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente'));
+    const resultClass = isLive ? 'live' : (hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending');
+    return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
   }
-  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
+  return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
 }
 
 let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let claudeCalendarFilter = 'all';
+let claudeCalendarSelectedDay = null;
 
 function renderClaudeCalendar() {
   const year = claudeCalendarMonth.getFullYear();
@@ -3784,28 +3790,158 @@ function renderClaudeCalendar() {
     const day = index + 1;
     const key = dateKey(day);
     const isToday = key === new Date().toLocaleDateString('en-CA');
-    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${matchDays.has(key) ? ', partido' : ''}${trainingDays.has(key) ? ', entrenamiento' : ''}"><span>${day}</span><i class="${matchDays.has(key) ? 'has-match' : trainingDays.has(key) ? 'has-training' : ''}"></i></button>`;
+    const isSelected = claudeCalendarSelectedDay === key;
+    const hasMatch = matchDays.has(key);
+    const hasTraining = trainingDays.has(key);
+    const dotsHtml = (hasMatch || hasTraining)
+      ? `<span class="cbx-cal-dots">${hasMatch ? '<i class="has-match"></i>' : ''}${hasTraining ? '<i class="has-training"></i>' : ''}</span>`
+      : '<span class="cbx-cal-dots"></span>';
+    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${hasMatch ? ', partido' : ''}${hasTraining ? ', entrenamiento' : ''}"><span>${day}</span>${dotsHtml}</button>`;
   })).join('');
   return `<section class="cbx-calendar-month panel"><header><h3>${new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(claudeCalendarMonth)}</h3><div><span>● Partido</span><span>● Entreno</span></div></header><div class="cbx-calendar-weekdays">${['L','M','X','J','V','S','D'].map((item) => `<b>${item}</b>`).join('')}</div><div class="cbx-calendar-days">${cells}</div><footer><button type="button" data-calendar-move="-1" aria-label="Mes anterior">←</button><button type="button" data-calendar-now="1">Hoy</button><button type="button" data-calendar-move="1" aria-label="Mes siguiente">→</button></footer></section>`;
+}
+
+function renderCalendarFilterBar() {
+  const allCount = state.matches.length + state.trainingSessions.length;
+  const leagueCount = state.matches.filter((m) => (m.type || 'league') === 'league').length;
+  const friendlyCount = state.matches.filter((m) => m.type === 'friendly').length;
+  const tournamentCount = state.matches.filter((m) => m.type === 'tournament').length;
+  const trainingCount = state.trainingSessions.length;
+
+  const filters = [
+    { id: 'all', label: `Todos (${allCount})` },
+    { id: 'league', label: `Liga (${leagueCount})` },
+    { id: 'friendly', label: `Amistosos (${friendlyCount})` },
+    { id: 'tournament', label: `Torneos (${tournamentCount})` },
+    { id: 'training', label: `Entrenos (${trainingCount})` },
+  ];
+
+  return `<nav class="cbx-calendar-filter-bar" aria-label="Filtros de calendario">${filters.map((f) => `<button type="button" class="cbx-calendar-filter-btn${claudeCalendarFilter === f.id ? ' is-active' : ''}" data-calendar-filter="${f.id}" aria-pressed="${claudeCalendarFilter === f.id}">${escapeHtml(f.label)}</button>`).join('')}</nav>`;
+}
+
+function renderTrainingCalendarCard(training) {
+  const dateStr = String(training.date || '').slice(0, 10);
+  const date = new Date(`${dateStr}T12:00:00`);
+  const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
+  const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+  const time = training.time || (/^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(training.date || ''))?.[1]) || '17:30';
+  const name = training.name || 'Entrenamiento del equipo';
+  const pitch = training.pitch ? ` · ${training.pitch}` : '';
+  const duration = training.totalDuration ? ` · ${training.totalDuration} min` : '';
+
+  return `<article class="cbx-calendar-training panel" data-training-id="${escapeHtml(training.id || '')}" data-match-day="${escapeHtml(dateStr)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>Entrenamiento · ${escapeHtml(time)}${escapeHtml(pitch)}${escapeHtml(duration)}</small><h3>${escapeHtml(name)}</h3><p><span>Sesión planificada</span>${training.notes ? ` · ${escapeHtml(training.notes)}` : ''}</p></div><strong class="cbx-calendar-score training-pill">Entreno</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary><div class="button-row">${training.id ? `<button type="button" class="print-session secondary" data-id="${escapeHtml(training.id)}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir sesión</button><button type="button" class="open-whatsapp-session icon-button accent" data-id="${escapeHtml(training.id)}">📱 WhatsApp</button><button type="button" class="view-session secondary" data-id="${escapeHtml(training.id)}">Ver sesión</button>` : ''}</div></details></article>`;
 }
 
 function renderMatches() {
   if (document.body.classList.contains('cb-redesign-active')) {
     const root = $('#matches-list');
-    const { upcoming, played } = partitionAndSortMatches(state.matches);
+    if (!root) return;
+    const newMatchBtn = $('#calendario button[data-dialog="match-dialog"]');
+    if (newMatchBtn) newMatchBtn.hidden = !roleCanUseOwnerFeatures(state.role);
+
+    // 1. Filtrado de partidos
+    let matchesToRender = state.matches;
+    if (claudeCalendarFilter === 'league') {
+      matchesToRender = state.matches.filter((m) => (m.type || 'league') === 'league');
+    } else if (claudeCalendarFilter === 'friendly') {
+      matchesToRender = state.matches.filter((m) => m.type === 'friendly');
+    } else if (claudeCalendarFilter === 'tournament') {
+      matchesToRender = state.matches.filter((m) => m.type === 'tournament');
+    } else if (claudeCalendarFilter === 'training') {
+      matchesToRender = [];
+    }
+
+    if (claudeCalendarSelectedDay) {
+      matchesToRender = matchesToRender.filter((m) => String(m.date || '').slice(0, 10) === claudeCalendarSelectedDay);
+    }
+
+    // 2. Filtrado de entrenamientos
+    let relevantTrainings = [];
+    if (claudeCalendarFilter === 'all' || claudeCalendarFilter === 'training') {
+      relevantTrainings = state.trainingSessions;
+      if (claudeCalendarSelectedDay) {
+        relevantTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) === claudeCalendarSelectedDay);
+      }
+    }
+
+    const { upcoming, played } = partitionAndSortMatches(matchesToRender);
+    const isLiveMatch = (m) => Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(m.id)) || m.status === 'in_progress');
+    const liveMatches = upcoming.filter(isLiveMatch);
+    const nonLiveUpcoming = upcoming.filter((m) => !isLiveMatch(m));
     const league = played.filter((item) => !isPreseasonMatch(item));
     const preseason = played.filter(isPreseasonMatch);
+
+    const todayStr = localDateKey();
+    const upcomingTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) >= todayStr).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+    const pastTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) < todayStr).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
     const group = (title, matches) => matches.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${matches.map(renderMatchCard).join('')}</div></section>` : '';
+    const trainingGroup = (title, items) => items.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${items.map(renderTrainingCalendarCard).join('')}</div></section>` : '';
+
     const wasOpen = root.querySelector('#played-matches-collapsible')?.open ?? true;
-    root.innerHTML = `${renderClaudeCalendar()}${group('Próximos', upcoming)}<details class="played-matches-accordion cbx-calendar-played" id="played-matches-collapsible"${wasOpen ? ' open' : ''}><summary>Jugados (${played.length})</summary>${group('Liga · Jugados', league)}${group('Pretemporada', preseason)}</details>${state.matches.length ? '' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>'}`;
+    const selectedDayBanner = claudeCalendarSelectedDay ? `
+      <div class="cbx-calendar-selected-day-banner" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f1f5f9;border-radius:12px;margin:8px 0 14px;border:1px solid #e2e8f0;">
+        <span style="font-weight:750;font-size:13px;color:#1e293b;">📅 Eventos del <strong>${escapeHtml(claudeCalendarSelectedDay)}</strong></span>
+        <button type="button" class="cbx-clear-day-btn" style="padding:4px 12px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:12px;font-weight:750;color:#0f172a;">Ver todo el mes</button>
+      </div>` : '';
+
+    const hasAnyEvent = liveMatches.length || nonLiveUpcoming.length || played.length || relevantTrainings.length;
+    const emptyNotice = !hasAnyEvent ? (state.matches.length ? '<p class="meta" style="text-align:center;padding:24px 12px;">No hay eventos para el filtro seleccionado.</p>' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>') : '';
+
+    root.innerHTML = `
+      ${renderClaudeCalendar()}
+      ${renderCalendarFilterBar()}
+      ${selectedDayBanner}
+      ${group('🔴 En juego', liveMatches)}
+      ${group('Próximos', nonLiveUpcoming)}
+      ${trainingGroup('Próximos entrenamientos', upcomingTrainings)}
+      ${played.length || pastTrainings.length ? `
+        <details class="played-matches-accordion cbx-calendar-played" id="played-matches-collapsible"${wasOpen ? ' open' : ''}>
+          <summary>Jugados y completados (${played.length + pastTrainings.length})</summary>
+          ${group('Liga · Jugados', league)}
+          ${group('Pretemporada', preseason)}
+          ${trainingGroup('Entrenamientos pasados', pastTrainings)}
+        </details>` : ''}
+      ${emptyNotice}
+    `;
+
     if (!root.dataset.claudeCalendarBound) {
       root.dataset.claudeCalendarBound = '1';
       root.addEventListener('click', (event) => {
         const move = event.target.closest('[data-calendar-move]');
-        if (move) { claudeCalendarMonth = new Date(claudeCalendarMonth.getFullYear(), claudeCalendarMonth.getMonth() + Number(move.dataset.calendarMove), 1); renderMatches(); return; }
-        if (event.target.closest('[data-calendar-now]')) { claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderMatches(); return; }
+        if (move) {
+          claudeCalendarMonth = new Date(claudeCalendarMonth.getFullYear(), claudeCalendarMonth.getMonth() + Number(move.dataset.calendarMove), 1);
+          renderMatches();
+          return;
+        }
+        if (event.target.closest('[data-calendar-now]')) {
+          claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+          claudeCalendarSelectedDay = null;
+          renderMatches();
+          return;
+        }
+        const filterBtn = event.target.closest('[data-calendar-filter]');
+        if (filterBtn) {
+          claudeCalendarFilter = filterBtn.dataset.calendarFilter;
+          renderMatches();
+          return;
+        }
+        if (event.target.closest('.cbx-clear-day-btn')) {
+          claudeCalendarSelectedDay = null;
+          renderMatches();
+          return;
+        }
         const day = event.target.closest('[data-calendar-day]');
-        if (day) { root.querySelectorAll('.cbx-calendar-day').forEach((button) => button.classList.toggle('is-selected', button === day)); root.querySelector(`.cbx-calendar-match[data-match-day="${day.dataset.calendarDay}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        if (day) {
+          const clickedKey = day.dataset.calendarDay;
+          if (claudeCalendarSelectedDay === clickedKey) {
+            claudeCalendarSelectedDay = null;
+          } else {
+            claudeCalendarSelectedDay = clickedKey;
+          }
+          renderMatches();
+          return;
+        }
       });
     }
     return;
@@ -9892,7 +10028,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 

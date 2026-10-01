@@ -6,5 +6,5 @@
 - [x] **Tarea 4**: Crear suite de tests `tests/partido-finalizacion-resumen-puntuaciones.test.js` y verificar paso al 100%.
 - [x] **Tarea 5**: Ejecutar `npm run check && npm test` (todos los tests en verde sin errores).
 - [x] **Tarea 6**: Actualizar `agente.md` con la sección correspondiente a la Entrega v67.
-- [ ] **Tarea 7**: Compilar, sincronizar y desplegar a `campobase-preview-deploy/v2/`.
-- [ ] **Tarea 8**: Validar el despliegue en GitHub Pages y entregar respuesta con la URL al final.
+- [x] **Tarea 7**: Compilar, sincronizar y desplegar a `campobase-preview-deploy/v2/`.
+- [x] **Tarea 8**: Validar el despliegue en GitHub Pages y entregar respuesta con la URL al final.

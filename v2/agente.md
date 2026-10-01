@@ -1255,6 +1255,30 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de pruebas en `tests/partido-finalizacion-resumen-puntuaciones.test.js` (4 tests pasando).
    - **631/631 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
 
+### 28. Entrega v68 (01/10/2026) — Calendario: Vista Mensual, Puntos Múltiples, Filtros y Lista Integrada (Spec 011)
 
+1. **Vista Mensual con Puntos Simultáneos (`renderClaudeCalendar`):**
+   - **Puntos dobles independientes (`.cbx-cal-dots`):** Solucionada la limitación donde un partido y un entrenamiento en el mismo día se anulaban mutuamente. Ahora se renderizan ambos puntos de forma simultánea e independiente: punto rojo (`#c8102e`, `.has-match`) y punto verde (`#10b981`, `.has-training`).
+   - **Navegación mensual reactiva:** Botones de mes anterior, mes siguiente y «Hoy» para saltar rápidamente al mes actual sin perder filtros.
+   - **Selección de día táctil:** Al pulsar un día del mes, se activa `.is-selected`, mostrando un banner informativo superior (`📅 Eventos del AAAA-MM-DD`) y un botón para volver a «Ver todo el mes».
 
+2. **Barra de Filtros Reactiva (`renderCalendarFilterBar`):**
+   - **Chips de filtro:** `Todos`, `Liga`, `Amistosos`, `Torneos` y `Entrenos` con recuentos dinámicos en tiempo real entre paréntesis.
+   - **Filtrado instantáneo:** Actualización reactiva sin recargas de página ni pérdida del mes que se está explorando.
 
+3. **Partidos en Directo y Lista Cronológica:**
+   - **Partido en juego destacado:** Si un partido está en disputa (`status === 'in_progress'` o fase de partido activa), se resalta en la parte superior con borde rojo brillante, fondo rosado tenue, distintivo animado `🔴 EN DIRECTO` y marcador en vivo.
+   - **Próximos eventos ordenados:** Próximos partidos y entrenamientos ordenados cronológicamente (el más cercano arriba).
+   - **Historial de jugados y completados:** Agrupados bajo el acordeón desplegable `Jugados y completados`, ordenados en orden cronológico descendente (el más reciente arriba), con marcadores coloreados según victoria (`.win`), empate (`.draw`) o derrota (`.loss`).
+
+4. **Tarjetas de Entrenamientos Integradas (`renderTrainingCalendarCard`):**
+   - Tarjetas con franja lateral verde (`border-left: 4px solid #10b981`), fecha desglosada, hora, campo, nombre de sesión y objetivos.
+   - Acciones directas integradas: `🖨️ Imprimir sesión`, `📱 WhatsApp` y `Ver sesión`.
+
+5. **Aislamiento de Permisos del Delegado:**
+   - El botón `+ Partido` de la cabecera y los botones `Editar` y `Borrar` de las tarjetas de partido se ocultan automáticamente si el usuario tiene rol de delegado (`state.role === 'delegate'`), reservándolos para el entrenador (Migue).
+
+6. **Especificación SDD 011 y Validación:**
+   - Carpeta formal en `specs/011-calendario-vista-mensual-filtros-y-navegacion/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/calendario-filtros-vista-mensual.test.js` (6 tests pasando).
+   - **637/637 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
