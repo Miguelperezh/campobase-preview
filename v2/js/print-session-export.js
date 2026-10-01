@@ -769,9 +769,7 @@ function generateStandalonePrintPage(htmlContent) {
 function isMobileDevice() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in (typeof window !== 'undefined' ? window : {}));
-  const isSmall = typeof window !== 'undefined' && (window.innerWidth <= 1024 || window.innerHeight <= 900);
-  return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (isTouch && /Macintosh/i.test(ua)) || (isTouch && isSmall) || isSmall;
+  return /iPhone|iPod|Android.*Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 }
 
 export async function ensurePdfLibraries() {
@@ -1035,19 +1033,19 @@ export function executePrint(htmlContent) {
         <span>Formato A4 oficial Claude (para papel, PDF y móvil)</span>
       </div>
       <div class="cb-print-floating-bar-actions">
-        <button type="button" class="btn primary cb-print-btn-print" id="cb-print-trigger-btn">
-          🖨️ Imprimir
+        <button type="button" class="cb-print-btn-print" id="cb-print-trigger-btn">
+          🖨️ Imprimir / Guardar PDF
         </button>
-        <button type="button" class="btn primary cb-print-btn-open" id="cb-print-open-tab-btn" title="Abre la Ficha A4 en nueva pestaña para imprimir o guardar PDF con el navegador">
+        <button type="button" class="cb-print-btn-open" id="cb-print-open-tab-btn" title="Abre la Ficha A4 en nueva pestaña para imprimir o guardar PDF con el navegador">
           📄 Abrir Ficha A4
         </button>
-        <button type="button" class="btn primary cb-print-btn-share" id="cb-print-share-btn">
+        <button type="button" class="cb-print-btn-share" id="cb-print-share-btn">
           📲 Compartir WhatsApp / PDF
         </button>
-        <button type="button" class="btn secondary cb-print-btn-download" id="cb-print-download-btn">
-          📥 Guardar / Descargar PDF
+        <button type="button" class="cb-print-btn-download" id="cb-print-download-btn">
+          📥 Descargar PDF
         </button>
-        <button type="button" class="btn secondary cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
+        <button type="button" class="cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
           ✕ Salir
         </button>
       </div>
@@ -1058,10 +1056,16 @@ export function executePrint(htmlContent) {
   document.body.appendChild(container);
 
   let cleanedUp = false;
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape') cleanup();
+  };
+  window.addEventListener('keydown', handleKeydown);
+
   const cleanup = () => {
     if (cleanedUp) return;
     cleanedUp = true;
     try {
+      window.removeEventListener('keydown', handleKeydown);
       if (document.body && document.body.classList) {
         document.body.classList.remove('cb-is-printing');
       }
@@ -1222,12 +1226,6 @@ export function executePrint(htmlContent) {
 
 function triggerBrowserPrint(container, cleanup) {
   if (typeof window === 'undefined') return;
-
-  if (typeof cleanup === 'function') {
-    window.addEventListener('afterprint', cleanup, { once: true });
-    const cleanupTimeout = setTimeout(cleanup, 120000);
-    if (cleanupTimeout?.unref) cleanupTimeout.unref();
-  }
 
   if (typeof window.print === 'function') {
     window.print();

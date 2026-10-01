@@ -411,7 +411,7 @@ export function renderTacticToolIcon(kind) {
   if (kind === 'clear') return `<svg ${common}><path d="M6 9h20M10 9l1-4h10l1 4M9 9l1 8h12l1-8" fill="none" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 6h6" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round"/></svg>`;
   const s = arrowStyle(kind);
   const markerId = `tool-arrow-${kind}-${++toolIconSeq}`;
-  return `<svg ${common}><defs><marker id="${markerId}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker></defs><path d="M3 9 L27 9" class="${s.cls}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="round" marker-end="url(#${markerId})"/></svg>`;
+  return `<svg ${common}><defs><marker id="${markerId}" markerWidth="4" markerHeight="4" refX="1.2" refY="2" orient="auto"><path d="M0 0.6 L3.6 2 L0 3.4z" fill="${s.stroke}"/></marker></defs><path d="M3 9 L24 9" class="${s.cls}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="butt" marker-end="url(#${markerId})"/></svg>`;
 }
 
 const TOOL_KINDS = new Set(['pass', 'move', 'dribble', 'shot', 'sprint']);
@@ -428,7 +428,7 @@ export function renderTacticArrow(from, to, kind, markerId = 'tac-arrow-shared',
   const s = arrowStyle(kind);
   const idxAttr = idx !== '' ? ` data-idx="${idx}"` : '';
   const mid = `${markerId}-${s.stroke.replace('#', '')}`;
-  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="round" marker-end="url(#${mid})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
+  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="butt" marker-end="url(#${mid})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
 }
 
 export function renderTacticArrowDefs(markerId = 'tac-arrow-shared') { return marker(markerId); }
@@ -492,9 +492,9 @@ const marker = (id) => {
   let defs = '<defs>';
   for (const color of colors) {
     const mid = `${id}-${color.replace('#', '')}`;
-    defs += `<marker id="${mid}" markerWidth="3" markerHeight="3" refX="2.4" refY="1.5" orient="auto"><path d="M0 0.5 L2.4 1.5 L0 2.5z" fill="${color}"/></marker>`;
+    defs += `<marker id="${mid}" markerWidth="4" markerHeight="4" refX="1.2" refY="2" orient="auto"><path d="M0 0.6 L3.6 2 L0 3.4z" fill="${color}"/></marker>`;
   }
-  defs += `<marker id="${id}" markerWidth="3" markerHeight="3" refX="2.4" refY="1.5" orient="auto"><path d="M0 0.5 L2.4 1.5 L0 2.5z" fill="context-stroke"/></marker>`;
+  defs += `<marker id="${id}" markerWidth="4" markerHeight="4" refX="1.2" refY="2" orient="auto"><path d="M0 0.6 L3.6 2 L0 3.4z" fill="context-stroke"/></marker>`;
   defs += '</defs>';
   return defs;
 };

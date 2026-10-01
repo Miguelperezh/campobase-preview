@@ -1640,36 +1640,46 @@ body.cb-redesign-active .cbx-btn-view-tactic:hover {
 
 /* Flechas tácticas réplica exacta manual / PDF */
 body.cb-redesign-active .tac-arrow {
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
+  stroke-linecap: butt !important;
 }
 
 body.cb-redesign-active .tac-arrow.mov {
   stroke: #4b5563 !important;
-  stroke-width: 2.8px !important;
-  stroke-dasharray: 6 4.5 !important;
+  stroke-width: 1.3px !important;
+  stroke-dasharray: 5 3.5 !important;
 }
 
 body.cb-redesign-active .tac-arrow.spr {
   stroke: #f59e0b !important;
-  stroke-width: 3.2px !important;
-  stroke-dasharray: 4 2.5 !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 3.5 2 !important;
 }
 
 body.cb-redesign-active .tac-arrow.pac {
   stroke: #2563eb !important;
-  stroke-width: 2.4px !important;
+  stroke-width: 1.4px !important;
 }
 
 body.cb-redesign-active .tac-arrow.dri {
   stroke: #8b5cf6 !important;
-  stroke-width: 2.8px !important;
+  stroke-width: 1.6px !important;
+  stroke-dasharray: 4 2.5 !important;
 }
 
 body.cb-redesign-active .tac-arrow.tiq {
   stroke: #dc2626 !important;
-  stroke-width: 3.2px !important;
+  stroke-width: 1.8px !important;
 }
+
+/* En la barra de herramientas y leyendas de pizarra, iconos nítidos y proporcionados */
+.tactic-tool-icon .tac-arrow {
+  stroke-linecap: butt !important;
+}
+.tactic-tool-icon .tac-arrow.mov { stroke-width: 1.2px !important; }
+.tactic-tool-icon .tac-arrow.spr { stroke-width: 1.4px !important; }
+.tactic-tool-icon .tac-arrow.pac { stroke-width: 1.3px !important; }
+.tactic-tool-icon .tac-arrow.dri { stroke-width: 1.5px !important; }
+.tactic-tool-icon .tac-arrow.tiq { stroke-width: 1.6px !important; }
 
 /* ==========================================================
    IMPRESIÓN OFICIAL CLAUDE (SESIÓN Y EJERCICIO A4)
@@ -1688,10 +1698,10 @@ body.cb-is-printing #cb-print-root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px 20px 40px;
+  padding: 85px 20px 40px;
 }
 
-/* Floating bar on top inside CampoBase UI */
+/* Barra de acciones de impresión (pantalla) */
 .cb-print-floating-bar {
   position: fixed;
   top: 14px;
@@ -1702,7 +1712,7 @@ body.cb-is-printing #cb-print-root {
   color: #fff;
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-  padding: 8px 16px;
+  padding: 8px 18px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -1740,33 +1750,46 @@ body.cb-is-printing #cb-print-root {
 }
 
 .cb-print-floating-bar-actions button {
-  padding: 7px 12px;
-  border-radius: 8px;
-  border: 0;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all .15s;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  border: 0 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  transition: transform .1s, opacity .15s !important;
+}
+
+.cb-print-floating-bar-actions button:active {
+  transform: scale(0.97) !important;
 }
 
 .cb-print-btn-print {
   background: #10b981 !important;
   color: #04120c !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important;
 }
 
 .cb-print-btn-open {
-  background: #ffffff !important;
-  color: #0a251b !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4) !important;
 }
 
 .cb-print-btn-share {
-  background: #1e523d !important;
+  background: #16a34a !important;
   color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4) !important;
 }
 
 .cb-print-btn-download {
   background: #334155 !important;
   color: #ffffff !important;
+  border: 1px solid #475569 !important;
 }
 
 .cb-print-btn-close {
@@ -1774,25 +1797,470 @@ body.cb-is-printing #cb-print-root {
   color: #ffffff !important;
 }
 
-/* Hoja A4 Claude individual */
+/* ==========================================================
+   HOJA A4 CLAUDE (SESIÓN Y EJERCICIO) - PANTALLA E IMPRESIÓN
+   ========================================================== */
 .cb-print-sheet {
   width: 794px;
   min-height: 1123px;
   max-height: 1123px;
   box-sizing: border-box;
   background: #ffffff;
-  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .35);
-  padding: 34px 40px;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+  padding: 30px 38px 24px 38px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
   color: #0f172a;
-  margin-bottom: 24px;
+  margin: 0 auto 30px auto;
   page-break-after: always;
   break-after: page;
+  border-radius: 6px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Encabezado A4 */
+.cb-print-header {
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.cbx-print-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cbx-print-crest-wrap {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cbx-print-crest-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cbx-print-header-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.cbx-print-eyebrow {
+  font-size: 7.5pt;
+  font-weight: 800;
+  color: #15803d;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.cb-print-title {
+  font-size: 16pt;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.cbx-print-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cbx-print-badge-soft {
+  font-size: 7pt;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  white-space: nowrap;
+}
+
+.cbx-print-badge-amber {
+  font-size: 7pt;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
+}
+
+.cb-print-doc-badge {
+  font-size: 6.5pt;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Tarjetas de métricas (DURACIÓN, SERIES, JUGADORES, ESPACIO) */
+.cbx-print-stat-cards {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+.cbx-print-stat-card {
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  background: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cbx-print-stat-card-label {
+  font-size: 6.5pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+}
+
+.cbx-print-stat-card-val {
+  font-size: 11pt !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
+}
+
+/* Contenedor del campo y pizarra táctica */
+.cb-print-stage-box.cbx-print-pitch-container {
+  width: 100% !important;
+  height: 215px !important;
+  max-height: 215px !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background: #166534 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 10px !important;
+}
+
+.cb-print-field-img {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 215px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.cb-print-pitch-diagram {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  background: #22c55e !important;
+  color: #ffffff !important;
+}
+
+.cbx-print-pitch-legend {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 12px !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  color: #ffffff !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  font-size: 7pt !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  z-index: 2 !important;
+}
+
+.cbx-print-pitch-legend .legend-dot.red { color: #ef4444 !important; }
+.cbx-print-pitch-legend .legend-dot.blue { color: #3b82f6 !important; }
+.cbx-print-pitch-legend .legend-line { font-weight: 900 !important; }
+
+/* 2 Columnas Claude */
+.cb-print-columns-grid {
+  display: grid !important;
+  grid-template-columns: 1.15fr 0.85fr !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.cb-print-col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.cb-print-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.cb-print-card-title {
+  font-size: 7.5pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #15803d !important;
+  margin: 0 0 5px 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-bottom: 3px !important;
+  line-height: 1.2 !important;
+}
+
+.cb-print-card-text {
+  font-size: 7.5pt !important;
+  line-height: 1.35 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.cb-print-card-text.pre-line {
+  white-space: pre-line !important;
+}
+
+.cb-print-card-subtext {
+  font-size: 7pt !important;
+  color: #475569 !important;
+  margin: 4px 0 0 0 !important;
+  line-height: 1.3 !important;
+}
+
+.cbx-print-steps-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.cbx-print-step-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+.cbx-print-step-num {
+  font-size: 8.5pt !important;
+  font-weight: 900 !important;
+  color: #15803d !important;
+  line-height: 1.2 !important;
+  flex-shrink: 0 !important;
+}
+
+.cbx-print-step-txt {
+  font-size: 7.5pt !important;
+  line-height: 1.3 !important;
+  color: #1e293b !important;
+}
+
+.cbx-print-variants-box {
+  background: #f8fafc !important;
+}
+
+.cbx-print-variants-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+/* Bloque Notas del Entrenador */
+.cbx-print-notes-section {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  background: #ffffff !important;
+  margin-bottom: 6px !important;
+}
+
+.cbx-print-notes-title {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #475569 !important;
+  margin: 0 0 5px 0 !important;
+}
+
+.cbx-print-notes-lines {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 11px !important;
+  margin-top: 6px !important;
+}
+
+.cbx-print-note-line {
+  border-bottom: 1px solid #cbd5e1 !important;
+  height: 1px !important;
+}
+
+/* Pie de página */
+.cbx-print-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 7pt !important;
+  color: #64748b !important;
+  padding-top: 6px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  margin-top: auto !important;
+}
+
+/* ==========================================================
+   PORTADA DE SESIÓN (Página 1 de la sesión)
+   ========================================================== */
+.cbx-print-cards-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.cbx-print-card-box {
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.cbx-print-card-box-label {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #0f766e !important;
+}
+
+.cbx-print-card-box-text {
+  font-size: 8pt !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+}
+
+.cbx-print-card-box-notes {
+  font-size: 7.5pt !important;
+  color: #475569 !important;
+  margin: 2px 0 0 0 !important;
+}
+
+.cbx-print-timeline-bar {
+  display: flex !important;
+  height: 22px !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  font-weight: 900 !important;
+  font-size: 7.5pt !important;
+  color: #ffffff !important;
+}
+
+.cbx-print-timeline-segment {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 4px !important;
+  border-right: 1.5px solid #ffffff !important;
+}
+
+.cbx-print-timeline-segment:last-child {
+  border-right: 0 !important;
+}
+
+.cbx-print-timeline-segment.warmup { background: #ea580c !important; }
+.cbx-print-timeline-segment.main { background: #0f766e !important; }
+.cbx-print-timeline-segment.final { background: #dc2626 !important; }
+.cbx-print-timeline-segment.cool { background: #64748b !important; }
+
+.cb-print-session-tasks-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+.cb-print-session-task {
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  background: #ffffff !important;
+}
+
+.cbx-print-bottom-grid {
+  display: grid !important;
+  grid-template-columns: 1.15fr 0.85fr !important;
+  gap: 12px !important;
+  margin-bottom: 6px !important;
+}
+
+.cbx-print-attendance-section {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  background: #ffffff !important;
+}
+
+.cbx-print-section-title {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #475569 !important;
+  margin: 0 0 5px 0 !important;
+}
+
+.cbx-print-attendance-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 3px 12px !important;
+}
+
+.cbx-print-att-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 7.5pt !important;
+  color: #0f172a !important;
+}
+
+.cbx-print-att-box {
+  width: 10px !important;
+  height: 10px !important;
+  border: 1.5px solid #475569 !important;
+  border-radius: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ==========================================================
+   REGLAS PARA @media print (IMPRESIÓN REAL NATIVA)
+   ========================================================== */
 @media print {
   @page {
     size: A4 portrait;
@@ -1834,7 +2302,15 @@ body.cb-is-printing #cb-print-root {
     page-break-after: always !important;
     break-after: page !important;
     overflow: hidden !important;
-    padding: 10mm 12mm !important;
+    padding: 10mm 12mm 8mm 12mm !important;
+    border-radius: 0 !important;
+  }
+  .cb-print-stage-box.cbx-print-pitch-container {
+    height: 54mm !important;
+    max-height: 54mm !important;
+  }
+  .cb-print-field-img {
+    max-height: 54mm !important;
   }
 }
 
