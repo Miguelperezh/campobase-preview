@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Oswald:wght@600;700&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260927-v66-real-calendar-dates">
   <link rel="stylesheet" href="styles-redesign.css?v=20260927-v66-real-calendar-dates">
   <link rel="stylesheet" href="billing.css?v=1">
@@ -637,6 +637,204 @@
             <button type="button" id="settings-logout" class="secondary">Cerrar sesión</button>
             <button type="button" id="settings-reload" class="primary">🔄 Recargar / Actualizar app</button>
             <button type="button" id="toggle-video-debug" class="secondary">🐞 Diagnóstico de vídeo</button>
+          </div>
+        </article>
+        <article class="panel cbx-theme-preview-card" id="theme-preview-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Vista previa del tema</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <div class="cbx-preview-scoreboard-wrap" style="border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;margin-top:6px;">
+            <div id="preview-scoreboard-header" style="background:var(--hero, #0a251b);color:#fff;padding:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <img id="preview-crest-demo" src="icons/escudo.png" data-crest="1" alt="Escudo demo" style="width:34px;height:34px;object-fit:contain;background:#fff;border-radius:9px;padding:2px">
+                <span id="preview-team-name" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase">Unión Viera</span>
+              </div>
+              <span id="preview-score" style="font:900 40px/1 var(--disp, 'Barlow Condensed', sans-serif)">4:2</span>
+              <span id="preview-opp-name" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;text-align:right">Rival</span>
+            </div>
+            <div id="preview-scoreboard-body" style="background:var(--bg, #f4f6f5);padding:12px;display:flex;gap:8px;align-items:center">
+              <span style="flex:1;font:600 14px var(--ui, sans-serif);color:var(--ink, #0f172a)">Texto de ejemplo en listas y fichas</span>
+              <span id="preview-sample-btn" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff);display:flex;align-items:center;font:800 13px var(--ui, sans-serif)">Botón</span>
+            </div>
+          </div>
+          <p class="meta" style="margin-top:8px;">Cambia en directo con lo que elijas en Preferencias visuales.</p>
+        </article>
+
+        <article class="panel cbx-saved-themes-card" id="saved-themes-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Temas guardados</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <div id="cbx-presets-list" style="display:flex;flex-wrap:wrap;gap:6px;min-height:34px;align-items:center;">
+            <!-- Renderizado dinámico de presets con chips -->
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+            <input type="text" id="new-preset-name" placeholder="Nombre para guardar este tema…" style="flex:1;height:38px;padding:0 10px;border-radius:10px;border:1px solid #e2e8f0;font:600 13px var(--ui, sans-serif);">
+            <button type="button" id="save-current-preset-btn" class="primary" style="height:38px;padding:0 14px;white-space:nowrap;">Guardar tema actual</button>
+          </div>
+          <p id="match-preset-info" class="meta" style="margin-top:6px;">«Partido» marca el tema que se aplica solo al entrar en En vivo. Ahora el partido usa el tema general.</p>
+        </article>
+
+        <article class="panel cbx-title-font-card" id="title-font-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Fuente de títulos y marcadores</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Independiente de la fuente del texto.</p>
+          <div id="title-font-options" style="display:flex;flex-direction:column;gap:6px">
+            <!-- Renderizado dinámico de opciones de fuentes de títulos -->
+          </div>
+        </article>
+
+        <article class="panel cbx-semantic-colors-card" id="semantic-colors-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Colores con significado</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Líneas de juego en fichas y resultados en la temporada.</p>
+          <div id="semantic-colors-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-gk" data-sem="gk" value="#0284c7" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Porteros
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-def" data-sem="def" value="#16a34a" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Defensas
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-mid" data-sem="mid" value="#eab308" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Medios
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-fw" data-sem="fw" value="#dc2626" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Delanteros
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-win" data-sem="win" value="#10b981" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Victoria
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-draw" data-sem="draw" value="#f59e0b" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Empate
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-loss" data-sem="loss" value="#ef4444" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Derrota
+            </label>
+          </div>
+        </article>
+
+        <article class="panel cbx-surfaces-buttons-card" id="surfaces-buttons-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Fondos, tarjetas y botones</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Color del fondo de la app y de las tarjetas con la intensidad que quieras, y colores de los botones secundarios, del texto de WhatsApp y de los resultados de temporada.</p>
+          
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Fondo de la app</div>
+            <div class="cbx-swatches-row" id="cbx-app-bg-swatches"></div>
+            <div class="cbx-slider-row">
+              <span class="cbx-slider-label">Intensidad</span>
+              <input type="range" min="0" max="100" value="12" id="cbx-app-bg-pct-slider" class="cbx-slider-input">
+              <span class="cbx-slider-val" id="cbx-app-bg-pct-val">12%</span>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de tarjetas</div>
+            <div class="cbx-swatches-row" id="cbx-card-swatches"></div>
+            <div class="cbx-slider-row">
+              <span class="cbx-slider-label">Intensidad</span>
+              <input type="range" min="0" max="100" value="6" id="cbx-card-pct-slider" class="cbx-slider-input">
+              <span class="cbx-slider-val" id="cbx-card-pct-val">6%</span>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Títulos de tarjetas</div>
+            <div class="cbx-swatches-row" id="cbx-card-title-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de botones secundarios</div>
+            <div class="cbx-swatches-row" id="cbx-btn2-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de botones secundarios</div>
+            <div class="cbx-swatches-row" id="cbx-btn2-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto del botón de WhatsApp (el fondo se queda verde WhatsApp)</div>
+            <div class="cbx-swatches-row" id="cbx-wa-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de resultados de temporada (J1, J2…)</div>
+            <div class="cbx-swatches-row" id="cbx-res-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group" style="padding-top:10px;border-top:1px solid #f1f5f9;margin-top:10px;">
+            <div style="font:800 11px var(--ui, sans-serif);letter-spacing:.1em;text-transform:uppercase;color:#1e523d;margin-bottom:6px;">Goles «A favor» y «En contra» (Temporada · Liga)</div>
+            
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:4px;">A favor · color de barras</div>
+            <div class="cbx-swatches-row" id="cbx-gf-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">A favor · fondo del botón</div>
+            <div class="cbx-swatches-row" id="cbx-gf-bg-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">A favor · texto del botón</div>
+            <div class="cbx-swatches-row" id="cbx-gf-ink-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">En contra · color de barras</div>
+            <div class="cbx-swatches-row" id="cbx-ga-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">En contra · fondo del botón</div>
+            <div class="cbx-swatches-row" id="cbx-ga-bg-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">En contra · texto del botón</div>
+            <div class="cbx-swatches-row" id="cbx-ga-ink-swatches"></div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+              <span class="cbx-preview-gf-badge" id="cbx-preview-gf-badge"><span class="dot"></span>A favor · 10</span>
+              <span class="cbx-preview-ga-badge" id="cbx-preview-ga-badge"><span class="dot"></span>En contra · 5</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <button type="button" id="cbx-reset-colors-btn" class="secondary" style="width:100%;height:40px;border-radius:10px;font:700 13px var(--ui, sans-serif);">Restablecer estos colores</button>
+          </div>
+        </article>
+
+        <article class="panel cbx-banners-buttons-card" id="banners-buttons-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Cabeceras y botones</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Colores de las bandas de título de cada pantalla y de todos los botones («Guardar…», «Subir», «Exportar»…), aparte del tema.</p>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Fondo de cabeceras</div>
+            <div class="cbx-swatches-row" id="cbx-bn-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de cabeceras</div>
+            <div class="cbx-swatches-row" id="cbx-bn-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de botones</div>
+            <div class="cbx-swatches-row" id="cbx-btn-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de botones</div>
+            <div class="cbx-swatches-row" id="cbx-btn-ink-swatches"></div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid #f1f5f9;margin-top:12px;">
+            <div id="cbx-preview-banner-box" style="flex:1;min-width:160px;padding:12px 14px;border-radius:14px;color:var(--bnInk, #ffffff);background:linear-gradient(135deg,var(--bn, #0a251b),color-mix(in srgb,var(--bn, #0a251b) 72%,#297053))">
+              <div style="font:800 10.5px var(--ui, sans-serif);letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--bnInk, #ffffff) 72%,transparent)">Fecha y bloques</div>
+              <div style="font:800 22px/1 var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase">Sesiones</div>
+            </div>
+            <span id="cbx-preview-banner-btn" style="height:42px;padding:0 16px;border-radius:12px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff);display:flex;align-items:center;font:800 14px var(--ui, sans-serif)">Guardar</span>
           </div>
         </article>
       </div>

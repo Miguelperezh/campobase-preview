@@ -1282,3 +1282,42 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Carpeta formal en `specs/011-calendario-vista-mensual-filtros-y-navegacion/` (`spec.md`, `plan.md`, `tasks.md`).
    - Suite de pruebas en `tests/calendario-filtros-vista-mensual.test.js` (6 tests pasando).
    - **637/637 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+### 29. Entrega v69 (01/10/2026) — Ajustes: Personalización Visual Completa, Colores, Fuentes y Presets Fiel a Claude (Spec 012)
+
+1. **Vista Previa del Tema en Directo (`#theme-preview-card`):**
+   - Marcador demo interactivo con escudo de muestra, nombres de equipo y rival, resultado demo, lista de convocados y botón de muestra con insignias reactivas.
+   - Refleja instantáneamente cualquier ajuste sobre la paleta de colores, tipografía de títulos, fondos o tarjetas sin necesidad de recargar la página ni abandonar la pantalla.
+
+2. **Temas Guardados (Presets) y Asignación Exclusiva para el Partido en Vivo (`#saved-themes-card`):**
+   - Colección de presets predefinidos y creados por el usuario con dot de gradiente cromático.
+   - Botón directo para aplicar preset al club (`applyThemePreset`).
+   - Botón exclusivo `⚡ Usar en vivo` (`setMatchThemePreset`) para asignar un tema específico al partido en directo (`partido` y `delegado`), destacado con insignia roja `#c8102e`.
+   - Guardado del tema actual como nuevo preset (`saveCurrentThemePreset`) y eliminación de presets personalizados (`deleteThemePreset`).
+   - **Reversión automática:** En `showView`, al entrar a `partido` o `delegado` se activa automáticamente el preset de partido; al regresar a cualquier otra vista se restaura el tema general del club.
+
+3. **Fuente de Títulos y Marcadores (`#title-font-card`):**
+   - Tipografía independiente del texto del cuerpo: `Auto`, `Barlow`, `Oswald`, `Bebas Neue`, `Inter`, `Outfit`, `System`, `Technical` y `Classic`.
+   - Carga desde Google Fonts e inyección dinámica en `--font-title` y `--title-font`, gobernando marcadores de partidos, cabeceras de paneles y títulos principales.
+
+4. **Colores con Significado (Semáforos) (`#semantic-colors-card`):**
+   - Selectores cromáticos individuales para demarcaciones tácticas: Porteros (`gk`), Defensas (`def`), Medios (`mid`), Delanteros (`fw`).
+   - Selectores cromáticos individuales para desenlaces de partidos: Victoria (`win`), Empate (`draw`), Derrota (`loss`).
+   - Inyección en variables CSS `--sem-gk`, `--sem-def`, `--sem-mid`, `--sem-fw`, `--sem-win`, `--sem-draw`, `--sem-loss`.
+
+5. **Fondos, Tarjetas y Botones Secundarios (`#surfaces-buttons-card`):**
+   - Swatches de acceso rápido + color picker libre + sliders de intensidad (0–100%) para fondo general (`appBgHue`, `appBgPct`) y tarjetas (`cardHue`, `cardPct`).
+   - Cálculo dinámico de tonalidad mediante `color-mix(in srgb, ${hue} ${pct}%, #ffffff)`.
+   - Selectores para títulos de tarjetas (`cardTitle`), fondo y texto de botones secundarios (`btn2Bg`, `btn2Ink`), enlaces de WhatsApp (`waInk`), resultados de temporada (`resInk`), y goles a favor / en contra (barras, fondo y texto con badges interactivos).
+   - Botón directo «Restablecer estos colores» (`resetExtendedColors`) para restaurar las superficies recomendadas.
+
+6. **Cabeceras y Botones Principales (`#banners-buttons-card`):**
+   - Selectores independientes de fondo y texto de cabeceras (`bannerBg`, `bannerInk`) inyectados en `--bn` y `--bnInk`.
+   - Selectores independientes de fondo y texto de botones principales (`btnBg`, `btnInk`) inyectados en `--btn` y `--btnInk`.
+   - Detección reactiva de luminancia: si el color de texto elegido es claro, la app adapta automáticamente el fondo y las tarjetas a tonos oscuros para salvaguardar la legibilidad y el contraste.
+
+7. **Especificación SDD 012 y Validación:**
+   - Carpeta formal en `specs/012-ajustes-personalizacion-temas-colores-fuentes/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/ajustes-personalizacion-temas-colores.test.js` (5 tests pasando).
+   - **642/642 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+

@@ -103,6 +103,21 @@ let prepMomentsDraft = [];
 let prepMomentIndex = 0;
 let playerCropper = null;
 let realtimeCloudStore = null;
+
+const DEFAULT_SEM = {
+  gk: '#0284c7',
+  def: '#16a34a',
+  mid: '#eab308',
+  fw: '#dc2626',
+  win: '#10b981',
+  draw: '#f59e0b',
+  loss: '#ef4444',
+};
+
+const DEFAULT_PRESETS = [
+  { name: 'Oficial Unión Viera', theme: 'default', accent: '#10b981', font: 'system', fontTitle: 'sport' },
+  { name: 'Modo Noche OLED', theme: 'dark', accent: '#10b981', font: 'system', fontTitle: 'sport' },
+];
 let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
@@ -444,6 +459,17 @@ function showView(viewId) {
   if (previousViewId !== viewId) window.scrollTo({ top: 0, behavior: 'instant' });
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
+
+  // Gestión de tema específico para el partido (matchPreset)
+  const mp = state.settings?.presets && state.settings.matchPreset !== undefined && state.settings.matchPreset !== null
+    ? state.settings.presets[state.settings.matchPreset]
+    : null;
+  if ((viewId === 'partido' || viewId === 'delegado') && mp) {
+    applyCustomTheme(mp.theme ? mp : { ...state.settings.theme, ...mp });
+  } else if (previousViewId === 'partido' || previousViewId === 'delegado') {
+    applyCustomTheme(state.settings?.theme);
+  }
+
   applyGlobalSearch();
   if (viewId === 'plantilla') {
     renderPlayers();
@@ -477,6 +503,8 @@ function showView(viewId) {
   } else if (viewId === 'ajustes') {
     populateDelegateAccountForm();
     populateKitSettingsForm();
+    renderCustomizerControls();
+    renderSavedThemePresets();
   }
 }
 
@@ -622,6 +650,30 @@ async function refresh() {
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
+  if (!Array.isArray(state.settings.presets) || !state.settings.presets.length) {
+    try {
+      const cachedPresets = JSON.parse(localStorage.getItem('campobase.presets') || 'null');
+      state.settings.presets = Array.isArray(cachedPresets) && cachedPresets.length ? cachedPresets : [...DEFAULT_PRESETS];
+    } catch {
+      state.settings.presets = [...DEFAULT_PRESETS];
+    }
+  }
+  if (!state.settings.sem) {
+    try {
+      const cachedSem = JSON.parse(localStorage.getItem('campobase.sem') || 'null');
+      state.settings.sem = cachedSem && typeof cachedSem === 'object' ? cachedSem : { ...DEFAULT_SEM };
+    } catch {
+      state.settings.sem = { ...DEFAULT_SEM };
+    }
+  }
+  if (state.settings.matchPreset === undefined || state.settings.matchPreset === null) {
+    try {
+      const cachedMatch = JSON.parse(localStorage.getItem('campobase.matchPreset') || 'null');
+      state.settings.matchPreset = cachedMatch;
+    } catch {
+      state.settings.matchPreset = null;
+    }
+  }
   if (!state.settings.delegatePermissions || !state.settings.delegatePermissions.length) {
     try {
       const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
@@ -6561,6 +6613,218 @@ const COLOR_TO_TEXT_MAP = {
   '#ffffff': 'pure-white',
 };
 
+const TITLE_FONT_MAP = {
+  auto: '',
+  sport: "'Barlow Condensed', sans-serif",
+  barlow: "'Barlow Condensed', sans-serif",
+  oswald: "'Oswald', sans-serif",
+  bebas: "'Bebas Neue', sans-serif",
+  system: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  readable: "'Inter', sans-serif",
+  inter: "'Inter', sans-serif",
+  modern: "'Outfit', sans-serif",
+  outfit: "'Outfit', sans-serif",
+  technical: "'JetBrains Mono', monospace",
+  mono: "'JetBrains Mono', monospace",
+  classic: "'Merriweather', Georgia, serif",
+  serif: "'Merriweather', Georgia, serif",
+};
+
+const TITLE_FONT_OPTIONS = [
+  { id: 'auto', label: 'Igual que el texto (por defecto)', sample: 'Unión Viera', font: "'Barlow Condensed', sans-serif" },
+  { id: 'sport', label: 'Deportiva de estadio (Barlow)', sample: 'Unión Viera', font: "'Barlow Condensed', sans-serif" },
+  { id: 'oswald', label: 'Oswald Táctica', sample: 'Unión Viera', font: "'Oswald', sans-serif" },
+  { id: 'bebas', label: 'Bebas Neue Impacto', sample: 'Unión Viera', font: "'Bebas Neue', sans-serif" },
+  { id: 'system', label: 'Sistema moderna', sample: 'Unión Viera', font: "system-ui, -apple-system, sans-serif" },
+  { id: 'inter', label: 'Inter Máxima legibilidad', sample: 'Unión Viera', font: "'Inter', sans-serif" },
+  { id: 'outfit', label: 'Outfit Moderna geométrica', sample: 'Unión Viera', font: "'Outfit', sans-serif" },
+  { id: 'technical', label: 'JetBrains Pizarra técnica', sample: 'Unión Viera', font: "'JetBrains Mono', monospace" },
+  { id: 'classic', label: 'Merriweather Clásica', sample: 'Unión Viera', font: "'Merriweather', serif" },
+];
+
+const EXTENDED_SWATCH_CONFIGS = {
+  appBgHue: {
+    containerId: 'cbx-app-bg-swatches',
+    swatches: [
+      ['', 'Igual que el tema'],
+      ['#10b981', 'Esmeralda'],
+      ['#0a251b', 'Verde campo'],
+      ['#2563eb', 'Azul'],
+      ['#0369a1', 'Océano'],
+      ['#7c3aed', 'Morado'],
+      ['#c8102e', 'Rojo club'],
+      ['#f59e0b', 'Dorado'],
+      ['#64748b', 'Gris'],
+      ['#111827', 'Negro']
+    ]
+  },
+  cardHue: {
+    containerId: 'cbx-card-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#10b981', 'Esmeralda'],
+      ['#0a251b', 'Verde campo'],
+      ['#2563eb', 'Azul'],
+      ['#0369a1', 'Océano'],
+      ['#7c3aed', 'Morado'],
+      ['#c8102e', 'Rojo club'],
+      ['#f59e0b', 'Dorado'],
+      ['#64748b', 'Gris'],
+      ['#111827', 'Negro']
+    ]
+  },
+  cardTitle: {
+    containerId: 'cbx-card-title-swatches',
+    swatches: [
+      ['', 'Por defecto'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco'],
+      ['#0a251b', 'Verde campo'],
+      ['#c8102e', 'Rojo'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  btn2Bg: {
+    containerId: 'cbx-btn2-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#f0f7f3', 'Verde suave'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#dbeafe', 'Azul suave'],
+      ['#fde8ec', 'Rojo suave'],
+      ['#fff8eb', 'Dorado suave'],
+      ['#111827', 'Negro']
+    ]
+  },
+  btn2Ink: {
+    containerId: 'cbx-btn2-ink-swatches',
+    swatches: [
+      ['', 'Por defecto'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco'],
+      ['#0a251b', 'Verde campo'],
+      ['#c8102e', 'Rojo'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  waInk: {
+    containerId: 'cbx-wa-ink-swatches',
+    swatches: [
+      ['', 'Verde oscuro (por defecto)'],
+      ['#ffffff', 'Blanco'],
+      ['#0f172a', 'Negro']
+    ]
+  },
+  resInk: {
+    containerId: 'cbx-res-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  gfColor: {
+    containerId: 'cbx-gf-swatches',
+    swatches: [
+      ['', 'Acento'],
+      ['#10b981', 'Verde'],
+      ['#2563eb', 'Azul'],
+      ['#0a251b', 'Verde campo'],
+      ['#f59e0b', 'Dorado']
+    ]
+  },
+  gfBg: {
+    containerId: 'cbx-gf-bg-swatches',
+    swatches: [
+      ['', 'Verde suave'],
+      ['#ffffff', 'Blanco'],
+      ['#10b981', 'Verde'],
+      ['#0a251b', 'Verde campo'],
+      ['#dbeafe', 'Azul suave']
+    ]
+  },
+  gfInk: {
+    containerId: 'cbx-gf-ink-swatches',
+    swatches: [
+      ['', 'Verde oscuro'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  gaColor: {
+    containerId: 'cbx-ga-swatches',
+    swatches: [
+      ['', 'Rojo'],
+      ['#c8102e', 'Rojo club'],
+      ['#f59e0b', 'Dorado'],
+      ['#64748b', 'Gris'],
+      ['#111827', 'Negro']
+    ]
+  },
+  gaBg: {
+    containerId: 'cbx-ga-bg-swatches',
+    swatches: [
+      ['', 'Rojo suave'],
+      ['#ffffff', 'Blanco'],
+      ['#c8102e', 'Rojo club'],
+      ['#111827', 'Negro'],
+      ['#fff8eb', 'Dorado suave']
+    ]
+  },
+  gaInk: {
+    containerId: 'cbx-ga-ink-swatches',
+    swatches: [
+      ['', 'Granate'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  bannerBg: {
+    containerId: 'cbx-bn-bg-swatches',
+    swatches: [
+      ['', 'Igual que el tema'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#1e3a8a', 'Azul marino'],
+      ['#c8102e', 'Rojo club'],
+      ['#111827', 'Negro'],
+      ['#f59e0b', 'Dorado'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  bannerInk: {
+    containerId: 'cbx-bn-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro']
+    ]
+  },
+  btnBg: {
+    containerId: 'cbx-btn-bg-swatches',
+    swatches: [
+      ['', 'Igual que el acento'],
+      ['#10b981', 'Esmeralda'],
+      ['#0a251b', 'Verde campo'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo'],
+      ['#f59e0b', 'Dorado'],
+      ['#111827', 'Negro'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  btnInk: {
+    containerId: 'cbx-btn-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo']
+    ]
+  }
+};
+
 function applyCustomTheme(themeInput) {
   let localTheme = {};
   try {
@@ -6575,6 +6839,7 @@ function applyCustomTheme(themeInput) {
     fontScale: 'normal',
     fontWeight: 'bold',
     textColor: 'dark-slate',
+    fontTitle: 'auto',
     ...(state.settings?.theme || {}),
     ...localTheme,
     ...(themeInput || {})
@@ -6675,7 +6940,7 @@ function applyCustomTheme(themeInput) {
   root.style.setProperty('--cb-font-family', fontFamVal);
   body.style.setProperty('--cb-font-family', fontFamVal);
 
-  // La capa visual de Claude usa los mismos Ajustes que el resto de CampoBase.
+  // Mapeo héroe y fondos canónicos de Claude
   const claudeHeroes = {
     default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
     navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
@@ -6688,17 +6953,15 @@ function applyCustomTheme(themeInput) {
     steel: '#f1f3f5', burgundy: '#f8f2f3', purple: '#f4f2f8',
     light: '#ffffff', warm: '#f6f3eb', sepia: '#eee6d8', 'high-vis': '#ffffff',
   };
-  const displayFont = ['modern', 'technical', 'classic'].includes(family)
-    ? fontFamVal : '"Barlow Condensed", sans-serif';
-  for (const target of [root, body]) {
-    target.style.setProperty('--cbx-hero', claudeHeroes[bg] || claudeHeroes.default);
-    target.style.setProperty('--cbx-bg', claudeBackgrounds[bg] || claudeBackgrounds.default);
-    target.style.setProperty('--cbx-acc', theme.accentColor || '#10b981');
-    target.style.setProperty('--cbx-ui', fontFamVal);
-    target.style.setProperty('--cbx-disp', displayFont);
-  }
+  const hero = claudeHeroes[bg] || claudeHeroes.default;
 
-  // 4. Tamaño / Escala de fuentes (data-font-scale y rem base en html)
+  // Fuente de títulos y marcadores independiente
+  const ft = theme.fontTitle && theme.fontTitle !== 'auto'
+    ? (TITLE_FONT_MAP[theme.fontTitle] || theme.fontTitle)
+    : null;
+  const displayFont = ft || (['modern', 'technical', 'classic'].includes(family) ? fontFamVal : '"Barlow Condensed", sans-serif');
+
+  // 4. Tamaño / Escala de fuentes
   const scale = theme.fontScale || 'normal';
   if (scale && scale !== 'normal') {
     root.setAttribute('data-font-scale', scale);
@@ -6710,7 +6973,7 @@ function applyCustomTheme(themeInput) {
   const fontSizePx = FONT_SCALE_MAP[scale] || '16px';
   root.style.fontSize = fontSizePx;
 
-  // 5. Grosor / Negritas (data-font-weight)
+  // 5. Grosor / Negritas
   const weight = theme.fontWeight || 'bold';
   if (weight && weight !== 'normal') {
     root.setAttribute('data-font-weight', weight);
@@ -6720,7 +6983,7 @@ function applyCustomTheme(themeInput) {
     body.removeAttribute('data-font-weight');
   }
 
-  // 6. Color y contraste de textos (data-theme-font)
+  // 6. Color y contraste de textos
   const textColor = theme.textColor || 'dark-slate';
   if (textColor && textColor !== 'dark-slate') {
     root.setAttribute('data-theme-font', textColor);
@@ -6730,7 +6993,7 @@ function applyCustomTheme(themeInput) {
     body.removeAttribute('data-theme-font');
   }
 
-  // 7. Color de fuente personalizado (fontColor)
+  // 7. Color de fuente personalizado
   let fontColor = theme.fontColor;
   if (!fontColor && textColor && TEXT_COLOR_MAP[textColor]) {
     fontColor = TEXT_COLOR_MAP[textColor];
@@ -6793,6 +7056,76 @@ function applyCustomTheme(themeInput) {
     body.style.removeProperty('color');
   }
 
+  // 8. Cálculo de color-mix para fondos e intensidades de app y tarjetas
+  const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
+  let calculatedAppBg = theme.appBgHue ? mix(theme.appBgHue, theme.appBgPct ?? 12, '#ffffff') : null;
+  let calculatedCardBg = theme.cardHue ? mix(theme.cardHue, theme.cardPct ?? 6, '#ffffff') : null;
+
+  // Comprobación de luminancia: si la fuente es clara (>170), forzar fondo oscuro para mantener legibilidad
+  const cleanHexColor = (fontColor || '#0f172a').replace('#', '');
+  const lum = cleanHexColor.length >= 6
+    ? 0.299 * parseInt(cleanHexColor.substring(0, 2), 16) + 0.587 * parseInt(cleanHexColor.substring(2, 4), 16) + 0.114 * parseInt(cleanHexColor.substring(4, 6), 16)
+    : 0;
+
+  const finalAppBg = lum > 170 ? '#0b1712' : (calculatedAppBg || preset?.bg || claudeBackgrounds[bg] || '#f4f6f5');
+  const finalCardBg = lum > 170 ? '#11221b' : (calculatedCardBg || preset?.card || '#ffffff');
+
+  // Semáforos con significado
+  const sem = state.settings?.sem || DEFAULT_SEM;
+
+  // Inyección de todas las variables en root y body
+  for (const target of [root, body]) {
+    target.style.setProperty('--acc', theme.accentColor || '#10b981');
+    target.style.setProperty('--cbx-acc', theme.accentColor || '#10b981');
+    target.style.setProperty('--hero', hero);
+    target.style.setProperty('--cbx-hero', hero);
+    target.style.setProperty('--cb-shell-hero', hero);
+    target.style.setProperty('--ui', fontFamVal);
+    target.style.setProperty('--cbx-ui', fontFamVal);
+    target.style.setProperty('--disp', displayFont);
+    target.style.setProperty('--cbx-disp', displayFont);
+    target.style.setProperty('--bg', finalAppBg);
+    target.style.setProperty('--cbx-bg', finalAppBg);
+    target.style.setProperty('--paper', finalAppBg);
+    target.style.setProperty('--cb-surface-bg', finalAppBg);
+    target.style.setProperty('--cardBg', finalCardBg);
+    target.style.setProperty('--card', finalCardBg);
+    target.style.setProperty('--cb-surface-card', finalCardBg);
+    target.style.setProperty('--cardTitle', theme.cardTitle || 'var(--ink, #0f172a)');
+
+    target.style.setProperty('--bn', theme.bannerBg || hero);
+    target.style.setProperty('--bnInk', theme.bannerInk || '#ffffff');
+    target.style.setProperty('--btn', theme.btnBg || theme.accentColor || '#10b981');
+    target.style.setProperty('--btnInk', theme.btnInk || '#ffffff');
+
+    target.style.setProperty('--btn2', theme.btn2Bg || '#ffffff');
+    target.style.setProperty('--btn2Ink', theme.btn2Ink || '#0f172a');
+    target.style.setProperty('--waInk', theme.waInk || '#053b1d');
+    target.style.setProperty('--resInk', theme.resInk || '#ffffff');
+
+    target.style.setProperty('--gf', theme.gfColor || theme.accentColor || '#10b981');
+    target.style.setProperty('--gfBg', theme.gfBg || '#f0f7f3');
+    target.style.setProperty('--gfInk', theme.gfInk || '#14532d');
+    target.style.setProperty('--ga', theme.gaColor || '#e02444');
+    target.style.setProperty('--gaBg', theme.gaBg || '#fdf2f4');
+    target.style.setProperty('--gaInk', theme.gaInk || '#9f1239');
+
+    // Semáforos
+    target.style.setProperty('--sem-gk', sem.gk || DEFAULT_SEM.gk);
+    target.style.setProperty('--sem-def', sem.def || DEFAULT_SEM.def);
+    target.style.setProperty('--sem-mid', sem.mid || DEFAULT_SEM.mid);
+    target.style.setProperty('--sem-fw', sem.fw || DEFAULT_SEM.fw);
+    target.style.setProperty('--sem-win', sem.win || DEFAULT_SEM.win);
+    target.style.setProperty('--sem-draw', sem.draw || DEFAULT_SEM.draw);
+    target.style.setProperty('--sem-loss', sem.loss || DEFAULT_SEM.loss);
+  }
+
+  // Actualizar tarjeta de vista previa interactiva
+  updateThemePreviewBox(theme);
+
+  // Sincronizar controles interactivos de Ajustes
+  syncCustomizerControls(theme);
+
   // Sincronizar controles en el formulario si está en el DOM
   const themeForm = $('#theme-settings-form');
   if (themeForm) {
@@ -6820,6 +7153,357 @@ function applyCustomTheme(themeInput) {
     $$('.font-color-swatch-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.color?.toLowerCase() === fontColor?.toLowerCase());
     });
+  }
+}
+
+function updateThemePreviewBox(theme) {
+  const previewScoreboardHeader = $('#preview-scoreboard-header');
+  const previewCrestDemo = $('#preview-crest-demo');
+  const previewTeamName = $('#preview-team-name');
+  const previewScore = $('#preview-score');
+  const previewScoreboardBody = $('#preview-scoreboard-body');
+  const previewSampleBtn = $('#preview-sample-btn');
+  const previewBannerBox = $('#cbx-preview-banner-box');
+  const previewBannerBtn = $('#cbx-preview-banner-btn');
+  const previewGfBadge = $('#cbx-preview-gf-badge');
+  const previewGaBadge = $('#cbx-preview-ga-badge');
+
+  const bg = theme.themeBg || 'default';
+  const claudeHeroes = {
+    default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
+    navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
+    steel: '#171d24', burgundy: '#170408', purple: '#110722',
+    light: '#0a251b', warm: '#0a251b', sepia: '#0a251b', 'high-vis': '#000000',
+  };
+  const hero = claudeHeroes[bg] || claudeHeroes.default;
+  const bannerBg = theme.bannerBg || hero;
+  const bannerInk = theme.bannerInk || '#ffffff';
+  const btnBg = theme.btnBg || theme.accentColor || '#10b981';
+  const btnInk = theme.btnInk || '#ffffff';
+
+  if (previewScoreboardHeader) {
+    previewScoreboardHeader.style.background = bannerBg;
+    previewScoreboardHeader.style.color = bannerInk;
+  }
+  if (previewCrestDemo) {
+    const crestVal = $('#club-crest-value')?.value || state.settings?.clubCrest || 'icons/escudo.png';
+    previewCrestDemo.src = crestVal;
+  }
+  if (previewTeamName) {
+    previewTeamName.textContent = state.settings?.teamName || 'Unión Viera';
+  }
+  if (previewScore) {
+    const ft = theme.fontTitle && theme.fontTitle !== 'auto' ? (TITLE_FONT_MAP[theme.fontTitle] || theme.fontTitle) : null;
+    if (ft) previewScore.style.fontFamily = ft;
+  }
+  if (previewScoreboardBody) {
+    const appBg = theme.appBgHue
+      ? `color-mix(in srgb, ${theme.appBgHue} ${theme.appBgPct ?? 12}%, #ffffff)`
+      : (THEME_PRESETS[theme.themeBg || 'default']?.bg || '#f4f6f5');
+    previewScoreboardBody.style.background = appBg;
+    previewScoreboardBody.style.color = theme.fontColor || '#0f172a';
+  }
+  if (previewSampleBtn) {
+    previewSampleBtn.style.background = btnBg;
+    previewSampleBtn.style.color = btnInk;
+  }
+  if (previewBannerBox) {
+    previewBannerBox.style.background = `linear-gradient(135deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 72%, #297053))`;
+    previewBannerBox.style.color = bannerInk;
+  }
+  if (previewBannerBtn) {
+    previewBannerBtn.style.background = btnBg;
+    previewBannerBtn.style.color = btnInk;
+  }
+  if (previewGfBadge) {
+    previewGfBadge.style.background = theme.gfBg || '#f0f7f3';
+    previewGfBadge.style.color = theme.gfInk || '#14532d';
+    const dot = previewGfBadge.querySelector('.dot');
+    if (dot) dot.style.background = theme.gfColor || theme.accentColor || '#10b981';
+  }
+  if (previewGaBadge) {
+    previewGaBadge.style.background = theme.gaBg || '#fdf2f4';
+    previewGaBadge.style.color = theme.gaInk || '#9f1239';
+    const dot = previewGaBadge.querySelector('.dot');
+    if (dot) dot.style.background = theme.gaColor || '#e02444';
+  }
+}
+
+function renderCustomizerControls() {
+  const currentTheme = state.settings?.theme || {};
+  Object.entries(EXTENDED_SWATCH_CONFIGS).forEach(([key, config]) => {
+    const container = document.getElementById(config.containerId);
+    if (!container || container.children.length > 0) return;
+    container.innerHTML = '';
+    config.swatches.forEach(([color, title]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cbx-swatch-btn' + ((currentTheme[key] || '') === color ? ' active' : '');
+      btn.title = title;
+      btn.dataset.key = key;
+      btn.dataset.color = color;
+      if (color) {
+        btn.style.background = color;
+      } else {
+        btn.textContent = 'Auto';
+        btn.style.background = '#ffffff';
+      }
+      btn.addEventListener('click', () => updateThemeProperty(key, color));
+      container.appendChild(btn);
+    });
+
+    // Selector libre de color
+    const picker = document.createElement('input');
+    picker.type = 'color';
+    picker.className = 'cbx-color-picker-input';
+    picker.title = 'Selector libre de color';
+    picker.dataset.key = key;
+    picker.value = currentTheme[key] && currentTheme[key].startsWith('#') ? currentTheme[key] : '#10b981';
+    picker.addEventListener('input', (e) => updateThemeProperty(key, e.target.value));
+    container.appendChild(picker);
+  });
+
+  renderTitleFontOptions(currentTheme.fontTitle);
+  renderSavedThemePresets();
+}
+
+function renderTitleFontOptions(currentFontTitle) {
+  const container = document.getElementById('title-font-options');
+  if (!container) return;
+  container.innerHTML = '';
+  const activeVal = currentFontTitle || 'auto';
+  TITLE_FONT_OPTIONS.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cbx-title-font-btn' + (activeVal === opt.id ? ' active' : '');
+    btn.dataset.id = opt.id;
+    btn.innerHTML = `
+      <span class="cbx-title-font-radio"></span>
+      <span style="flex:1;">
+        <span class="cbx-title-font-sample" style="font-family:${opt.font};">${opt.sample}</span>
+        <span style="font-size:12px;color:#64748b;display:block;">${opt.label}</span>
+      </span>
+    `;
+    btn.addEventListener('click', () => {
+      updateThemeProperty('fontTitle', opt.id);
+      renderTitleFontOptions(opt.id);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function syncCustomizerControls(theme) {
+  Object.entries(EXTENDED_SWATCH_CONFIGS).forEach(([key, config]) => {
+    const container = document.getElementById(config.containerId);
+    if (!container) return;
+    const currentVal = theme[key] || '';
+    container.querySelectorAll('.cbx-swatch-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.color === currentVal);
+    });
+    const picker = container.querySelector('.cbx-color-picker-input');
+    if (picker && currentVal && currentVal.startsWith('#')) {
+      picker.value = currentVal;
+    }
+  });
+
+  const appBgSlider = $('#cbx-app-bg-pct-slider');
+  const appBgValText = $('#cbx-app-bg-pct-val');
+  if (appBgSlider) {
+    const pct = theme.appBgPct ?? 12;
+    appBgSlider.value = pct;
+    if (appBgValText) appBgValText.textContent = `${pct}%`;
+  }
+
+  const cardSlider = $('#cbx-card-pct-slider');
+  const cardValText = $('#cbx-card-pct-val');
+  if (cardSlider) {
+    const pct = theme.cardPct ?? 6;
+    cardSlider.value = pct;
+    if (cardValText) cardValText.textContent = `${pct}%`;
+  }
+
+  const sem = state.settings?.sem || DEFAULT_SEM;
+  Object.entries(sem).forEach(([k, val]) => {
+    const input = document.getElementById(`sem-${k}`);
+    if (input) input.value = val;
+  });
+
+  $$('.cbx-title-font-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.id === (theme.fontTitle || 'auto'));
+  });
+}
+
+function renderSavedThemePresets() {
+  const container = document.getElementById('cbx-presets-list');
+  const infoEl = document.getElementById('match-preset-info');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const presets = state.settings?.presets || DEFAULT_PRESETS;
+  const matchIdx = state.settings?.matchPreset ?? null;
+  const currentTheme = state.settings?.theme || {};
+
+  presets.forEach((p, idx) => {
+    const isApplied = currentTheme.themeBg === p.theme && currentTheme.accentColor === p.accent;
+    const isMatch = matchIdx === idx;
+    const claudeHeroes = {
+      default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
+      navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
+      steel: '#171d24', burgundy: '#170408', purple: '#110722',
+      light: '#0a251b', warm: '#0a251b', sepia: '#0a251b', 'high-vis': '#000000',
+    };
+    const tHero = claudeHeroes[p.theme || 'default'] || '#0a251b';
+    const pAccent = p.accent || p.accentColor || '#10b981';
+
+    const chip = document.createElement('div');
+    chip.className = 'cbx-preset-chip';
+    chip.innerHTML = `
+      <button type="button" class="cbx-preset-apply-btn ${isApplied ? 'active' : ''}" title="Aplicar tema ${p.name}">
+        <span class="cbx-preset-dot" style="background:linear-gradient(135deg, ${tHero} 50%, ${pAccent} 50%)"></span>
+        ${p.name}
+      </button>
+      <button type="button" class="cbx-preset-match-btn ${isMatch ? 'active' : ''}" title="Usar en el partido en vivo">Partido</button>
+      <button type="button" class="cbx-preset-del-btn" title="Eliminar tema">×</button>
+    `;
+
+    chip.querySelector('.cbx-preset-apply-btn').addEventListener('click', () => applyThemePreset(idx));
+    chip.querySelector('.cbx-preset-match-btn').addEventListener('click', () => setMatchThemePreset(idx));
+    chip.querySelector('.cbx-preset-del-btn').addEventListener('click', () => deleteThemePreset(idx));
+    container.appendChild(chip);
+  });
+
+  if (infoEl) {
+    const mp = matchIdx !== null && presets[matchIdx];
+    infoEl.textContent = mp
+      ? `«Partido» marca el tema que se aplica solo al entrar en En vivo. Ahora: «${mp.name}» en el partido.`
+      : '«Partido» marca el tema que se aplica solo al entrar en En vivo. Ahora el partido usa el tema general.';
+  }
+}
+
+async function saveCurrentThemePreset(name) {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!Array.isArray(state.settings.presets)) {
+    state.settings.presets = [...DEFAULT_PRESETS];
+  }
+  const currentTheme = { ...(state.settings.theme || {}) };
+  const count = state.settings.presets.length + 1;
+  const presetName = (name && name.trim()) || `Tema ${count}`;
+  const newPreset = {
+    name: presetName,
+    theme: currentTheme.themeBg || 'default',
+    accent: currentTheme.accentColor || '#10b981',
+    font: currentTheme.fontFamily || 'system',
+    fontTitle: currentTheme.fontTitle || 'auto',
+    ...currentTheme,
+  };
+  state.settings.presets.push(newPreset);
+  try {
+    localStorage.setItem('campobase.presets', JSON.stringify(state.settings.presets));
+  } catch {}
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+  toast(`Tema «${presetName}» guardado.`);
+}
+
+async function applyThemePreset(index) {
+  const presets = state.settings?.presets || DEFAULT_PRESETS;
+  const p = presets[index];
+  if (!p) return;
+  const updatedTheme = {
+    ...(state.settings?.theme || {}),
+    ...p,
+    themeBg: p.theme || p.themeBg || 'default',
+    accentColor: p.accent || p.accentColor || '#10b981',
+    fontFamily: p.font || p.fontFamily || 'system',
+    fontTitle: p.fontTitle || 'auto',
+  };
+  state.settings.theme = updatedTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(updatedTheme));
+  } catch {}
+  applyCustomTheme(updatedTheme);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+  toast(`Tema aplicado: ${p.name}`);
+}
+
+async function setMatchThemePreset(index) {
+  if (!state.settings) state.settings = { id: 'main' };
+  const current = state.settings.matchPreset;
+  if (current === index) {
+    state.settings.matchPreset = null;
+    toast('Ahora el partido usa el tema general.');
+  } else {
+    state.settings.matchPreset = index;
+    const p = state.settings.presets?.[index];
+    toast(`Tema para partido en vivo: ${p?.name || 'Seleccionado'}`);
+  }
+  try {
+    localStorage.setItem('campobase.matchPreset', JSON.stringify(state.settings.matchPreset));
+  } catch {}
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+}
+
+async function deleteThemePreset(index) {
+  if (!state.settings?.presets) return;
+  const deleted = state.settings.presets.splice(index, 1)[0];
+  if (state.settings.matchPreset === index) {
+    state.settings.matchPreset = null;
+  } else if (state.settings.matchPreset > index) {
+    state.settings.matchPreset--;
+  }
+  try {
+    localStorage.setItem('campobase.presets', JSON.stringify(state.settings.presets));
+    localStorage.setItem('campobase.matchPreset', JSON.stringify(state.settings.matchPreset));
+  } catch {}
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+  toast(`Tema «${deleted?.name || ''}» eliminado.`);
+}
+
+async function resetExtendedColors() {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.theme) state.settings.theme = {};
+  const t = state.settings.theme;
+  const keysToReset = [
+    'gfColor', 'gaColor', 'gfBg', 'gaBg', 'gfInk', 'gaInk',
+    'appBgHue', 'cardHue', 'cardTitle', 'btn2Bg', 'btn2Ink',
+    'waInk', 'resInk', 'bannerBg', 'bannerInk', 'btnBg', 'btnInk'
+  ];
+  keysToReset.forEach((k) => delete t[k]);
+  t.appBgPct = 12;
+  t.cardPct = 6;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(t));
+  } catch {}
+  applyCustomTheme(t);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  syncCustomizerControls(t);
+  toast('Colores restablecidos');
+}
+
+async function setSemanticColor(key, color) {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.sem) state.settings.sem = { ...DEFAULT_SEM };
+  state.settings.sem[key] = color;
+  try {
+    localStorage.setItem('campobase.sem', JSON.stringify(state.settings.sem));
+  } catch {}
+  document.documentElement.style.setProperty(`--sem-${key}`, color);
+  document.body.style.setProperty(`--sem-${key}`, color);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
   }
 }
 
@@ -6860,6 +7544,8 @@ async function saveThemeSettings(event) {
     fontWeight: values.fontWeight || 'bold',
     textColor: textColor,
     fontColor: fontColor,
+    fontTitle: state.settings?.theme?.fontTitle || 'auto',
+    ...(state.settings?.theme || {}),
   };
   try {
     localStorage.setItem('campobase.theme', JSON.stringify(theme));
@@ -6886,6 +7572,7 @@ function updateThemeProperty(prop, val, extra = {}) {
     fontScale: 'normal',
     fontWeight: 'bold',
     textColor: 'dark-slate',
+    fontTitle: 'auto',
     ...(state.settings?.theme || {}),
     ...localTheme,
     [prop]: val,
@@ -6923,6 +7610,7 @@ function initCustomizationListeners() {
       console.warn('Error guardando escudo en configuración:', err);
     }
     applyTeamIdentity(state.settings);
+    updateThemePreviewBox(state.settings?.theme || {});
     toast(successMessage);
   };
 
@@ -7035,6 +7723,54 @@ function initCustomizationListeners() {
       updateThemeProperty('fontColor', mappedColor, { textColor: textColorVal });
     }
   });
+
+  // Botón guardar preset actual
+  const savePresetBtn = $('#save-current-preset-btn');
+  const presetNameInput = $('#new-preset-name');
+  if (savePresetBtn) {
+    savePresetBtn.addEventListener('click', () => {
+      saveCurrentThemePreset(presetNameInput?.value);
+      if (presetNameInput) presetNameInput.value = '';
+    });
+  }
+
+  // Botón restablecer colores extendidos
+  const resetColorsBtn = $('#cbx-reset-colors-btn');
+  if (resetColorsBtn) {
+    resetColorsBtn.addEventListener('click', () => resetExtendedColors());
+  }
+
+  // Sliders de intensidad
+  const appBgSlider = $('#cbx-app-bg-pct-slider');
+  const appBgValText = $('#cbx-app-bg-pct-val');
+  if (appBgSlider) {
+    appBgSlider.addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      if (appBgValText) appBgValText.textContent = `${v}%`;
+      updateThemeProperty('appBgPct', v);
+    });
+  }
+
+  const cardSlider = $('#cbx-card-pct-slider');
+  const cardValText = $('#cbx-card-pct-val');
+  if (cardSlider) {
+    cardSlider.addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      if (cardValText) cardValText.textContent = `${v}%`;
+      updateThemeProperty('cardPct', v);
+    });
+  }
+
+  // Semáforos inputs
+  $$('#semantic-colors-grid input[type="color"]').forEach((input) => {
+    input.addEventListener('change', (e) => {
+      const semKey = e.dataset.sem;
+      if (semKey) setSemanticColor(semKey, e.value);
+    });
+  });
+
+  renderCustomizerControls();
+  renderSavedThemePresets();
 
   // Delegación para replegar estadísticas con el botón al final del desplegable
   document.addEventListener('click', (e) => {
