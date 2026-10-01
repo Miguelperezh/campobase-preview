@@ -1083,5 +1083,26 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de tests en `tests/preparacion-flujo.test.js` verificando la eliminación de la condición limitante, auto-creación de convocatoria, auto-asignación de 7 jugadores, presencia de botones de retorno y exportación de API.
    - Batería de 610 tests pasando al 100% y `npm run check` verificado sin errores.
 
+### 22. Entrega v62 (01/10/2026) — Ampliación de Pizarra Táctica de Cambios y Corrección de Desplegables de Nombres (Spec 005)
+
+1. **Ampliación de la Pizarra Táctica en el Plan de Cambios (`#prep-board`):**
+   - **Diagnóstico:** En la vista de preparación (`#preparacion`), la cuadrícula `.cbx-prep-editor-layout` reservaba `1.15fr` a los controles y solo `0.95fr` al campo, imponiendo además un tope rígido de `max-width: 420px;` en `.board-wrap` y `max-width: 440px;` en `#prep-board`. En pantallas de escritorio y portátiles, la pizarra se apreciaba diminuta respecto al espacio disponible.
+   - **Solución Implementada:**
+     - En `css/claude-partido.css`, la cuadrícula se reestructuró a `grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px;`, dando prioridad y protagonismo completo a la pizarra táctica.
+     - `.board-wrap` y `#prep-board` se ampliaron a `max-width: 640px;` con `padding: 12px` y `border-radius: 20px;`, ganando más de un 120% en superficie visual y permitiendo que fichas, dorsales y nombres tácticos se lean con máxima claridad.
+     - En `Partido en vivo` (`#partido`), se amplió asimismo `.board-wrap` a `max-width: 600px;`.
+     - **Botón de Ampliación de Pizarra (`#prep-full-btn`):** Se añadió el botón `⛶ Ampliar pizarra` en la barra táctica de preparación. Al pulsarlo, abre `#prep-lightbox` con el visor de alta resolución `#prep-board-full` a escala completa (`min(92vw, calc(100dvh - 10rem))`).
+
+2. **Corrección de Nombres Cortados en Desplegables de Cambios y Puestos:**
+   - **Ajuste de Puestos (`#prep-slots`):** Anteriormente en `.cbx-prep-slots-details .live-tactics-slots` se empleaba `grid-template-columns: repeat(2, minmax(0, 1fr))`, lo que dejaba apenas ~180px por selector y provocaba que nombres con suplencia (`12 Alejandro Pedrós (Suplente)`) aparecieran cortados. Se transformó a `grid-template-columns: 1fr;` con selectores a ancho completo (>580px útiles), tipografía aumentada a `13.5px`, `font-weight: 600`, `min-height: 42px`, `text-overflow: ellipsis` y formateo `${dorsal} · ${nombre}`.
+   - **Popup Táctico Flotante (`#prep-popup`):** Se amplió el ancho calculado en JavaScript de `240px` a `Math.min(340, window.innerWidth - 24)`, con `min-width: 320px !important;` y selectores cómodos de 44px de altura.
+   - **Modal de Cambios de Calendario (`#calendar-substitutions-v2-dialog`):** Se amplió la ventana modal de `560px` a `min(820px, calc(100% - 2rem))` y se maquetaron las filas de sustitución (`Quién sale`, `Quién entra`, cambios de posición y observaciones) a doble columna ancha de ~360px útiles cada una con fuente de `13.5px`, garantizando que todos los nombres y dorsales quepan completos.
+
+3. **Especificación SDD 005 y Tests Automatizados:**
+   - Carpeta formal en `specs/005-pizarra-cambios-tamano-desplegables/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/cambios-pizarra-desplegables.test.js` verificando el límite de 640px en la pizarra, maquetación a 1 columna de `#prep-slots`, dimensiones de popup a 340px y modal de calendario a 820px.
+   - Batería de **614/614 tests pasando al 100%** y `npm run check` totalmente limpio.
+
+
 
 

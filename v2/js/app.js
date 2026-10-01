@@ -4007,7 +4007,7 @@ async function openPreparacionEditor(matchId) {
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
-      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button><button type="button" id="prep-toggle-rival-btn" class="secondary">${prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button></div>
+      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button><button type="button" id="prep-full-btn" class="secondary" title="Ampliar la pizarra a pantalla completa">⛶ Ampliar pizarra</button><button type="button" id="prep-toggle-rival-btn" class="secondary">${prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button></div>
       <div class="board-wrap"><svg id="prep-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación"></svg></div>
       <div class="live-tactics-slots" id="prep-slots"></div>
       <div class="keeper-note"><strong>Regla del portero:</strong> 1 portero juega el partido completo; si hay 2 porteros, un tiempo cada uno. El portero del 1er tiempo entra en portería automáticamente.</div>
@@ -4017,7 +4017,7 @@ async function openPreparacionEditor(matchId) {
     <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-back" class="secondary">← Volver a partidos</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
     <p class="meta" id="prep-hint">Toca una ficha de la pizarra o usa «Elegir jugadores y cambiar posiciones». Completa los 7 titulares y guarda la preparación.</p>
     <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>
-    <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
+    <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-board" style="display:none;flex-direction:column;align-items:center;gap:.5rem;width:100%"><svg id="prep-board-full" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación ampliada" style="background:#0c3b2e;border-radius:12px;touch-action:none;width:min(92vw,calc(100dvh - 10rem));max-width:760px;aspect-ratio:1"></svg></div><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
   $('#prep-keeper2').value = secondKeeper;
   $('#preparacion-list').classList.add('hidden');
@@ -4031,8 +4031,8 @@ async function openPreparacionEditor(matchId) {
   wirePrepEditor();
 }
 
-function renderPrepBoard() {
-  const svg = $('#prep-board');
+function renderPrepBoard(targetSvg = null) {
+  const svg = targetSvg || $('#prep-board');
   if (!svg || !prepDraft) return;
   svg.setAttribute('viewBox', '0 0 100 100');
   const parts = [];
@@ -4057,6 +4057,11 @@ function renderPrepBoard() {
   }
   parts.push('<g class="tac-ball" data-piece="ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
   svg.innerHTML = parts.join('');
+  const fullSvg = $('#prep-board-full');
+  if (fullSvg && svg !== fullSvg && $('#prep-lightbox')?.classList.contains('open')) {
+    fullSvg.setAttribute('viewBox', '0 0 100 100');
+    fullSvg.innerHTML = parts.join('');
+  }
 }
 
 function renderPrepSlots() {
@@ -4068,11 +4073,11 @@ function renderPrepSlots() {
     const pl = playerById(state.players, p.playerId);
     const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId, true);
     const opts = ['<option value="">— Sin asignar —</option>'];
-    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
-    if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
+    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
+    if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`); }
     return `<div class="slot"><div class="slot-head"><span class="pos">${escapeHtml(p.pos)}</span><span class="dorsal">${pl ? 'Dorsal ' + escapeHtml(pl.number) : '—'}</span></div><select data-idx="${i}" aria-label="${escapeHtml(p.pos)}">${opts.join('')}</select></div>`;
   }).join('');
-  const suplentesHTML = suplentesList.length ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>` : '';
+  const suplentesHTML = suplentesList.length ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number ? pl.number + ' · ' : '')}${escapeHtml(pl.name)}</span>`).join('')}</div></div>` : '';
   container.innerHTML = filas + suplentesHTML;
   container.querySelectorAll('select').forEach((sel) => {
     sel.addEventListener('change', () => {
@@ -4095,16 +4100,16 @@ function prepOpenPopup(idx, clientX, clientY) {
   const availableIds = prepAvailableIds(prepMatchId);
   const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId, true);
   const opts = ['<option value="">— Sin asignar —</option>'];
-  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
-  if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
+  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
+  if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`); }
   title.textContent = p.pos;
   select.innerHTML = opts.join('');
   select.value = p.playerId;
   popup.dataset.idx = idx;
   popup.classList.add('open');
-  const w = 240, h = 120;
-  popup.style.left = Math.min(window.innerWidth - w - 10, Math.max(10, clientX - w / 2)) + 'px';
-  popup.style.top = Math.min(window.innerHeight - h - 10, Math.max(10, clientY - h - 10)) + 'px';
+  const w = Math.min(340, window.innerWidth - 24), h = 130;
+  popup.style.left = Math.min(window.innerWidth - w - 12, Math.max(12, clientX - w / 2)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - h - 12, Math.max(12, clientY - h - 10)) + 'px';
 }
 
 function wirePrepEditor() {
@@ -4216,26 +4221,44 @@ function wirePrepEditor() {
   const del = $('#prep-delete');
   if (del) del.addEventListener('click', () => deletePreparacion());
   const gifBtn = $('#prep-gif');
+  const fullBtn = $('#prep-full-btn');
   const lightbox = $('#prep-lightbox');
-  if (gifBtn && lightbox) {
+  const lbBoard = lightbox?.querySelector('.lb-board');
+  const lbControls = lightbox?.querySelector('.lb-controls');
+  if (lightbox) {
     const closeLb = () => {
       lightbox.classList.remove('open');
       lightbox.querySelectorAll('video').forEach((v) => v.pause());
+      if (lbBoard) lbBoard.style.display = 'none';
+      if (lbControls) lbControls.style.display = 'flex';
     };
-    gifBtn.addEventListener('click', () => {
-      const formacion = $('#prep-formacion').value;
-      lightbox.querySelectorAll('video').forEach((n) => n.remove());
-      const video = document.createElement('video');
-      video.src = TACTICA_MP4[formacion] || TACTICA_MP4['1-3-2-1'];
-      video.playsInline = true; video.muted = true; video.loop = true;
-      lightbox.appendChild(video);
-      lightbox.classList.add('open');
-      video.muted = true;
-      video.defaultMuted = true;
-      video.playsInline = true;
-      video.play().catch(() => {});
-    });
-    lightbox.querySelector('.lb-close').addEventListener('click', closeLb);
+    if (gifBtn) {
+      gifBtn.addEventListener('click', () => {
+        if (lbBoard) lbBoard.style.display = 'none';
+        if (lbControls) lbControls.style.display = 'flex';
+        const formacion = $('#prep-formacion').value;
+        lightbox.querySelectorAll('video').forEach((n) => n.remove());
+        const video = document.createElement('video');
+        video.src = TACTICA_MP4[formacion] || TACTICA_MP4['1-3-2-1'];
+        video.playsInline = true; video.muted = true; video.loop = true;
+        lightbox.appendChild(video);
+        lightbox.classList.add('open');
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.play().catch(() => {});
+      });
+    }
+    if (fullBtn) {
+      fullBtn.addEventListener('click', () => {
+        if (lbControls) lbControls.style.display = 'none';
+        lightbox.querySelectorAll('video').forEach((n) => n.remove());
+        if (lbBoard) lbBoard.style.display = 'flex';
+        renderPrepBoard($('#prep-board-full'));
+        lightbox.classList.add('open');
+      });
+    }
+    lightbox.querySelector('.lb-close')?.addEventListener('click', closeLb);
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
     const lbPlay = lightbox.querySelector('.lb-play');
     if (lbPlay) lbPlay.addEventListener('click', () => {
