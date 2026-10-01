@@ -96,4 +96,5 @@ test('claude-partido.css contiene estilos de especialistas y celebraciones enriq
   assert.match(stylesSource, /\.cbx-la-keeper-notice/, 'Debe tener estilo para aviso de portero bajo palos');
   assert.match(stylesSource, /\.cbx-celebration-score/, 'Debe tener estilo para marcador en celebración');
   assert.match(stylesSource, /\.cbx-celebration-min/, 'Debe tener estilo para minuto en celebración');
+  assert.match(stylesSource, /\.cbx-live-celebration\s*\*\s*,\s*body\.cb-redesign-active\s*\.cbx-live-celebration\s*\*\s*,\s*body\.cb-redesign-active\[data-has-custom-font-color="true"\]\s*\.cbx-live-celebration\s*\*[\s\S]*?color:\s*#ffffff\s*!important/, 'Debe forzar color blanco puro en todos los textos de la celebración incluso con fuente personalizada');
 });

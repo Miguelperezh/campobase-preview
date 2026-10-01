@@ -3936,7 +3936,8 @@ function showLiveCelebration(title, name, saved = false, scoreText = '', minuteT
   document.querySelector('.cbx-live-celebration')?.remove();
   const celebration = document.createElement('div');
   celebration.className = `cbx-live-celebration ${saved ? 'is-save' : ''}`;
-  celebration.innerHTML = `<strong>${escapeHtml(title)}</strong><span class="cbx-celebration-hero-name">${escapeHtml(name)}</span>${scoreText ? `<b class="cbx-celebration-score">${escapeHtml(scoreText)}</b>` : ''}${minuteText ? `<small class="cbx-celebration-min">Minuto ${escapeHtml(minuteText)}</small>` : ''}`;
+  celebration.style.cssText = `position:fixed;z-index:9999999;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;text-align:center;background:${saved ? 'rgba(120, 53, 15, 0.96)' : 'rgba(5, 44, 32, 0.96)'};color:#ffffff !important;backdrop-filter:blur(6px);`;
+  celebration.innerHTML = `<strong style="color:#ffffff !important;text-shadow:0 8px 32px rgba(0,0,0,0.7);">${escapeHtml(title)}</strong><span class="cbx-celebration-hero-name" style="color:#ffffff !important;text-shadow:0 4px 16px rgba(0,0,0,0.6);">${escapeHtml(name)}</span>${scoreText ? `<b class="cbx-celebration-score" style="color:${saved ? '#fde68a' : '#fbbf24'} !important;text-shadow:0 4px 20px rgba(0,0,0,0.8);">${escapeHtml(scoreText)}</b>` : ''}${minuteText ? `<small class="cbx-celebration-min" style="color:#ffffff !important;opacity:0.95;">Minuto ${escapeHtml(minuteText)}</small>` : ''}`;
   celebration.addEventListener('click', () => celebration.remove());
   document.body.append(celebration);
   window.setTimeout(() => celebration.remove(), 2800);
