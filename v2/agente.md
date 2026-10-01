@@ -1050,5 +1050,9 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
         - `spec.md`: Unificación de pizarra única en Partido en Vivo y Preparación, conmutador de rival por defecto oculto y blindaje de leyenda.
         - `plan.md`: Arquitectura técnica de actualización sobre el mismo SVG y persistencia en IndexedDB.
         - `tasks.md`: Verificación de tareas y paso de tests al 100%.
+      - `specs/003-catalogo-tarjetas-filtros-ejercicios-f7/`:
+        - `spec.md`: Tarjeta en rejilla Claude con acciones rápidas, filtros multidimensionales F7 y biblioteca local-first.
+        - `plan.md`: Diseño de componentes de tarjeta, delegación de eventos e integración con el planificador de sesiones.
+        - `tasks.md`: Verificación de tareas y paso de tests al 100%.
 
 
