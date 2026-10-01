@@ -1126,7 +1126,28 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de pruebas actualizada en `tests/cambios-pizarra-desplegables.test.js` verificando el layout de 1 columna por defecto, dimensiones de 640px, ausencia de `<details>` plegables y orden `pitch` antes de `controls`.
    - **614/614 tests pasando al 100%** y `npm run check` con cero errores.
 
+### 24. Entrega v64 (01/10/2026) — Partido en Vivo: Pizarra Táctica Hero de 640px y Controles Homogeneizados (Spec 007)
 
+1. **Pizarra Táctica Hero de 640px en Partido en Vivo y Vista Delegado (`#live-tactics` y `#delegate-tactics`):**
+   - **Diagnóstico de Causa Raíz:** En `#partido`, `.cbx-live-main` imponía una cuadrícula fija de 3 columnas (`grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr)`). En ordenadores portátiles estándar (pantallas de 1024px MacBook con sidebar de 220px), cada columna quedaba constreñida a escasos ~230px. Además, `@media(max-width: 1100px)` forzaba 2 columnas, impidiendo que la pizarra alcanzase el protagonismo visual y operativo de 640px validado en Preparación.
+   - **Solución Implementada:**
+     - En `css/claude-partido.css`, `.cbx-live-main` se estableció por defecto (< 1280px) a 1 sola columna centrada de hasta 720px (`grid-template-columns: 1fr; gap: 18px; align-items: start; max-width: 720px; margin: 0 auto;`), eliminando la regla limitante de 1100px.
+     - En pantallas ultra-anchas (`@media(min-width: 1280px)`), se organiza en 3 columnas holgadas con la pizarra reservada en `minmax(560px, 640px)` y los cambios/dashboard en `minmax(340px, 1fr)` y `minmax(280px, 1fr)`.
+     - `#live-tactics .board-wrap` y `#delegate-tactics .board-wrap` se ampliaron a `max-width: 640px`, padding generoso de `12px`, border-radius de `20px` y fondo unificado `#155438`.
+     - Los estilos del campo `.tac-field` (`fill: #205f43;`), aros de fichas (`stroke: #cbd5e1; stroke-width: .6;`) y dorsales (`fill: #0b2d20;`) quedaron 100% homogeneizados con la experiencia de Preparación.
 
+2. **Herramientas Tácticas y Desplegables de Puestos Siempre Visibles en Directo:**
+   - **Diagnóstico de Causa Raíz:** En `arrangeClaudeLiveBoard`, las herramientas interactivas (`#live-tactics-tools`) y los 7 puestos por posición (`#live-tactics-slots`) se envolvían dentro de un acordeón `<details class="cbx-live-board-options">` cerrado por defecto (`▶ Herramientas y asignación por puestos`), forzando al entrenador y al delegado a desplegarlo manualmente en cada refresco.
+   - **Solución Implementada:**
+     - Se reemplazó el contenedor `<details>` por un panel abierto permanente `<section class="cbx-live-board-options cbx-live-slots-panel panel">` con encabezado descriptivo claro.
+     - La barra de herramientas tácticas (`.live-tactics-tools`: selección, balón, 5 tipos de flecha, goma y limpiar) queda permanentemente visible e interactiva inmediatamente debajo de la pizarra táctica.
+     - Los 7 selectores de puesto (`#live-tactics-slots`) se organizan mediante la cuadrícula adaptativa `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;`, garantizando ~300px por selector para que nombres y dorsales nunca se recorten. Los suplentes se expanden a ancho completo (`grid-column: 1 / -1`).
 
+3. **Popup Táctico Ampliado y Formateo Limpio (`openTacticsPopup`):**
+   - Se actualizó `openTacticsPopup` en `js/app.js` para calcular ancho de hasta `Math.min(340, window.innerWidth - 24)` y altura de `130px`.
+   - Se formatearon las opciones de titulares y suplentes con el separador canónico `${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}` sin truncamientos ni solapamientos.
 
+4. **Especificación SDD 007 y Validación de Calidad:**
+   - Carpeta formal de especificación en `specs/007-partido-en-vivo-pizarra-hero-y-controles/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Nueva suite de pruebas en `tests/partido-en-vivo-pizarra-hero.test.js` verificando el layout hero de 640px, ausencia de `<details>` cerrados, dimensiones de popup a 340px y colores tácticos.
+   - **618/618 tests en verde al 100%** y `npm run check` con 0 errores de sintaxis.

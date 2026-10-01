@@ -2239,11 +2239,11 @@ function arrangeClaudeLiveBoard(sc) {
     select.dispatchEvent(new Event('change', { bubbles: true }));
     chips.querySelectorAll('button[data-live-formation]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
   });
-  const details = document.createElement('details');
-  details.className = 'cbx-live-board-options';
-  details.innerHTML = '<summary>Herramientas y asignación por puestos</summary>';
-  details.append(sc.tools(), sc.slots(), root.querySelector('.keeper-note'), root.querySelector('.live-tactics-legend'));
-  root.append(details);
+  const optionsPanel = document.createElement('section');
+  optionsPanel.className = 'cbx-live-board-options cbx-live-slots-panel panel';
+  optionsPanel.innerHTML = '<div class="cbx-live-slots-head"><h4>Elegir jugadores y herramientas tácticas</h4><p>Puedes cambiar jugadores por puesto o dibujar movimientos tácticos sobre la pizarra.</p></div>';
+  optionsPanel.append(sc.tools(), sc.slots(), root.querySelector('.keeper-note'), root.querySelector('.live-tactics-legend'));
+  root.append(optionsPanel);
 }
 
 function renderTacticsTools(sc) {
@@ -2301,15 +2301,15 @@ function renderTacticsSlots(sc) {
     const pl = playerById(state.players, p.playerId);
     const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, t.team, p.pos, p.playerId);
     const opts = ['<option value="">— Sin asignar —</option>'];
-    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
     if (ss.length) {
       opts.push('<option disabled>— Suplentes —</option>');
-      for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
+      for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`);
     }
     return `<div class="slot"><div class="slot-head"><span class="pos">${escapeHtml(p.pos)}</span><span class="dorsal">${pl ? 'Dorsal ' + escapeHtml(pl.number) : '—'}</span></div><select data-idx="${i}" aria-label="${escapeHtml(p.pos)}">${opts.join('')}</select></div>`;
   }).join('');
   const suplentesHTML = suplentesList.length
-    ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>`
+    ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number ? pl.number + ' · ' : '')}${escapeHtml(pl.name)}</span>`).join('')}</div></div>`
     : '';
   container.innerHTML = filas + suplentesHTML;
   container.querySelectorAll('select').forEach((sel) => {
@@ -2344,19 +2344,19 @@ function openTacticsPopup(sc, idx, clientX, clientY) {
   const availableIds = liveTacticAvailableIds();
   const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, t.team, p.pos, p.playerId);
   const opts = ['<option value="">— Sin asignar —</option>'];
-  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
   if (ss.length) {
     opts.push('<option disabled>— Suplentes —</option>');
-    for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
+    for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`);
   }
   title.textContent = p.pos;
   select.innerHTML = opts.join('');
   select.value = p.playerId;
   popup.dataset.idx = idx;
   popup.classList.add('open');
-  const w = 240, h = 120;
-  popup.style.left = Math.min(window.innerWidth - w - 10, Math.max(10, clientX - w / 2)) + 'px';
-  popup.style.top = Math.min(window.innerHeight - h - 10, Math.max(10, clientY - h - 10)) + 'px';
+  const w = Math.min(340, window.innerWidth - 24), h = 130;
+  popup.style.left = Math.min(window.innerWidth - w - 12, Math.max(12, clientX - w / 2)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - h - 12, Math.max(12, clientY - h - 10)) + 'px';
 }
 
 function bindTacticsBoard(sc, svg) {

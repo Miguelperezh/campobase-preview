@@ -190,8 +190,8 @@ body.cb-redesign-active #partido .cbx-live-hero .live-clock .button-row button {
 body.cb-redesign-active #partido .cbx-live-quick-actions { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; margin-top: 11px; }
 body.cb-redesign-active #partido .cbx-live-quick-actions button { min-width: 0; min-height: 44px; padding: 7px 5px; border: 1px solid #ffffff25; border-radius: 10px; background: #ffffff17; color: #fff; font-size: 11px; font-weight: 800; overflow-wrap: anywhere; }
 body.cb-redesign-active #partido .cbx-live-quick-actions button:first-child { grid-column: span 3; background: #10b981; border-color: #10b981; }
-body.cb-redesign-active #partido .cbx-live-quick-actions button:nth-child(2) { grid-column: span 2; }
-body.cb-redesign-active #partido .cbx-live-main { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr); align-items: start; gap: 12px; }
+body.cb-redesign-active #partido .cbx-live-main { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; max-width: 720px; margin: 0 auto; }
+@media(min-width: 1280px) { body.cb-redesign-active #partido .cbx-live-main { grid-template-columns: minmax(560px, 640px) minmax(340px, 1fr) minmax(280px, 1fr); max-width: 1400px; margin: 0; } }
 body.cb-redesign-active #partido .cbx-live-plan { margin: 0; padding: 20px 24px; border: 1px solid #b9d2c4; border-radius: 17px; background: var(--card); }
 body.cb-redesign-active #partido .cbx-live-plan > summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
 body.cb-redesign-active #partido .cbx-live-plan > summary::-webkit-details-marker { display: none; }
@@ -255,13 +255,22 @@ body.cb-redesign-active #partido #live-tactics .formacion-row > select,body.cb-r
 body.cb-redesign-active .cbx-live-formation-chips { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; }
 body.cb-redesign-active .cbx-live-formation-chips button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--cbx-line); border-radius: 999px; background: #fff; color: var(--cbx-ink); font-size: 11px; font-weight: 850; }
 body.cb-redesign-active .cbx-live-formation-chips button[aria-pressed="true"] { background: var(--cbx-hero); color: #fff; }
-body.cb-redesign-active #partido #live-tactics .board-wrap,body.cb-redesign-active #delegado #delegate-tactics .board-wrap { width: 100%; max-width: 600px; margin: 8px auto; padding: 8px; border-radius: 18px; background: #205f43; box-shadow: 0 4px 20px rgba(0,0,0,.1); }
-body.cb-redesign-active #partido #live-tactics .board-wrap svg,body.cb-redesign-active #delegado #delegate-tactics .board-wrap svg { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; }
-body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player circle,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player circle { fill: #fff; stroke: #10b981; stroke-width: .7; }
+body.cb-redesign-active #partido #live-tactics .panel.live-tactics,body.cb-redesign-active #delegado #delegate-tactics .panel.live-tactics { margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+body.cb-redesign-active #partido #live-tactics .board-wrap,body.cb-redesign-active #delegado #delegate-tactics .board-wrap { width: 100%; max-width: 640px; margin: 8px auto; padding: 12px; border: 0; border-radius: 20px; background: #155438; box-shadow: 0 4px 20px rgba(0,0,0,.12); }
+body.cb-redesign-active #partido #live-tactics .board-wrap svg,body.cb-redesign-active #delegado #delegate-tactics .board-wrap svg { display: block; width: 100%; max-width: 640px; margin: 0 auto; height: auto; aspect-ratio: 1 / 1; }
+body.cb-redesign-active #partido #live-tactics .board-wrap .tac-field,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-field { fill: #205f43; }
+body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player circle,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player circle { fill: #fff; stroke: #cbd5e1; stroke-width: .6; }
 body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player .num,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player .num { fill: #0b2d20; }
 body.cb-redesign-active #partido #live-tactics .board-wrap .tac-player .name,body.cb-redesign-active #delegado #delegate-tactics .board-wrap .tac-player .name { fill: #fff; font-size: 3.2px; font-weight: 850; }
-body.cb-redesign-active .cbx-live-board-options { margin: 9px 0; padding: 10px; border: 1px solid var(--cbx-line); border-radius: 10px; background: #f8fafc; }
-body.cb-redesign-active .cbx-live-board-options > summary { cursor: pointer; color: var(--cbx-ink); font-size: 11px; font-weight: 850; }
+body.cb-redesign-active .cbx-live-board-options { margin: 12px 0 0; padding: 14px 16px; border: 1px solid var(--cbx-line); border-radius: 14px; background: #f8fafc; color: var(--cbx-muted); font-size: 12px; }
+body.cb-redesign-active .cbx-live-board-options h4 { margin: 0 0 4px; color: var(--cbx-ink); font: 900 15px/1.2 var(--cbx-disp); text-transform: uppercase; letter-spacing: .02em; }
+body.cb-redesign-active .cbx-live-board-options p { margin: 0 0 10px; line-height: 1.45; color: var(--cbx-muted); font-size: 11.5px; }
+body.cb-redesign-active .cbx-live-board-options .live-tactics-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-top: 10px; }
+body.cb-redesign-active .cbx-live-board-options .suplentes { grid-column: 1 / -1; margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--cbx-line, #e2e8f0); }
+body.cb-redesign-active .cbx-live-board-options .slot { min-width: 0; padding: 8px 12px; border: 1px solid var(--cbx-line, #e2e8f0); border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+body.cb-redesign-active .cbx-live-board-options .slot .slot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+body.cb-redesign-active .cbx-live-board-options .slot .pos { font-size: 12px; font-weight: 800; color: var(--cbx-ink, #0f172a); }
+body.cb-redesign-active .cbx-live-board-options .slot select { min-width: 0; width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid var(--cbx-line, #cbd5e1); border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--cbx-ink, #0f172a); background: #fff; text-overflow: ellipsis; white-space: nowrap; }
 body.cb-redesign-active #partido .cbx-live-changes .cbx-live-changes-header,body.cb-redesign-active #delegado .cbx-live-changes-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 body.cb-redesign-active #partido .cbx-live-changes .cbx-live-changes-header h3,body.cb-redesign-active #delegado .cbx-live-changes-header h3 { margin: 0 !important; font: 900 19px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; color: var(--cbx-ink) !important; text-transform: uppercase; }
 body.cb-redesign-active #partido .cbx-live-changes .cbx-live-changes-sub,body.cb-redesign-active #delegado .cbx-live-changes-sub { font: 600 12px/1 var(--cbx-ui); color: var(--cbx-muted); }
@@ -300,7 +309,6 @@ body.cb-redesign-active #partido .cbx-live-targets,body.cb-redesign-active #part
 body.cb-redesign-active #partido .cbx-live-targets > summary,body.cb-redesign-active #partido .match-log > summary { cursor: pointer; color: var(--cbx-ink); font-weight: 850; }
 body.cb-redesign-active #partido .match-log .event-editor { grid-template-columns: repeat(5,minmax(0,1fr)); }
 body.cb-redesign-active #partido .match-log .event-editor > * { min-width: 0; }
-@media(max-width:1100px){body.cb-redesign-active #partido .cbx-live-main { grid-template-columns: repeat(2,minmax(0,1fr)); }body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { grid-column: 1/-1; }}
 @media(max-width:720px){body.cb-redesign-active #partido .cbx-live-hero { padding: 14px 10px; }body.cb-redesign-active #partido .cbx-live-main { display: flex; flex-direction: column; gap: 14px; }body.cb-redesign-active #partido .cbx-live-main > * { width: 100%; }body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { grid-column: auto; }body.cb-redesign-active #partido .cbx-live-changes .live-grid,body.cb-redesign-active #delegado .live-grid { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 8px !important; }body.cb-redesign-active #partido .cbx-live-quick-actions { grid-template-columns: repeat(3,minmax(0,1fr)); }body.cb-redesign-active #partido .cbx-live-quick-actions button:first-child,body.cb-redesign-active #partido .cbx-live-quick-actions button:nth-child(2) { grid-column: span 3; }body.cb-redesign-active #partido .match-log .event-editor { grid-template-columns: 1fr 1fr; }body.cb-redesign-active #partido .cbx-live-hero .live-clock .button-row button { flex: 1 1 43%; }}
 
 /* Calendario y resultados: mes y tarjetas compactas de Claude, con acciones intactas. */
