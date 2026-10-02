@@ -1128,7 +1128,11 @@ body.cb-redesign-active .cbx-legacy-tactics-wrapper {
   display: none !important;
 }
 
-body.cb-redesign-active #tacticas {
+body.cb-redesign-active #tacticas:not(.active) {
+  display: none !important;
+}
+
+body.cb-redesign-active #tacticas.active {
   display: flex;
   flex-direction: column;
   gap: 16px;

@@ -78,7 +78,10 @@ body.cb-redesign-active > .topbar { background: var(--cb-surface-card, #fff); }
   body.cb-redesign-active > .topbar .format-badge { max-width: 100% !important; white-space: normal !important; }
 }
 
-html:not([data-theme-bg]):has(body.cb-redesign-active) { background: #f4f6f5 !important; }
+html:has(body.cb-redesign-active),
+body.cb-redesign-active {
+  background: var(--bg, var(--cb-surface-bg, #f4f6f5)) !important;
+}
 body.cb-redesign-active:not([data-theme-bg]):not([data-has-custom-font-color="true"]) {
   --cb-slate-900: #0f172a !important;
   --ink: #0f172a !important;

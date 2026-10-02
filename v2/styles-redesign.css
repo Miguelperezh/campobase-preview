@@ -174,7 +174,7 @@ body {
 
 html:has(body.cb-redesign-active),
 body.cb-redesign-active {
-  background: var(--cb-surface-bg);
+  background: var(--bg, var(--cb-surface-bg, #f4f6f5)) !important;
   color: var(--cb-slate-900);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

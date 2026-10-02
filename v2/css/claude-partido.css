@@ -1644,21 +1644,52 @@ body.cb-redesign-active .season-round-tag {
   background: var(--tb-rival, #111827) !important;
 }
 
-/* Conexión a las pizarras tácticas de toda la app */
+/* Conexión exhaustiva a todas las pizarras tácticas de la app */
 #cbx-tactics-pitch-board,
 .live-tactics svg,
-.board-wrap svg {
-  background-color: var(--tb-pitch, #1f5a41) !important;
+.board-wrap svg,
+.tactic-board svg,
+.tactic-board,
+.board-wrap,
+.cbx-mini-pitch-svg {
+  background-color: var(--tb-pitch, #1e523d) !important;
+}
+
+.tac-field {
+  fill: var(--tb-pitch, #1e523d) !important;
+}
+
+.tac-line,
+.tac-area {
+  stroke: var(--tb-lines, rgba(255, 255, 255, 0.4)) !important;
 }
 
 #cbx-tactics-pitch-board .cbx-tac-player-chip,
-#cbx-tactics-pitch-board [data-team="1"] {
+#cbx-tactics-pitch-board [data-team="1"],
+.tac-player circle,
+.live-tactics .tac-player circle {
+  fill: var(--tb-team, #c8102e) !important;
   background: var(--tb-team, #c8102e) !important;
 }
 
 #cbx-tactics-pitch-board .cbx-tac-rival-marker,
-#cbx-tactics-pitch-board [data-rival="1"] {
+#cbx-tactics-pitch-board [data-rival="1"],
+.tac-opponent circle,
+.live-tactics .tac-opponent circle {
+  fill: var(--tb-rival, #111827) !important;
   background: var(--tb-rival, #111827) !important;
+}
+
+.tac-legend-team {
+  color: var(--tb-team, #c8102e) !important;
+}
+
+.tac-legend-rival {
+  color: var(--tb-rival, #111827) !important;
+}
+
+.tac-arrow {
+  stroke: var(--tb-arrow, #facc15) !important;
 }
 
 /* Estilos de la Barra Lateral personalizada */

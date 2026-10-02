@@ -1345,3 +1345,43 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Suite de pruebas en `tests/ajustes-pizarra-lateral-bloques.test.js` (7 tests específicos pasando).
    - **649/649 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
 
+---
+
+### 31. Entrega v71 (02/10/2026) — Corrección de Fuga de Pizarra en Ajustes, Fondo Reactivo Sólido, Previsualización Rica con Marcadores/Botones/Semáforos y Propagación Global de Pizarras
+
+1. **Corrección de Fuga Visual de `#tacticas` (`css/claude-entreno.css`):**
+   - **Causa anterior:** En `css/claude-entreno.css` la regla `body.cb-redesign-active #tacticas { display: flex; ... }` no tenía la pseudoclase `:not(.active)`. Al poseer un selector con ID `#tacticas`, anulaba la regla global `.view { display: none; }` de `styles.css`. Por ello, la pizarra táctica completa de sistemas de juego permanecía permanentemente visible sobre la pantalla de Ajustes.
+   - **Solución implementada:** Reglas estrictas:
+     - `body.cb-redesign-active #tacticas:not(.active) { display: none !important; }`
+     - `body.cb-redesign-active #tacticas.active { display: flex; flex-direction: column; ... }`
+   - La pantalla de Ajustes solo muestra su propia mini pizarra de previsualización cromática compacta, libre de sistemas de juego y formaciones ajenas.
+
+2. **Fondo de la App Reactivo, Inmediato y Sólido (`css/claude-shell.css`, `styles-redesign.css`, `js/app.js`):**
+   - **Causa anterior:** `html:not([data-theme-bg]):has(body.cb-redesign-active) { background: #f4f6f5 !important; }` fijaba el fondo a gris claro e impedía que los selectores de `appBgHue` se vieran. Además, la función `calculatedAppBg` diluía los colores al 12% con blanco, haciendo imperceptibles los colores oscuros seleccionados por el usuario.
+   - **Solución implementada:**
+     - En `css/claude-shell.css` y `styles-redesign.css` se sincronizó a `var(--bg, var(--cb-surface-bg, #f4f6f5)) !important;`.
+     - `applyCustomTheme` aplica directamente el color sólido seleccionado en `appBgHue` (sin dilución artificial innecesaria) y lo inyecta forzosamente en `document.body.style.backgroundColor`, `document.documentElement.style.backgroundColor`, `--bg`, `--app-bg` y `--cb-surface-bg`.
+     - Los swatches de `EXTENDED_SWATCH_CONFIGS.appBgHue` se dotaron de colores sólidos y elegantes (`#0a251b`, `#040806`, `#021e12`, `#061021`, `#111827`, `#f4f6f5`, `#ffffff`).
+     - El cambio de fondo reacciona al instante sin recarga ni retrasos.
+
+3. **Previsualización Rica e Interactiva en Ajustes (`index.html`, `js/app.js`):**
+   - **Marcador en directo con goles a favor y en contra:** Se incorporó un marcador de muestra con contadores numéricos independientes (`#preview-gf-num` y `#preview-ga-num`), barras de progreso cromáticas (`#preview-gf-bar`, `#preview-ga-bar`) y badges estilizados (`#preview-card-gf-badge`, `#preview-card-ga-badge`). Al cambiar los colores de GF o GA, la previsualización refleja exactamente el impacto en el marcador.
+   - **Botones de muestra completos:** La tarjeta demo exhibe Botón Primario (`#preview-sample-btn`), Botón Secundario (`#preview-sample-btn2`), Botón WhatsApp (`#preview-sample-wa`) y Resultado de partido (`#preview-sample-res`).
+   - **Semáforos de demarcación y desenlaces:** Previsualizadores en tiempo real de Porteros (`gk`), Defensas (`def`), Medios (`mid`), Delanteros (`fw`) y Resultados (Victoria `win`, Empate `draw`, Derrota `loss`).
+   - La función `updateThemePreviewBox` sincroniza todos estos elementos en tiempo real según los inputs o el tema guardado.
+
+4. **Propagación Cromática Global a Todas las Pizarras del Sistema (`css/claude-partido.css`):**
+   - Se vincularon las clases estándar `.tac-field` (`var(--tb-pitch)`), `.tac-line` y `.tac-area` (`var(--tb-lines)`), `.tac-player circle` (`var(--tb-team)`), `.tac-opponent circle` (`var(--tb-rival)`), `.tac-arrow` (`var(--tb-arrow)`) y `.tac-legend-*` en `css/claude-partido.css`.
+   - Modificar los colores en la mini pizarra de Ajustes traslada los cambios armónicamente a las pizarras de entrenamiento, visor de tácticas, tácticas interactivas y partido en vivo.
+
+5. **Integridad de Ejercicios y Batería de Pruebas:**
+   - La biblioteca de ejercicios («Mis ejercicios», «+ Ejercicios») se mantiene intacta y completamente validada.
+   - 4 nuevos tests añadidos en `tests/ajustes-pizarra-lateral-bloques.test.js` cubriendo:
+     - Reglas de visibilidad estricta de `#tacticas:not(.active)`.
+     - Fondo reactivo en CSS y soporte sólido en `applyCustomTheme`.
+     - Componentes del marcador y semáforos en la previsualización.
+     - Selectores de propagación de variables `--tb-*` a `.tac-*`.
+   - Total: **653/653 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service Worker actualizado a `-20261002-v71-ajustes-preview-rico-bg-tacticas-fix`.
+
+

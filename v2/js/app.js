@@ -6654,16 +6654,19 @@ const EXTENDED_SWATCH_CONFIGS = {
   appBgHue: {
     containerId: 'cbx-app-bg-swatches',
     swatches: [
-      ['', 'Igual que el tema'],
-      ['#10b981', 'Esmeralda'],
-      ['#0a251b', 'Verde campo'],
-      ['#2563eb', 'Azul'],
-      ['#0369a1', 'Océano'],
-      ['#7c3aed', 'Morado'],
-      ['#c8102e', 'Rojo club'],
-      ['#f59e0b', 'Dorado'],
-      ['#64748b', 'Gris'],
-      ['#111827', 'Negro']
+      ['', 'Por defecto'],
+      ['#ffffff', 'Blanco luz'],
+      ['#f4f6f5', 'Gris campo'],
+      ['#0a251b', 'Campo Esmeralda'],
+      ['#040806', 'Noche OLED'],
+      ['#021e12', 'Césped Intenso'],
+      ['#061021', 'Azul Marino'],
+      ['#111827', 'Negro Grafito'],
+      ['#f6f3eb', 'Arena cálida'],
+      ['#eee6d8', 'Papiro / Sepia'],
+      ['#10b981', 'Verde Club'],
+      ['#2563eb', 'Azul Real'],
+      ['#c8102e', 'Rojo Club']
     ]
   },
   cardHue: {
@@ -7149,13 +7152,25 @@ function applyCustomTheme(themeInput) {
 
   // 8. Cálculo de color-mix para fondos e intensidades de app y tarjetas
   const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
-  let calculatedAppBg = theme.appBgHue ? mix(theme.appBgHue, theme.appBgPct ?? 12, '#ffffff') : null;
+  let calculatedAppBg = null;
+  if (theme.appBgHue) {
+    if (['#ffffff', '#f4f6f5', '#0a251b', '#040806', '#021e12', '#061021', '#111827', '#171d24', '#170408', '#110722', '#000000', '#f6f3eb', '#eee6d8'].includes(theme.appBgHue)) {
+      calculatedAppBg = theme.appBgHue;
+    } else if (theme.appBgPct !== undefined && theme.appBgPct !== null) {
+      calculatedAppBg = theme.appBgPct >= 95 ? theme.appBgHue : mix(theme.appBgHue, theme.appBgPct, '#ffffff');
+    } else {
+      calculatedAppBg = theme.appBgHue;
+    }
+  }
+
   let calculatedCardBg = null;
   if (theme.cardHue) {
     if (['#ffffff', '#f8fafc', '#fef9ee', '#f0fdf4', '#eff6ff', '#11221b', '#18181b', '#000000'].includes(theme.cardHue)) {
       calculatedCardBg = theme.cardHue;
+    } else if (theme.cardPct !== undefined && theme.cardPct !== null) {
+      calculatedCardBg = theme.cardPct >= 95 ? theme.cardHue : mix(theme.cardHue, theme.cardPct, '#ffffff');
     } else {
-      calculatedCardBg = mix(theme.cardHue, theme.cardPct ?? 6, '#ffffff');
+      calculatedCardBg = theme.cardHue;
     }
   }
 
@@ -7165,8 +7180,8 @@ function applyCustomTheme(themeInput) {
     ? 0.299 * parseInt(cleanHexColor.substring(0, 2), 16) + 0.587 * parseInt(cleanHexColor.substring(2, 4), 16) + 0.114 * parseInt(cleanHexColor.substring(4, 6), 16)
     : 0;
 
-  const finalAppBg = lum > 170 ? '#0b1712' : (calculatedAppBg || preset?.bg || claudeBackgrounds[bg] || '#f4f6f5');
-  const finalCardBg = lum > 170 ? '#11221b' : (calculatedCardBg || preset?.card || '#ffffff');
+  const finalAppBg = calculatedAppBg || (lum > 170 ? '#0b1712' : (preset?.bg || claudeBackgrounds[bg] || '#f4f6f5'));
+  const finalCardBg = calculatedCardBg || (lum > 170 ? '#11221b' : (preset?.card || '#ffffff'));
 
   // Semáforos con significado
   const sem = state.settings?.sem || DEFAULT_SEM;
@@ -7242,6 +7257,10 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--tb-rival', tbRival);
     target.style.setProperty('--tb-arrow', tbArrow);
   }
+
+  // Aplicar fondo directamente en el canvas HTML y body
+  document.body.style.setProperty('background', finalAppBg, 'important');
+  document.documentElement.style.setProperty('background', finalAppBg, 'important');
 
   // Actualizar DOM directo de la barra lateral si existe
   const sidebarEl = $('#cb-claude-sidebar');
@@ -7348,21 +7367,53 @@ function updateThemePreviewBox(theme) {
     previewBannerBtn.style.background = btnBg;
     previewBannerBtn.style.setProperty('color', btnInk, 'important');
   }
-  if (previewGfBadge) {
-    previewGfBadge.style.background = theme.gfBg || '#f0f7f3';
-    previewGfBadge.style.color = theme.gfInk || '#14532d';
-    const dot = previewGfBadge.querySelector('.dot');
-    if (dot) dot.style.background = theme.gfColor || theme.accentColor || '#10b981';
+
+  const previewGfNum = $('#preview-gf-num');
+  const previewGaNum = $('#preview-ga-num');
+  if (previewGfNum) {
+    previewGfNum.style.background = theme.gfBg || '#f0f7f3';
+    previewGfNum.style.color = theme.gfInk || '#14532d';
+    if (ft) previewGfNum.style.fontFamily = ft;
   }
-  if (previewGaBadge) {
-    previewGaBadge.style.background = theme.gaBg || '#fdf2f4';
-    previewGaBadge.style.color = theme.gaInk || '#9f1239';
-    const dot = previewGaBadge.querySelector('.dot');
+  if (previewGaNum) {
+    previewGaNum.style.background = theme.gaBg || '#fdf2f4';
+    previewGaNum.style.color = theme.gaInk || '#9f1239';
+    if (ft) previewGaNum.style.fontFamily = ft;
+  }
+
+  $$('.cbx-preview-gf-badge').forEach((badge) => {
+    badge.style.background = theme.gfBg || '#f0f7f3';
+    badge.style.color = theme.gfInk || '#14532d';
+    const dot = badge.querySelector('.dot');
+    if (dot) dot.style.background = theme.gfColor || theme.accentColor || '#10b981';
+  });
+
+  $$('.cbx-preview-ga-badge').forEach((badge) => {
+    badge.style.background = theme.gaBg || '#fdf2f4';
+    badge.style.color = theme.gaInk || '#9f1239';
+    const dot = badge.querySelector('.dot');
     if (dot) dot.style.background = theme.gaColor || '#e02444';
+  });
+
+  const previewBtn2 = $('#preview-sample-btn2');
+  if (previewBtn2) {
+    previewBtn2.style.background = theme.btn2Bg || '#ffffff';
+    previewBtn2.style.color = theme.btn2Ink || '#0f172a';
+  }
+
+  const previewWa = $('#preview-sample-wa');
+  if (previewWa) {
+    previewWa.style.color = theme.waInk || '#053b1d';
+  }
+
+  const previewRes = $('#preview-sample-res');
+  if (previewRes) {
+    previewRes.style.color = theme.resInk || '#ffffff';
   }
 
   const previewCardWrap = $('#preview-card-demo-wrap');
   const previewCardTitle = $('#preview-card-demo-title');
+  const previewCardText = $('#preview-card-demo-text');
   if (previewCardWrap) {
     const cardBgVal = theme.cardHue && ['#ffffff', '#f8fafc', '#fef9ee', '#f0fdf4', '#eff6ff', '#11221b', '#18181b', '#000000'].includes(theme.cardHue)
       ? theme.cardHue
@@ -7373,6 +7424,24 @@ function updateThemePreviewBox(theme) {
   if (previewCardTitle) {
     previewCardTitle.style.color = theme.cardTitle || 'var(--cardTitle, #0f172a)';
   }
+  if (previewCardText) {
+    previewCardText.style.color = theme.fontColor || '#0f172a';
+  }
+
+  const sem = state.settings?.sem || DEFAULT_SEM;
+  const semMap = {
+    'preview-sem-gk': sem.gk || '#0284c7',
+    'preview-sem-def': sem.def || '#16a34a',
+    'preview-sem-mid': sem.mid || '#eab308',
+    'preview-sem-fw': sem.fw || '#dc2626',
+    'preview-sem-win': sem.win || '#10b981',
+    'preview-sem-draw': sem.draw || '#f59e0b',
+    'preview-sem-loss': sem.loss || '#ef4444',
+  };
+  Object.entries(semMap).forEach(([id, col]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.background = col;
+  });
 
   const sidebarPreviewBox = $('#cbx-sidebar-preview-box');
   if (sidebarPreviewBox) {

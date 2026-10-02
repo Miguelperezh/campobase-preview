@@ -7,5 +7,5 @@
 - [x] **Tarea 5**: Crear suite de tests `tests/ajustes-pizarra-lateral-bloques.test.js` y verificar que pase al 100%.
 - [x] **Tarea 6**: Ejecutar `npm run check && npm test` asegurando 0 errores sintácticos y todos los tests verdes.
 - [x] **Tarea 7**: Documentar la Entrega v70 en `agente.md`.
-- [ ] **Tarea 8**: Compilar, sincronizar y desplegar a `campobase-preview-deploy/v2/`.
-- [ ] **Tarea 9**: Validar despliegue en GitHub Pages y entregar respuesta con la URL al final.
+- [x] **Tarea 8**: Compilar, sincronizar y desplegar a `campobase-preview-deploy/v2/`.
+- [x] **Tarea 9**: Validar despliegue en GitHub Pages y entregar respuesta con la URL al final.

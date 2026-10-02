@@ -644,25 +644,52 @@
             <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Vista previa del tema</h3>
             <span class="cbx-badge-new">Nuevo</span>
           </div>
+          <p class="meta" style="margin:4px 0 8px;">Previsualización en directo de todos tus colores, tipografías, marcadores, botones y bloques.</p>
           <div class="cbx-preview-scoreboard-wrap" style="border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;margin-top:6px;">
-            <div id="preview-scoreboard-header" style="background:var(--hero, #0a251b);color:#fff;padding:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px">
+            <div id="preview-scoreboard-header" style="background:var(--hero, #0a251b);color:#fff;padding:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">
               <div style="display:flex;align-items:center;gap:8px">
                 <img id="preview-crest-demo" src="icons/escudo.png" data-crest="1" alt="Escudo demo" style="width:34px;height:34px;object-fit:contain;background:#fff;border-radius:9px;padding:2px">
                 <span id="preview-team-name" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase">Unión Viera</span>
               </div>
-              <span id="preview-score" style="font:900 40px/1 var(--disp, 'Barlow Condensed', sans-serif)">4:2</span>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div id="preview-score" style="font:900 36px/1 var(--disp, 'Barlow Condensed', sans-serif);letter-spacing:1px;display:flex;align-items:center;gap:6px;">
+                  <span id="preview-gf-num" style="padding:2px 8px;border-radius:8px;background:var(--gfBg, #f0f7f3);color:var(--gfInk, #14532d);">4</span>
+                  <span style="opacity:0.6;">:</span>
+                  <span id="preview-ga-num" style="padding:2px 8px;border-radius:8px;background:var(--gaBg, #fdf2f4);color:var(--gaInk, #9f1239);">2</span>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span id="preview-card-gf-badge" class="cbx-preview-gf-badge"><span class="dot"></span>A favor · 4</span>
+                  <span id="preview-card-ga-badge" class="cbx-preview-ga-badge"><span class="dot"></span>En contra · 2</span>
+                </div>
+              </div>
               <span id="preview-opp-name" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;text-align:right">Rival</span>
             </div>
-            <div id="preview-scoreboard-body" style="background:var(--bg, #f4f6f5);padding:12px;display:flex;gap:8px;align-items:center">
-              <span style="flex:1;font:600 14px var(--ui, sans-serif);color:var(--ink, #0f172a)">Texto de ejemplo en listas y fichas</span>
-              <span id="preview-sample-btn" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff);display:flex;align-items:center;font:800 13px var(--ui, sans-serif)">Botón</span>
+            <div id="preview-scoreboard-body" style="background:var(--bg, #f4f6f5);padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+              <span style="flex:1;min-width:140px;font:600 13px var(--ui, sans-serif);color:var(--ink, #0f172a)">Texto en listas y fichas</span>
+              <button type="button" id="preview-sample-btn" class="primary cbx-preview-banner-btn" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;display:flex;align-items:center;font:800 13px var(--ui, sans-serif);border:0;cursor:default;">Guardar</button>
+              <button type="button" id="preview-sample-btn2" class="secondary" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);border:1px solid #cbd5e1;font:700 13px var(--ui, sans-serif);cursor:default;">Secundario</button>
+              <span id="preview-sample-wa" style="color:var(--waInk, #053b1d);font:800 12px var(--ui, sans-serif);padding:3px 7px;border-radius:6px;background:rgba(37,211,102,0.18);">WhatsApp</span>
+              <span id="preview-sample-res" class="round-badge" style="color:var(--resInk, #ffffff);background:#1e293b;padding:3px 8px;border-radius:8px;font:800 11px var(--ui, sans-serif);">J8 · V</span>
             </div>
           </div>
           <div id="preview-card-demo-wrap" style="margin-top:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div id="preview-card-demo-title" style="font:800 15px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);margin-bottom:4px;">Muestra de bloque · Tarjeta</div>
-            <p id="preview-card-demo-text" style="margin:0;font:500 13px var(--ui, sans-serif);color:var(--ink, #0f172a);">Vista en directo del color del bloque, título y contraste.</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+              <div id="preview-card-demo-title" style="font:800 15px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Muestra de bloque · Tarjeta</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;" id="preview-sem-pills">
+                <span id="preview-sem-gk" style="background:var(--sem-gk, #0284c7);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">POR</span>
+                <span id="preview-sem-def" style="background:var(--sem-def, #16a34a);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">DEF</span>
+                <span id="preview-sem-mid" style="background:var(--sem-mid, #eab308);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">MED</span>
+                <span id="preview-sem-fw" style="background:var(--sem-fw, #dc2626);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">DEL</span>
+              </div>
+            </div>
+            <p id="preview-card-demo-text" style="margin:0 0 8px 0;font:500 13px var(--ui, sans-serif);color:var(--ink, #0f172a);">Vista en directo del color del bloque, título, contraste de fuentes y semáforos.</p>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" id="preview-sem-results">
+              <span id="preview-sem-win" style="background:var(--sem-win, #10b981);color:#fff;padding:2px 7px;border-radius:6px;font:800 10px var(--ui, sans-serif);">Victoria</span>
+              <span id="preview-sem-draw" style="background:var(--sem-draw, #f59e0b);color:#fff;padding:2px 7px;border-radius:6px;font:800 10px var(--ui, sans-serif);">Empate</span>
+              <span id="preview-sem-loss" style="background:var(--sem-loss, #ef4444);color:#fff;padding:2px 7px;border-radius:6px;font:800 10px var(--ui, sans-serif);">Derrota</span>
+            </div>
           </div>
-          <p class="meta" style="margin-top:8px;">Cambia en directo con lo que elijas en Preferencias visuales.</p>
+          <p class="meta" style="margin-top:8px;">Cambia en directo con lo que elijas en los controles de abajo.</p>
         </article>
 
         <article class="panel cbx-saved-themes-card" id="saved-themes-card">

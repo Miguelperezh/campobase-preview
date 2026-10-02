@@ -81,3 +81,37 @@ test('js/app.js implementa configuración y persistencia de pizarra y barra late
   assert.match(app, /--tb-rival/, 'applyCustomTheme debe inyectar --tb-rival');
   assert.match(app, /--tb-arrow/, 'applyCustomTheme debe inyectar --tb-arrow');
 });
+
+test('css/claude-entreno.css oculta #tacticas cuando no tiene clase active', () => {
+  const cssEntreno = fs.readFileSync('css/claude-entreno.css', 'utf8');
+  assert.match(cssEntreno, /#tacticas:not\(\.active\)\s*\{[^}]*display:\s*none\s*!important;/,
+    '#tacticas debe tener display: none !important cuando no está activo para no filtrarse en Ajustes');
+  assert.match(cssEntreno, /#tacticas\.active\s*\{[^}]*display:\s*flex;/,
+    '#tacticas debe tener display: flex solo cuando está activo');
+});
+
+test('index.html y js/app.js incluyen goles en contra/favor, semáforos y botones en la vista previa rica', () => {
+  assert.match(html, /id="preview-gf-num"/, 'Debe incluir el marcador de goles a favor en la cabecera');
+  assert.match(html, /id="preview-ga-num"/, 'Debe incluir el marcador de goles en contra en la cabecera');
+  assert.match(html, /id="preview-sem-gk"/, 'Debe incluir la píldora semáforo de portero');
+  assert.match(html, /id="preview-sem-win"/, 'Debe incluir la píldora semáforo de victoria');
+  assert.match(html, /id="preview-sample-btn2"/, 'Debe incluir botón secundario en la vista previa');
+  assert.match(html, /id="preview-sample-wa"/, 'Debe incluir muestra de WhatsApp en la vista previa');
+  assert.match(html, /id="preview-sample-res"/, 'Debe incluir muestra de resultado de temporada en la vista previa');
+
+  assert.match(app, /#preview-gf-num/, 'updateThemePreviewBox debe actualizar goles a favor');
+  assert.match(app, /#preview-ga-num/, 'updateThemePreviewBox debe actualizar goles en contra');
+  assert.match(app, /preview-sem-gk/, 'updateThemePreviewBox debe actualizar semáforos');
+});
+
+test('css/claude-shell.css y styles-redesign.css aplican reactivamente el fondo de la app', () => {
+  assert.match(cssShell, /background:\s*var\(--bg/, 'css/claude-shell.css debe usar var(--bg)');
+  assert.match(cssRedesign, /background:\s*var\(--bg/, 'styles-redesign.css debe usar var(--bg)');
+});
+
+test('css/claude-partido.css propaga los colores de pizarra a todas las pizarras del sistema', () => {
+  assert.match(cssPartido, /\.tac-field\s*\{[^}]*fill:\s*var\(--tb-pitch/, 'Debe aplicar --tb-pitch a .tac-field');
+  assert.match(cssPartido, /\.tac-line[^{]*\{[^}]*stroke:\s*var\(--tb-lines/, 'Debe aplicar --tb-lines a .tac-line');
+  assert.match(cssPartido, /\.tac-player\s*circle[^{]*\{[^}]*fill:\s*var\(--tb-team/, 'Debe aplicar --tb-team a .tac-player circle');
+  assert.match(cssPartido, /\.tac-opponent\s*circle[^{]*\{[^}]*fill:\s*var\(--tb-rival/, 'Debe aplicar --tb-rival a .tac-opponent circle');
+});
