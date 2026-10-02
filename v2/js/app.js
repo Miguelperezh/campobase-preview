@@ -7206,17 +7206,27 @@ function applyCustomTheme(themeInput) {
   const btnInkVal = theme.btnInk || '#ffffff';
 
   let btn2InkVal = theme.btn2Ink;
+  const btn2BgVal = theme.btn2Bg || '#ffffff';
+  const cHex = String(btn2BgVal).replace('#', '');
+  let bgYiq = 255;
+  if (cHex.length === 6) {
+    const r = parseInt(cHex.substring(0, 2), 16);
+    const g = parseInt(cHex.substring(2, 4), 16);
+    const b = parseInt(cHex.substring(4, 6), 16);
+    bgYiq = (r * 299 + g * 587 + b * 114) / 1000;
+  }
   if (!btn2InkVal) {
-    const btn2BgVal = theme.btn2Bg || '#ffffff';
-    const cHex = String(btn2BgVal).replace('#', '');
-    if (cHex.length === 6) {
-      const r = parseInt(cHex.substring(0, 2), 16);
-      const g = parseInt(cHex.substring(2, 4), 16);
-      const b = parseInt(cHex.substring(4, 6), 16);
-      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-      btn2InkVal = yiq < 135 ? '#ffffff' : '#0f172a';
-    } else {
-      btn2InkVal = '#0f172a';
+    btn2InkVal = bgYiq < 135 ? '#ffffff' : '#0f172a';
+  } else {
+    const cleanInk = String(btn2InkVal).replace('#', '');
+    if (cleanInk.length === 6) {
+      const ir = parseInt(cleanInk.substring(0, 2), 16);
+      const ig = parseInt(cleanInk.substring(2, 4), 16);
+      const ib = parseInt(cleanInk.substring(4, 6), 16);
+      const inkYiq = (ir * 299 + ig * 587 + ib * 114) / 1000;
+      if (Math.abs(bgYiq - inkYiq) < 45) {
+        btn2InkVal = bgYiq > 140 ? '#0f172a' : '#ffffff';
+      }
     }
   }
 
@@ -7352,17 +7362,27 @@ function updateThemePreviewBox(theme) {
   const btnInk = theme.btnInk || '#ffffff';
 
   let btn2Ink = theme.btn2Ink;
+  const b2 = theme.btn2Bg || '#ffffff';
+  const cleanB2 = String(b2).replace('#', '');
+  let b2Yiq = 255;
+  if (cleanB2.length === 6) {
+    const r = parseInt(cleanB2.substring(0, 2), 16);
+    const g = parseInt(cleanB2.substring(2, 4), 16);
+    const b = parseInt(cleanB2.substring(4, 6), 16);
+    b2Yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  }
   if (!btn2Ink) {
-    const b2 = theme.btn2Bg || '#ffffff';
-    const cleanB2 = String(b2).replace('#', '');
-    if (cleanB2.length === 6) {
-      const r = parseInt(cleanB2.substring(0, 2), 16);
-      const g = parseInt(cleanB2.substring(2, 4), 16);
-      const b = parseInt(cleanB2.substring(4, 6), 16);
-      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-      btn2Ink = yiq < 135 ? '#ffffff' : '#0f172a';
-    } else {
-      btn2Ink = '#0f172a';
+    btn2Ink = b2Yiq < 135 ? '#ffffff' : '#0f172a';
+  } else {
+    const cleanInk = String(btn2Ink).replace('#', '');
+    if (cleanInk.length === 6) {
+      const ir = parseInt(cleanInk.substring(0, 2), 16);
+      const ig = parseInt(cleanInk.substring(2, 4), 16);
+      const ib = parseInt(cleanInk.substring(4, 6), 16);
+      const inkYiq = (ir * 299 + ig * 587 + ib * 114) / 1000;
+      if (Math.abs(b2Yiq - inkYiq) < 45) {
+        btn2Ink = b2Yiq > 140 ? '#0f172a' : '#ffffff';
+      }
     }
   }
   const btn2Bg = theme.btn2Bg || '#ffffff';
@@ -7472,6 +7492,41 @@ function updateThemePreviewBox(theme) {
   if (previewSampleRes) {
     previewSampleRes.style.color = theme.resInk || '#ffffff';
   }
+
+  // Mini-previsualización en vivo en la tarjeta de Fondos, tarjetas y botones
+  const surfacesBox = $('#cbx-surfaces-preview-box');
+  if (surfacesBox) {
+    surfacesBox.style.background = finalCardBg;
+    surfacesBox.style.borderColor = cardBorder;
+  }
+  const surfacesTitle = $('#cbx-preview-card-sample-title');
+  if (surfacesTitle) {
+    surfacesTitle.style.color = cardTitle;
+    surfacesTitle.style.fontFamily = displayFont;
+  }
+  const surfacesText = $('#cbx-preview-card-sample-text');
+  if (surfacesText) {
+    surfacesText.style.color = fontColor;
+  }
+  const surfacesBtn2 = $('#cbx-preview-btn2-sample');
+  if (surfacesBtn2) {
+    surfacesBtn2.style.background = btn2Bg;
+    surfacesBtn2.style.color = btn2Ink;
+    surfacesBtn2.style.borderColor = cardBorder;
+  }
+  ['#cbx-preview-quick-btn-1', '#cbx-preview-quick-btn-2'].forEach((sel) => {
+    const qbtn = $(sel);
+    if (qbtn) {
+      qbtn.style.background = btn2Bg;
+      qbtn.style.color = btn2Ink;
+      qbtn.style.borderColor = cardBorder;
+    }
+  });
+  const surfacesWa = $('#cbx-preview-wa-sample');
+  if (surfacesWa) surfacesWa.style.color = theme.waInk || '#053b1d';
+  const surfacesRes = $('#cbx-preview-res-sample');
+  if (surfacesRes) surfacesRes.style.color = theme.resInk || '#ffffff';
+
   const previewCardWrap = $('#preview-card-demo-wrap');
   if (previewCardWrap) {
     previewCardWrap.style.background = finalCardBg;
@@ -7511,6 +7566,32 @@ function updateThemePreviewBox(theme) {
     previewHoyCardTitle.style.color = cardTitle;
     previewHoyCardTitle.style.fontFamily = displayFont;
   }
+  ['#preview-hoy-pending-card', '#preview-hoy-quick-card'].forEach((sel) => {
+    const c = $(sel);
+    if (c) {
+      c.style.background = finalCardBg;
+      c.style.borderColor = cardBorder;
+    }
+  });
+  ['#preview-hoy-pending-title', '#preview-hoy-quick-title'].forEach((sel) => {
+    const t = $(sel);
+    if (t) {
+      t.style.color = cardTitle;
+      t.style.fontFamily = displayFont;
+    }
+  });
+  $$('.preview-hoy-pending-item').forEach((item) => {
+    item.style.background = finalCardBg;
+    item.style.borderColor = cardBorder;
+  });
+  $$('.preview-hoy-pending-item-name').forEach((name) => {
+    name.style.color = cardTitle;
+  });
+  $$('.preview-hoy-pending-btn, .preview-hoy-quick-btn').forEach((btn) => {
+    btn.style.background = btn2Bg;
+    btn.style.color = btn2Ink;
+    btn.style.borderColor = cardBorder;
+  });
 
   // 3. Panel Convocatoria
   const previewCallupBanner = $('#preview-callup-banner');
