@@ -1,24 +1,24 @@
 /* Partido · Convocatoria. Presentación de Claude con datos y cálculo existentes. */
 body.cb-redesign-active #convocatorias.cbx-partido-convocatorias { color: var(--cbx-ink); font-family: var(--cbx-ui); }
 body.cb-redesign-active #convocatorias.cbx-partido-convocatorias * { font-family: var(--cbx-ui) !important; }
-body.cb-redesign-active #convocatorias > .cbx-banner { min-height: 106px; margin: 0 0 16px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); background: linear-gradient(120deg,var(--cbx-hero),color-mix(in srgb,var(--cbx-hero) 75%,#297053)) !important; box-shadow: var(--cbx-shadow-hero); }
-body.cb-redesign-active #convocatorias > .cbx-banner .eyebrow { margin: 0; color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; }
-body.cb-redesign-active #convocatorias > .cbx-banner h2 { margin: 4px 0 0; color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
-body.cb-redesign-active #convocatorias > .cbx-banner #new-callup { min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--cbx-acc) !important; color: #fff !important; font-weight: 800; }
+body.cb-redesign-active #convocatorias > .cbx-banner { min-height: 106px; margin: 0 0 16px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); background: radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--cbx-acc, var(--btn, #10b981)) 38%,transparent),transparent 55%),linear-gradient(135deg,var(--bn, var(--cbx-hero, #0a251b)),color-mix(in srgb,var(--bn, var(--cbx-hero, #0a251b)) 75%,#000000)) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #convocatorias > .cbx-banner .eyebrow { margin: 0; color: color-mix(in srgb, var(--bnInk, #ffffff) 75%, transparent) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; }
+body.cb-redesign-active #convocatorias > .cbx-banner h2 { margin: 4px 0 0; color: var(--bnInk, #ffffff) !important; font: 800 32px/1 var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias > .cbx-banner #new-callup { min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--btn, var(--cbx-acc, #10b981)) !important; color: var(--btnInk, #ffffff) !important; font-weight: 800; }
 body.cb-redesign-active #convocatorias #callups-list { display: grid; gap: 18px; }
 body.cb-redesign-active #convocatorias .cbx-callup-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: start; gap: 16px; }
-body.cb-redesign-active #convocatorias .cbx-callup-layout .panel { margin: 0; padding: 0; overflow: hidden; border: 1px solid var(--cbx-line); border-radius: 18px; background: var(--card); box-shadow: var(--cbx-shadow); }
-body.cb-redesign-active #convocatorias .cbx-callup-card > header { padding: 16px 18px; color: #fff; background: var(--cbx-hero); }
-body.cb-redesign-active #convocatorias .cbx-callup-card > header small { display: block; color: rgba(255,255,255,.75); font-size: 11px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
-body.cb-redesign-active #convocatorias .cbx-callup-card > header h3 { margin: 4px 0 10px; color: #fff !important; font: 900 23px/1.1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; overflow-wrap: anywhere; }
+body.cb-redesign-active #convocatorias .cbx-callup-layout .panel { margin: 0; padding: 0; overflow: hidden; border: 1px solid var(--cardBorder, var(--cbx-line, #e2e8f0)); border-radius: 18px; background: var(--cardBg, var(--card, #ffffff)); box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #convocatorias .cbx-callup-card > header { padding: 16px 18px; color: var(--bnInk, #ffffff); background: var(--bn, var(--cbx-hero, #0a251b)); }
+body.cb-redesign-active #convocatorias .cbx-callup-card > header small { display: block; color: color-mix(in srgb, var(--bnInk, #ffffff) 75%, transparent); font-size: 11px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias .cbx-callup-card > header h3 { margin: 4px 0 10px; color: var(--bnInk, #ffffff) !important; font: 900 23px/1.1 var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; text-transform: uppercase; overflow-wrap: anywhere; }
 body.cb-redesign-active #convocatorias .cbx-callup-counts { display: flex; gap: 7px; flex-wrap: wrap; }
 body.cb-redesign-active #convocatorias .cbx-callup-counts span { padding: 5px 9px; border-radius: 9px; background: #ffffff24; color: #fff; font-size: 11px; font-weight: 800; }
-body.cb-redesign-active #convocatorias .cbx-callup-counts span:last-child { background: var(--cbx-acc); }
+body.cb-redesign-active #convocatorias .cbx-callup-counts span:last-child { background: var(--btn, var(--cbx-acc, #10b981)); color: var(--btnInk, #ffffff); }
 body.cb-redesign-active #convocatorias .cbx-callup-help { margin: 0; padding: 11px 18px; background: #f7f9fb; color: var(--cbx-muted); font-size: 12px; font-weight: 600; }
 body.cb-redesign-active #convocatorias .cbx-callup-roster { margin: 0; padding: 0; list-style: none; }
 body.cb-redesign-active #convocatorias .cbx-callup-player { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 10px; align-items: center; min-height: 49px; padding: 7px 15px; border-top: 1px solid var(--cbx-line); }
 body.cb-redesign-active #convocatorias .cbx-callup-player.is-out { background: #f7f8fa; }
-body.cb-redesign-active #convocatorias .cbx-callup-number { display: grid; place-items: center; width: 32px; min-height: 32px; border-radius: 8px; color: #fff; background: var(--cbx-hero); font: 900 15px var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-number { display: grid; place-items: center; width: 32px; min-height: 32px; border-radius: 8px; color: var(--bnInk, #ffffff); background: var(--bn, var(--cbx-hero, #0a251b)); font: 900 15px var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; }
 body.cb-redesign-active #convocatorias .cbx-callup-player.is-out .cbx-callup-number { background: #e2e8f0; color: #64748b; }
 body.cb-redesign-active #convocatorias .cbx-callup-person { display: grid; min-width: 0; }
 body.cb-redesign-active #convocatorias .cbx-callup-person strong { color: var(--cbx-ink); font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
@@ -62,9 +62,9 @@ body.cb-redesign-active #convocatorias .cbx-plan-change strong { color: #10a678;
 /* Partido · Preparación: conserva el editor y sus acciones, ordenados como la maqueta. */
 body.cb-redesign-active #preparacion.cbx-partido-preparacion { color: var(--cbx-ink); font-family: var(--cbx-ui); }
 body.cb-redesign-active #preparacion.cbx-partido-preparacion * { font-family: var(--cbx-ui) !important; }
-body.cb-redesign-active #preparacion > .cbx-banner { min-height: 106px; margin: 0 0 16px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); background: linear-gradient(120deg,var(--cbx-hero),color-mix(in srgb,var(--cbx-hero) 75%,#297053)) !important; box-shadow: var(--cbx-shadow-hero); }
-body.cb-redesign-active #preparacion > .cbx-banner .eyebrow { margin: 0; color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; }
-body.cb-redesign-active #preparacion > .cbx-banner h2 { margin: 4px 0 0; color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #preparacion > .cbx-banner { min-height: 106px; margin: 0 0 16px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); background: radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--cbx-acc, var(--btn, #10b981)) 38%,transparent),transparent 55%),linear-gradient(135deg,var(--bn, var(--cbx-hero, #0a251b)),color-mix(in srgb,var(--bn, var(--cbx-hero, #0a251b)) 75%,#000000)) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #preparacion > .cbx-banner .eyebrow { margin: 0; color: color-mix(in srgb, var(--bnInk, #ffffff) 75%, transparent) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; }
+body.cb-redesign-active #preparacion > .cbx-banner h2 { margin: 4px 0 0; color: var(--bnInk, #ffffff) !important; font: 800 32px/1 var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; text-transform: uppercase; }
 body.cb-redesign-active #preparacion #preparacion-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 12px; margin-bottom: 16px; }
 body.cb-redesign-active #preparacion #preparacion-list.hidden,
 body.cb-redesign-active #preparacion.is-editing #preparacion-list,
@@ -132,11 +132,11 @@ body.cb-redesign-active #preparacion #prep-save { flex: 1 1 180px; color: #fff; 
 body.cb-redesign-active #preparacion #prep-back { flex: 0 1 auto; min-height: 43px; padding-inline: 12px; border: 1px solid var(--cbx-line); border-radius: 10px; color: var(--cbx-ink); background: #fff; font-size: 12px; font-weight: 800; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch { min-width: 0; }
 body.cb-redesign-active #preparacion .cbx-prep-pitch .live-tactics { margin: 0 !important; padding: 0; border: 0; background: transparent; box-shadow: none; }
-body.cb-redesign-active #preparacion .cbx-prep-pitch .board-wrap { width: 100%; max-width: 640px; margin-inline: auto; padding: 12px; border: 0; border-radius: 20px; background: #155438; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+body.cb-redesign-active #preparacion .cbx-prep-pitch .board-wrap { width: 100%; max-width: 640px; margin-inline: auto; padding: 12px; border: 0; border-radius: 20px; background: var(--tb-pitch, #155438); box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
 body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board { display: block; width: 100%; max-width: 640px; margin: 0 auto; height: auto; aspect-ratio: 1 / 1; }
-body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-field { fill: #205f43; }
-body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player circle { fill: #fff; stroke: #cbd5e1; stroke-width: .6; }
-body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player .num { fill: #0b2d20; }
+body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-field { fill: var(--tb-pitch, #205f43); }
+body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player circle { fill: var(--tb-team, #fff); stroke: #cbd5e1; stroke-width: .6; }
+body.cb-redesign-active #preparacion .cbx-prep-pitch #prep-board .tac-player .num { fill: #ffffff; }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details { margin: 0; padding: 14px 16px; border: 1px solid var(--cbx-line); border-radius: 14px; background: #f8fafc; color: var(--cbx-muted); font-size: 12px; }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details h4 { margin: 0 0 4px; color: var(--cbx-ink); font: 900 15px/1.2 var(--cbx-disp); text-transform: uppercase; letter-spacing: .02em; }
 body.cb-redesign-active #preparacion .cbx-prep-slots-details p { margin: 0 0 10px; line-height: 1.45; color: var(--cbx-muted); font-size: 11.5px; }
@@ -168,8 +168,7 @@ body.cb-redesign-active #partido.cbx-partido-vivo { color: var(--cbx-ink); font-
 body.cb-redesign-active #partido.cbx-partido-vivo * { font-family: var(--cbx-ui) !important; }
 body.cb-redesign-active #partido.cbx-partido-vivo > .section-head { display: none; }
 body.cb-redesign-active #partido.cbx-partido-vivo:not(:has(.cbx-live-hero)) > .section-head { display: flex; }
-body.cb-redesign-active #partido #live-match:has(.cbx-live-hero) { display: grid; gap: 14px; padding: 0; border: 0; background: transparent; box-shadow: none; }
-body.cb-redesign-active #partido .cbx-live-hero { min-width: 0; padding: 18px; border-radius: 21px; color: #fff; background: linear-gradient(120deg,var(--cbx-hero),#0e3325) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #partido .cbx-live-hero { min-width: 0; padding: 18px; border-radius: 21px; color: #fff; background: radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--cbx-acc, var(--btn, #10b981)) 38%,transparent),transparent 55%),linear-gradient(135deg,var(--bn, var(--cbx-hero, #0a251b)),color-mix(in srgb,var(--bn, var(--cbx-hero, #0a251b)) 75%,#000000)) !important; box-shadow: var(--cbx-shadow-hero); }
 body.cb-redesign-active #partido .cbx-live-hero-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; color: #c9d8d0; font-size: 11px; font-weight: 750; }
 body.cb-redesign-active #partido .cbx-live-status { padding: 6px 11px; border-radius: 999px; background: var(--cbx-acc); color: #fff !important; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
 body.cb-redesign-active #partido .cbx-live-hero .stadium-score { width: 100%; max-width: 900px !important; margin: 7px auto 0; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; overflow: visible !important; }
@@ -385,10 +384,10 @@ body.cb-redesign-active #partido .match-log .event-editor > * { min-width: 0; }
 /* Calendario y resultados: mes y tarjetas compactas de Claude, con acciones intactas. */
 body.cb-redesign-active #calendario.cbx-partido-calendario { color: var(--cbx-ink); font-family: var(--cbx-ui); }
 body.cb-redesign-active #calendario.cbx-partido-calendario * { font-family: var(--cbx-ui) !important; }
-body.cb-redesign-active #calendario > .cbx-banner { min-height: 112px; margin: 0 0 16px; padding: 19px 22px; border: 0; border-radius: 20px; background: linear-gradient(120deg,var(--cbx-hero),#124735) !important; box-shadow: var(--cbx-shadow-hero); }
-body.cb-redesign-active #calendario > .cbx-banner .eyebrow { margin: 0; color: #bdd1c6 !important; font-size: 11px; font-weight: 850; }
-body.cb-redesign-active #calendario > .cbx-banner h2 { margin: 3px 0 0; color: #fff !important; font: 900 29px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
-body.cb-redesign-active #calendario > .cbx-banner button { min-height: 43px; padding: 8px 15px; border-radius: 10px; color: #fff; background: #10b981; font-weight: 850; }
+body.cb-redesign-active #calendario > .cbx-banner { min-height: 112px; margin: 0 0 16px; padding: 19px 22px; border: 0; border-radius: 20px; background: radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--cbx-acc, var(--btn, #10b981)) 38%,transparent),transparent 55%),linear-gradient(135deg,var(--bn, var(--cbx-hero, #0a251b)),color-mix(in srgb,var(--bn, var(--cbx-hero, #0a251b)) 75%,#000000)) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #calendario > .cbx-banner .eyebrow { margin: 0; color: color-mix(in srgb, var(--bnInk, #ffffff) 75%, transparent) !important; font-size: 11px; font-weight: 850; }
+body.cb-redesign-active #calendario > .cbx-banner h2 { margin: 3px 0 0; color: var(--bnInk, #ffffff) !important; font: 900 29px/1 var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; text-transform: uppercase; }
+body.cb-redesign-active #calendario > .cbx-banner button { min-height: 43px; padding: 8px 15px; border-radius: 10px; color: var(--btnInk, #ffffff) !important; background: var(--btn, var(--cbx-acc, #10b981)) !important; font-weight: 850; }
 body.cb-redesign-active #calendario #matches-list { display: grid; gap: 17px; }
 body.cb-redesign-active #calendario .cbx-calendar-month { max-width: 560px; margin: 0; padding: 15px; border: 1px solid var(--cbx-line); border-radius: 17px; background: var(--card); box-shadow: var(--cbx-shadow); }
 body.cb-redesign-active #calendario .cbx-calendar-month header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }

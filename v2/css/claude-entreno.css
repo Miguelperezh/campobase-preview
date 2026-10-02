@@ -13,8 +13,8 @@ body.cb-redesign-active #sesiones > .cbx-banner {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc) 38%, transparent), transparent 55%),
-              linear-gradient(135deg, var(--cbx-hero), color-mix(in srgb, var(--cbx-hero) 72%, #297053)) !important;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000)) !important;
   box-shadow: var(--cbx-shadow-hero);
 }
 
@@ -443,8 +443,8 @@ body.cb-redesign-active #ejercicios > .cbx-banner {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc) 38%, transparent), transparent 55%),
-              linear-gradient(135deg, var(--cbx-hero), color-mix(in srgb, var(--cbx-hero) 72%, #297053)) !important;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000)) !important;
   box-shadow: var(--cbx-shadow-hero);
 }
 
@@ -1394,7 +1394,7 @@ body.cb-redesign-active .cbx-tactics-pitch-container {
   width: 100%;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a4d34;
+  background: var(--tb-pitch, #1a4d34);
   box-shadow: 0 4px 16px rgba(10, 37, 27, 0.2);
   padding: 8px;
 }

@@ -115,3 +115,40 @@ test('css/claude-partido.css propaga los colores de pizarra a todas las pizarras
   assert.match(cssPartido, /\.tac-player\s*circle[^{]*\{[^}]*fill:\s*var\(--tb-team/, 'Debe aplicar --tb-team a .tac-player circle');
   assert.match(cssPartido, /\.tac-opponent\s*circle[^{]*\{[^}]*fill:\s*var\(--tb-rival/, 'Debe aplicar --tb-rival a .tac-opponent circle');
 });
+
+test('index.html y js/app.js incluyen selector de 6 pestañas de previsualización en vivo en Ajustes', () => {
+  assert.match(html, /data-preview-pane="scoreboard"/, 'Debe incluir pestaña marcador');
+  assert.match(html, /data-preview-pane="hoy"/, 'Debe incluir pestaña hoy');
+  assert.match(html, /data-preview-pane="convocatoria"/, 'Debe incluir pestaña convocatoria');
+  assert.match(html, /data-preview-pane="lanzadores"/, 'Debe incluir pestaña lanzadores');
+  assert.match(html, /data-preview-pane="staff"/, 'Debe incluir pestaña cuerpo técnico');
+  assert.match(html, /data-preview-pane="pizarra"/, 'Debe incluir pestaña pizarra táctica');
+
+  assert.match(html, /id="preview-pane-scoreboard"/, 'Debe incluir panel marcador');
+  assert.match(html, /id="preview-pane-hoy"/, 'Debe incluir panel hoy');
+  assert.match(html, /id="preview-pane-convocatoria"/, 'Debe incluir panel convocatoria');
+  assert.match(html, /id="preview-pane-lanzadores"/, 'Debe incluir panel lanzadores');
+  assert.match(html, /id="preview-pane-staff"/, 'Debe incluir panel cuerpo técnico');
+  assert.match(html, /id="preview-pane-pizarra"/, 'Debe incluir panel pizarra táctica');
+
+  assert.match(app, /cbx-preview-tab-btn/, 'js/app.js debe delegar clics para conmutar pestañas de preview');
+  assert.match(app, /preview-tab-mini-pitch/, 'updateTacticBoardPreviewBox debe actualizar la mini pizarra de la pestaña');
+});
+
+test('Módulos clave eliminan verdes fijos y responden a variables de personalización', () => {
+  const cssHoy = fs.readFileSync('css/claude-hoy.css', 'utf8');
+  const cssPlantilla = fs.readFileSync('css/claude-plantilla.css', 'utf8');
+
+  // En Hoy, el banner responde a --bn y los paneles a --cardBg
+  assert.doesNotMatch(cssHoy, /linear-gradient\(135deg,\s*#0a251b,\s*#297053\)/, 'Hoy no debe tener gradiente verde fijo');
+  assert.match(cssHoy, /var\(--bn,\s*var\(--cbx-hero/, 'Hoy debe usar variable dinámica --bn');
+  assert.match(cssHoy, /var\(--cardBg/, 'Paneles de Hoy deben usar var(--cardBg)');
+
+  // En Lanzadores y Cuerpo Técnico, no debe haber verde hardcodeado #092b21 ni #116847
+  assert.doesNotMatch(cssPlantilla, /#092b21/, 'Plantilla no debe contener verde hardcodeado #092b21');
+  assert.doesNotMatch(cssPlantilla, /#116847/, 'Plantilla no debe contener verde hardcodeado #116847');
+
+  // Botón Actualizar (#manual-refresh) blindado en blanco
+  assert.match(cssHoy, /#manual-refresh[^{]*\{[^}]*color:\s*#ffffff\s*!important;/, 'Botón Actualizar debe tener texto blanco garantizado');
+});
+

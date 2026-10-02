@@ -1384,4 +1384,51 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Total: **653/653 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
    - Service Worker actualizado a `-20261002-v71-ajustes-preview-rico-bg-tacticas-fix`.
 
+---
+
+### 32. Entrega v72 (02/10/2026) — Desacoplamiento Total de Botones, Selector de 6 Paneles de Previsualización en Vivo, Eliminación de Verdes Hardcodeados y Sincronización Global de Ajustes
+
+1. **Desacoplamiento Estricto de Tipografía en Botones (`styles-redesign.css`):**
+   - **Causa resuelta:** La regla `body.cb-redesign-active[data-has-custom-font-color="true"] span:not(...)` forzaba el texto a oscuro (`--cb-font-custom-color`, `#0f172a`) en botones que contenían texto o spans interiores (como `#manual-refresh` en cabecera o botones primarios y de guardado en formularios), provocando texto negro sobre fondos de botón rojos o esmeralda.
+   - **Solución implementada:**
+     - Exclusiones estrictas para `:not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode)` en la regla de fuentes personalizadas del cuerpo.
+     - Reglas prioritarias con `!important` para `.primary`, `button.primary`, `button[type="submit"]:not(.secondary)`, `#manual-refresh` y `#cbx-preview-banner-btn` usando `var(--btnInk, #ffffff) !important;`.
+     - `#manual-refresh` garantizado con fondo rojo `#c8102e` y texto blanco puro `#ffffff !important;` en `css/claude-hoy.css`.
+
+2. **Selector de 6 Paneles de Previsualización en Vivo en Ajustes (`index.html`, `js/app.js`):**
+   - **Causa resuelta:** El usuario debía navegar continuamente entre diferentes pestañas (Hoy, Convocatorias, Plantilla, Partido) para verificar cómo quedaban sus cambios de tema y colores, lo cual no era intuitivo ni ágil.
+   - **Solución implementada:**
+     - Selector interactivo de pestañas integradas en la tarjeta superior `#theme-preview-card`:
+       `[ Marcador & Botones | ⚽ Hoy | 📋 Convocatoria | 🎯 Lanzadores | 👥 Cuerpo Técnico | 📌 Pizarra Táctica ]`
+     - 6 paneles fidedignos con visualización inmediata:
+       1. `#preview-pane-scoreboard`: Marcador con goles a favor y en contra, botones primarios/secundarios/WhatsApp, tarjeta de muestra y semáforos.
+       2. `#preview-pane-hoy`: Banner hero de Hoy con fecha, contadores y bloque de actividades diarias.
+       3. `#preview-pane-convocatoria`: Banner de convocatoria, botón «+ Convocatoria», cabecera de partido con hora/rival y fila con dorsal y estado del jugador.
+       4. `#preview-pane-lanzadores`: Tarjetas de especialistas de balón parado (Penaltis, Faltas), iconos, badges de 1.er/2.º lanzador y botón de configuración.
+       5. `#preview-pane-staff`: Banner de equipo técnico, botón «+ Nuevo», tarjeta con franja de acento, avatar de iniciales y botones de acción.
+       6. `#preview-pane-pizarra`: Campo SVG compacto con líneas, fichas de equipo, rivales, balón y flechas tácticas sincronizadas.
+     - Delegación de clics en `.cbx-preview-tab-btn` que conmuta instantáneamente el panel visible y resalta la pestaña activa con los colores del botón primario (`var(--btn)` y `var(--btnInk)`).
+     - La función `updateThemePreviewBox` y `updateTacticBoardPreviewBox` actualizan los 6 paneles en vivo al mover cualquier control o swatch de Ajustes.
+
+3. **Eliminación Definitiva de Verdes Hardcodeados en Toda la Aplicación:**
+   - **Causa resuelta:** Módulos clave contenían gradientes y colores fijos (`#297053`, `#116847`, `#092b21`, `#155438`, `#1a4d34`) que no se adaptaban al elegir temas azules, rojos, oscuros o claros.
+   - **Solución implementada:**
+     - `css/claude-hoy.css`: Banner `#hoy .today-hero` migrado a `var(--bn, var(--cbx-hero))` y `color-mix(..., #000000)` dinámico. Paneles `.panel` migrados de `#fff` fijo a `var(--cardBg, var(--card, #fff))`.
+     - `css/claude-plantilla.css`: Lanzadores y Cuerpo Técnico migrados de `#092b21` / `#116847` a variables dinámicas `--cardBg`, `--btn`, `--bn` y `--ink`.
+     - `css/claude-partido.css`: Convocatorias y preparaciones migradas de verdes estáticos a `var(--bn)`, `var(--cardBg)` y `var(--bnInk)`.
+     - `css/claude-entreno.css`: Contenedores tácticos `.cbx-tactics-pitch-container` migrados de `#1a4d34` a `var(--tb-pitch)`.
+     - `styles-redesign.css`: Paneles y tarjetas `.panel` y `.card` enlazados a `var(--cardBg)` y `var(--cardBorder)`.
+
+4. **Sincronización Global de Fondos de App, Bloques y Pizarra Táctica:**
+   - Al seleccionar un color de fondo (`appBgHue`) o bloque (`cardHue`), se activa al 100% de intensidad visible para que el usuario perciba el cambio de inmediato, manteniendo el slider disponible para ajustar la opacidad deseada.
+   - Al pulsar un chip de tono predeterminado (Azul Marino, Noche OLED, Rojo Burdeos, etc.), se limpia automáticamente cualquier `appBgHue` residual para aplicar el tema de inmediato.
+   - La barra lateral izquierda se adapta por defecto al banner o al color de fondo seleccionado con contraste automático en tipografía (`sidebarInk`).
+   - Las pizarras tácticas de toda la app (en vivo, preparación, visor de tácticas, modales y previsualización) adoptan unificadamente `--tb-pitch`, `--tb-lines`, `--tb-team`, `--tb-rival` y `--tb-arrow`.
+
+5. **Pruebas y Validación:**
+   - 2 nuevos tests añadidos en `tests/ajustes-pizarra-lateral-bloques.test.js` para las 6 pestañas de previsualización y la eliminación de verdes fijos.
+   - **655/655 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v72-ajustes-live-preview-completo`.
+
+
 

@@ -31,7 +31,7 @@
 
 /* Cabecera de pantalla (banda) */
 .cbx-banner { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 20px 22px; border-radius: var(--cbx-r-hero); color: #fff;
-  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc) 38%, transparent), transparent 55%), linear-gradient(135deg, var(--cbx-hero), color-mix(in srgb, var(--cbx-hero) 72%, #297053));
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%), linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000));
   box-shadow: var(--cbx-shadow-hero); }
 .cbx-eyebrow { font: 800 12px var(--cbx-ui); letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 255, 255, .72); }
 .cbx-banner h2 { margin: 4px 0 0; font: 800 32px/1 var(--cbx-disp); text-transform: uppercase; color: #fff; }

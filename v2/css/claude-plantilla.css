@@ -70,15 +70,15 @@ body.cb-redesign-active #plantilla .cbx-plantilla-specialists h3 { color: var(--
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .meta { margin: 2px 0 0; color: var(--cbx-muted); font: 600 12px var(--cbx-ui); }
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .open-set-pieces-trigger { min-height: 38px; padding: 0 12px; border-radius: 10px; background: #fff; color: var(--cbx-ink); border: 1px solid var(--cbx-line); font: 700 12px var(--cbx-ui); }
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialists-quick-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-item { display: block; min-width: 0; padding: 12px; background: var(--cbx-green-soft); border: 1px solid var(--cbx-line); border-radius: 14px; }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-item { display: block; min-width: 0; padding: 12px; background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--btn, var(--cbx-acc, #10b981))); border: 1px solid var(--cardBorder, var(--cbx-line, #e2e8f0)); border-radius: 14px; }
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-item-head { display: flex; align-items: center; gap: 9px; min-width: 0; margin-bottom: 10px; }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .sp-icon { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--cbx-hero); color: #fff !important; font: 900 17px var(--cbx-ui); }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-item h4 { margin: 0; color: var(--cbx-ink); font: 800 12px var(--cbx-ui) !important; text-transform: uppercase; line-height: 1.25; }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .sp-icon { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--bn, var(--cbx-hero, #0a251b)); color: var(--bnInk, #ffffff) !important; font: 900 17px var(--cbx-ui); }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-item h4 { margin: 0; color: var(--cardTitle, var(--cbx-ink, #0f172a)); font: 800 12px var(--cbx-ui) !important; text-transform: uppercase; line-height: 1.25; }
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-list { display: grid; gap: 6px; }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row { display: grid; grid-template-columns: minmax(84px,auto) minmax(0,1fr) auto; align-items: center; gap: 7px; min-width: 0; padding: 7px 8px; background: #fff; border: 1px solid var(--cbx-line); border-radius: 9px; }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank { padding: 4px 6px; border-radius: 6px; background: var(--cbx-hero); color: #fff !important; font: 800 10px var(--cbx-ui); text-align: center; white-space: nowrap; }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row:not(:first-child) .specialist-rank { background: #e5eee9; color: var(--cbx-green-ink) !important; }
-body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row strong { display: block; min-width: 0; margin: 0; color: var(--cbx-ink); font: 700 12px/1.25 var(--cbx-ui); overflow-wrap: anywhere; }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row { display: grid; grid-template-columns: minmax(84px,auto) minmax(0,1fr) auto; align-items: center; gap: 7px; min-width: 0; padding: 7px 8px; background: var(--cardBg, #fff); border: 1px solid var(--cardBorder, var(--cbx-line, #e2e8f0)); border-radius: 9px; }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank { padding: 4px 6px; border-radius: 6px; background: var(--bn, var(--cbx-hero, #0a251b)); color: var(--bnInk, #ffffff) !important; font: 800 10px var(--cbx-ui); text-align: center; white-space: nowrap; }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row:not(:first-child) .specialist-rank { background: color-mix(in srgb, var(--cardBg, #ffffff) 80%, var(--btn, var(--cbx-acc, #10b981))); color: var(--cardTitle, var(--cbx-ink, #0f172a)) !important; }
+body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row strong { display: block; min-width: 0; margin: 0; color: var(--cardTitle, var(--cbx-ink, #0f172a)); font: 700 12px/1.25 var(--cbx-ui); overflow-wrap: anywhere; }
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-rank-row.unassigned strong { color: var(--cbx-muted); font-weight: 600; }
 body.cb-redesign-active #plantilla .cbx-plantilla-specialists .specialist-number { display: grid; place-items: center; min-width: 27px; height: 27px; padding: 0 4px; border-radius: 50%; background: #edf2f6; color: var(--cbx-ink); font: 800 11px var(--cbx-ui); }
 
@@ -101,7 +101,7 @@ body.cb-redesign-active #plantilla .cbx-plantilla-leaders .cbx-leaders-more { wi
 
 body.cb-redesign-active #plantilla .cbx-plantilla-players { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) !important; align-items: stretch; gap: 12px !important; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player { min-width: 0; padding: 14px; gap: 8px; border: 1px solid var(--cbx-line); border-top: 4px solid var(--cbx-mid); border-radius: 16px; background: #fff; box-shadow: var(--cbx-shadow); }
-body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-head .avatar { width: 50px; height: 50px; border-radius: 12px; background: var(--cbx-hero); color: #fff; box-shadow: none; font: 900 16px var(--cbx-disp); font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-head .avatar { width: 50px; height: 50px; border-radius: 12px; background: var(--bn, var(--cbx-hero, #0a251b)); color: var(--bnInk, #ffffff); box-shadow: none; font: 900 16px var(--disp, var(--cbx-disp)); font-family: var(--disp, var(--cbx-disp)) !important; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-name h3 { color: var(--cbx-ink); font: 800 15px/1.15 var(--cbx-ui) !important; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-subhead-pill { color: var(--cbx-green-ink); background: var(--cbx-green-soft); font: 800 10px var(--cbx-ui); text-transform: uppercase; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .liga-media { width: 54px; min-width: 54px; height: 54px; border-radius: 13px; box-shadow: none; }
@@ -152,30 +152,30 @@ body.cb-redesign-active #cuerpo-tecnico.cbx-equipo-tecnicos { font-family: var(-
 body.cb-redesign-active #cuerpo-tecnico.cbx-equipo-tecnicos * { font-family: var(--cbx-ui) !important; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner {
   min-height: 106px; margin: 0 0 18px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero);
-  align-items: center; background: linear-gradient(120deg,#092b21,#116847) !important; box-shadow: var(--cbx-shadow-hero);
+  align-items: center; background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%), linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000)) !important; box-shadow: var(--cbx-shadow-hero);
 }
-body.cb-redesign-active #cuerpo-tecnico .cbx-banner .cbx-eyebrow { color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
-body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2 { color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; text-transform: uppercase; margin: 4px 0 0; }
-body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2 { font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #cuerpo-tecnico .cbx-banner .cbx-eyebrow { color: color-mix(in srgb, var(--bnInk, #ffffff) 75%, transparent) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
+body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2 { color: var(--bnInk, #ffffff) !important; font: 800 32px/1 var(--disp, var(--cbx-disp)) !important; text-transform: uppercase; margin: 4px 0 0; }
+body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2 { font-family: var(--disp, var(--cbx-disp)) !important; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner .button-row { margin: 0; align-items: center; gap: 8px; }
-body.cb-redesign-active #cuerpo-tecnico .staff-count-badge { color: var(--cbx-hero) !important; background: #e4f3eb !important; border: 0 !important; border-radius: 999px; padding: 7px 12px; font: 800 13px var(--cbx-ui); }
-body.cb-redesign-active #cuerpo-tecnico #new-staff-btn { min-height: 44px; padding: 0 16px; color: #fff !important; background: #10b981 !important; border: 0 !important; border-radius: 12px; font: 800 14px var(--cbx-ui); }
+body.cb-redesign-active #cuerpo-tecnico .staff-count-badge { color: var(--btn, var(--cbx-acc, #10b981)) !important; background: color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--btn, var(--cbx-acc, #10b981))) !important; border: 0 !important; border-radius: 999px; padding: 7px 12px; font: 800 13px var(--cbx-ui); }
+body.cb-redesign-active #cuerpo-tecnico #new-staff-btn { min-height: 44px; padding: 0 16px; color: var(--btnInk, #ffffff) !important; background: var(--btn, var(--cbx-acc, #10b981)) !important; border: 0 !important; border-radius: 12px; font: 800 14px var(--cbx-ui); }
 body.cb-redesign-active #cuerpo-tecnico .staff-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 16px; margin: 0; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card {
-  position: relative; min-height: 230px; overflow: hidden; padding: 106px 16px 16px; border: 1px solid var(--cbx-line);
-  border-radius: 18px; background: #fff; box-shadow: var(--cbx-shadow); display: flex; flex-direction: column; gap: 0;
+  position: relative; min-height: 230px; overflow: hidden; padding: 106px 16px 16px; border: 1px solid var(--cardBorder, var(--cbx-line, #e2e8f0));
+  border-radius: 18px; background: var(--cardBg, #fff); box-shadow: var(--cbx-shadow); display: flex; flex-direction: column; gap: 0;
 }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card::before {
   content: ''; position: absolute; inset: 0 0 auto; height: 74px;
-  background: linear-gradient(120deg,var(--cbx-hero),color-mix(in srgb,var(--cbx-hero) 78%,#297053));
+  background: linear-gradient(120deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000));
 }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-card-header { display: block !important; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-wrapper { position: absolute; top: 38px; left: 16px; z-index: 1; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-edit-btn { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; min-width: 22px; min-height: 22px; display: grid; place-items: center; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #10b981; color: #fff !important; box-shadow: none; font: 900 15px/1 var(--cbx-ui); cursor: pointer; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-img,
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-avatar-initials {
-  width: 62px; height: 62px; border: 0; border-radius: 15px; background: #fff !important; color: var(--cbx-hero) !important;
-  box-shadow: 0 3px 9px rgba(0,0,0,.15); font: 900 20px var(--cbx-disp); font-family: var(--cbx-disp) !important;
+  width: 62px; height: 62px; border: 0; border-radius: 15px; background: #fff !important; color: var(--bn, var(--cbx-hero, #0a251b)) !important;
+  box-shadow: 0 3px 9px rgba(0,0,0,.15); font: 900 20px var(--disp, var(--cbx-disp)); font-family: var(--disp, var(--cbx-disp)) !important;
 }
 body.cb-redesign-active #cuerpo-tecnico .cbx-staff-card .staff-badge {
   position: absolute; top: 12px; left: auto; right: 14px; bottom: auto; transform: none; z-index: 2;

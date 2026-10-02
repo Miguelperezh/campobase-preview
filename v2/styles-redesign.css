@@ -2152,9 +2152,9 @@ body.cb-redesign-active #cb-bottom-nav {
 
 body.cb-redesign-active .card,
 body.cb-redesign-active .panel {
-  background: var(--cb-surface-card, #ffffff) !important;
-  border-color: var(--cb-slate-200, #e2e8f0) !important;
-  color: var(--cb-slate-900, inherit);
+  background: var(--cardBg, var(--cb-surface-card, #ffffff)) !important;
+  border-color: var(--cardBorder, var(--cb-slate-200, #e2e8f0)) !important;
+  color: var(--ink, var(--cb-slate-900, inherit));
 }
 
 body.cb-redesign-active input,
@@ -2743,7 +2743,7 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .card,
 body.cb-redesign-active[data-has-custom-font-color="true"] .panel,
 body.cb-redesign-active[data-has-custom-font-color="true"] .meta,
 body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text):not(.cb-preview-badge),
-body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *) {
+body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode) {
   color: var(--cb-font-custom-color) !important;
 }
 
@@ -5935,20 +5935,43 @@ dialog {
 
 /* El texto dentro de botones respeta el contraste del color de acento,
    incluso cuando el usuario ha elegido un color de fuente personalizado. */
+body.cb-redesign-active .primary,
+body.cb-redesign-active .primary *,
+body.cb-redesign-active button.primary,
+body.cb-redesign-active button.primary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] .primary,
 body.cb-redesign-active[data-has-custom-font-color="true"] .primary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] button.primary,
 body.cb-redesign-active[data-has-custom-font-color="true"] button.primary *,
-body.cb-redesign-active[data-has-custom-font-color="true"] #cbx-preview-banner-btn,
-body.cb-redesign-active[data-has-custom-font-color="true"] #cbx-preview-banner-btn *,
-body.cb-redesign-active[data-has-custom-font-color="true"] #preview-sample-btn,
-body.cb-redesign-active[data-has-custom-font-color="true"] .cbx-preview-banner-btn {
+body.cb-redesign-active button[type="submit"]:not(.secondary),
+body.cb-redesign-active button[type="submit"]:not(.secondary) *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button[type="submit"]:not(.secondary),
+body.cb-redesign-active[data-has-custom-font-color="true"] button[type="submit"]:not(.secondary) *,
+body.cb-redesign-active #cbx-preview-banner-btn,
+body.cb-redesign-active #cbx-preview-banner-btn *,
+body.cb-redesign-active #preview-sample-btn,
+body.cb-redesign-active .cbx-preview-banner-btn,
+body.cb-redesign-active #save-delegate-account-btn,
+body.cb-redesign-active #save-delegate-account-btn * {
   color: var(--btnInk, var(--cb-accent-text, #ffffff)) !important;
 }
 
+body.cb-redesign-active button.secondary,
+body.cb-redesign-active button.secondary *,
+body.cb-redesign-active .secondary,
+body.cb-redesign-active .secondary *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button.secondary,
+body.cb-redesign-active[data-has-custom-font-color="true"] button.secondary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] .secondary,
 body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
-  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
+  color: var(--btn2Ink, #0f172a) !important;
+}
+
+body.cb-redesign-active #manual-refresh,
+body.cb-redesign-active #manual-refresh *,
+body.cb-redesign-active[data-has-custom-font-color="true"] #manual-refresh,
+body.cb-redesign-active[data-has-custom-font-color="true"] #manual-refresh * {
+  color: #ffffff !important;
 }
 
 /* ==========================================================================

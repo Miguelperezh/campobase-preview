@@ -7154,10 +7154,8 @@ function applyCustomTheme(themeInput) {
   const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
   let calculatedAppBg = null;
   if (theme.appBgHue) {
-    if (['#ffffff', '#f4f6f5', '#0a251b', '#040806', '#021e12', '#061021', '#111827', '#171d24', '#170408', '#110722', '#000000', '#f6f3eb', '#eee6d8'].includes(theme.appBgHue)) {
-      calculatedAppBg = theme.appBgHue;
-    } else if (theme.appBgPct !== undefined && theme.appBgPct !== null) {
-      calculatedAppBg = theme.appBgPct >= 95 ? theme.appBgHue : mix(theme.appBgHue, theme.appBgPct, '#ffffff');
+    if (theme.appBgPct !== undefined && theme.appBgPct !== null && theme.appBgPct < 95 && theme.appBgPct > 0) {
+      calculatedAppBg = mix(theme.appBgHue, theme.appBgPct, '#ffffff');
     } else {
       calculatedAppBg = theme.appBgHue;
     }
@@ -7165,10 +7163,8 @@ function applyCustomTheme(themeInput) {
 
   let calculatedCardBg = null;
   if (theme.cardHue) {
-    if (['#ffffff', '#f8fafc', '#fef9ee', '#f0fdf4', '#eff6ff', '#11221b', '#18181b', '#000000'].includes(theme.cardHue)) {
-      calculatedCardBg = theme.cardHue;
-    } else if (theme.cardPct !== undefined && theme.cardPct !== null) {
-      calculatedCardBg = theme.cardPct >= 95 ? theme.cardHue : mix(theme.cardHue, theme.cardPct, '#ffffff');
+    if (theme.cardPct !== undefined && theme.cardPct !== null && theme.cardPct < 95 && theme.cardPct > 0) {
+      calculatedCardBg = mix(theme.cardHue, theme.cardPct, '#ffffff');
     } else {
       calculatedCardBg = theme.cardHue;
     }
@@ -7180,16 +7176,49 @@ function applyCustomTheme(themeInput) {
     ? 0.299 * parseInt(cleanHexColor.substring(0, 2), 16) + 0.587 * parseInt(cleanHexColor.substring(2, 4), 16) + 0.114 * parseInt(cleanHexColor.substring(4, 6), 16)
     : 0;
 
-  const finalAppBg = calculatedAppBg || (lum > 170 ? '#0b1712' : (preset?.bg || claudeBackgrounds[bg] || '#f4f6f5'));
+  const finalAppBg = calculatedAppBg || (lum > 170 ? '#0b1712' : (bg !== 'default' && preset?.bg ? preset.bg : claudeBackgrounds[bg] || '#f4f6f5'));
   const finalCardBg = calculatedCardBg || (lum > 170 ? '#11221b' : (preset?.card || '#ffffff'));
 
   // Semáforos con significado
   const sem = state.settings?.sem || DEFAULT_SEM;
 
+  // Héroe canónico o personalizado
+  const heroBase = theme.bannerBg || claudeHeroes[bg] || claudeHeroes.default;
+
   // Barra lateral
-  const sidebarBg = theme.sidebarBg || hero;
-  const sidebarInk = theme.sidebarInk || '#ffffff';
+  const sidebarBg = theme.sidebarBg || heroBase;
+  let sidebarInk = theme.sidebarInk;
+  if (!sidebarInk) {
+    const sClean = String(sidebarBg).replace('#', '');
+    if (sClean.length === 6) {
+      const r = parseInt(sClean.substring(0, 2), 16);
+      const g = parseInt(sClean.substring(2, 4), 16);
+      const b = parseInt(sClean.substring(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      sidebarInk = yiq > 135 ? '#0f172a' : '#ffffff';
+    } else {
+      sidebarInk = '#ffffff';
+    }
+  }
   const sidebarSub = sidebarInk === '#ffffff' ? '#81958d' : `color-mix(in srgb, ${sidebarInk} 70%, transparent)`;
+
+  const btnBgVal = theme.btnBg || theme.accentColor || '#10b981';
+  const btnInkVal = theme.btnInk || '#ffffff';
+
+  let btn2InkVal = theme.btn2Ink;
+  if (!btn2InkVal) {
+    const btn2BgVal = theme.btn2Bg || '#ffffff';
+    const cHex = String(btn2BgVal).replace('#', '');
+    if (cHex.length === 6) {
+      const r = parseInt(cHex.substring(0, 2), 16);
+      const g = parseInt(cHex.substring(2, 4), 16);
+      const b = parseInt(cHex.substring(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      btn2InkVal = yiq < 135 ? '#ffffff' : '#0f172a';
+    } else {
+      btn2InkVal = '#0f172a';
+    }
+  }
 
   // Pizarra táctica
   const tb = theme.tb || state.settings?.tb || DEFAULT_TACTIC_BOARD;
@@ -7202,9 +7231,9 @@ function applyCustomTheme(themeInput) {
   // Inyección de todas las variables en root y body
   for (const target of [root, body]) {
     target.style.setProperty('--acc', theme.accentColor || '#10b981');
-    target.style.setProperty('--cbx-acc', theme.accentColor || '#10b981');
-    target.style.setProperty('--hero', hero);
-    target.style.setProperty('--cbx-hero', hero);
+    target.style.setProperty('--cbx-acc', btnBgVal);
+    target.style.setProperty('--hero', heroBase);
+    target.style.setProperty('--cbx-hero', heroBase);
     target.style.setProperty('--cb-shell-hero', sidebarBg);
     target.style.setProperty('--sidebar-bg', sidebarBg);
     target.style.setProperty('--sidebar-ink', sidebarInk);
@@ -7224,13 +7253,13 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--cardTitle', theme.cardTitle || 'var(--ink, #0f172a)');
     target.style.setProperty('--cardBorder', theme.cardBorder || '#e2e8f0');
 
-    target.style.setProperty('--bn', theme.bannerBg || hero);
+    target.style.setProperty('--bn', heroBase);
     target.style.setProperty('--bnInk', theme.bannerInk || '#ffffff');
-    target.style.setProperty('--btn', theme.btnBg || theme.accentColor || '#10b981');
-    target.style.setProperty('--btnInk', theme.btnInk || '#ffffff');
+    target.style.setProperty('--btn', btnBgVal);
+    target.style.setProperty('--btnInk', btnInkVal);
 
     target.style.setProperty('--btn2', theme.btn2Bg || '#ffffff');
-    target.style.setProperty('--btn2Ink', theme.btn2Ink || '#0f172a');
+    target.style.setProperty('--btn2Ink', btn2InkVal);
     target.style.setProperty('--waInk', theme.waInk || '#053b1d');
     target.style.setProperty('--resInk', theme.resInk || '#ffffff');
 
@@ -7309,17 +7338,6 @@ function applyCustomTheme(themeInput) {
 }
 
 function updateThemePreviewBox(theme) {
-  const previewScoreboardHeader = $('#preview-scoreboard-header');
-  const previewCrestDemo = $('#preview-crest-demo');
-  const previewTeamName = $('#preview-team-name');
-  const previewScore = $('#preview-score');
-  const previewScoreboardBody = $('#preview-scoreboard-body');
-  const previewSampleBtn = $('#preview-sample-btn');
-  const previewBannerBox = $('#cbx-preview-banner-box');
-  const previewBannerBtn = $('#cbx-preview-banner-btn');
-  const previewGfBadge = $('#cbx-preview-gf-badge');
-  const previewGaBadge = $('#cbx-preview-ga-badge');
-
   const bg = theme.themeBg || 'default';
   const claudeHeroes = {
     default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
@@ -7333,101 +7351,287 @@ function updateThemePreviewBox(theme) {
   const btnBg = theme.btnBg || theme.accentColor || '#10b981';
   const btnInk = theme.btnInk || '#ffffff';
 
+  let btn2Ink = theme.btn2Ink;
+  if (!btn2Ink) {
+    const b2 = theme.btn2Bg || '#ffffff';
+    const cleanB2 = String(b2).replace('#', '');
+    if (cleanB2.length === 6) {
+      const r = parseInt(cleanB2.substring(0, 2), 16);
+      const g = parseInt(cleanB2.substring(2, 4), 16);
+      const b = parseInt(cleanB2.substring(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      btn2Ink = yiq < 135 ? '#ffffff' : '#0f172a';
+    } else {
+      btn2Ink = '#0f172a';
+    }
+  }
+  const btn2Bg = theme.btn2Bg || '#ffffff';
+
+  const family = theme.fontFamily || 'system';
+  const fontFamVal = FONT_FAMILY_MAP[family] || FONT_FAMILY_MAP['system'];
+  const ft = theme.fontTitle && theme.fontTitle !== 'auto'
+    ? (TITLE_FONT_MAP[theme.fontTitle] || theme.fontTitle)
+    : null;
+  const displayFont = ft || (['modern', 'technical', 'classic'].includes(family) ? fontFamVal : '"Barlow Condensed", sans-serif');
+
+  const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
+  let calculatedAppBg = null;
+  if (theme.appBgHue) {
+    if (theme.appBgPct !== undefined && theme.appBgPct !== null && theme.appBgPct < 95 && theme.appBgPct > 0) {
+      calculatedAppBg = mix(theme.appBgHue, theme.appBgPct, '#ffffff');
+    } else {
+      calculatedAppBg = theme.appBgHue;
+    }
+  }
+  const finalAppBg = calculatedAppBg || (bg !== 'default' && THEME_PRESETS[bg]?.bg ? THEME_PRESETS[bg].bg : '#f4f6f5');
+
+  let calculatedCardBg = null;
+  if (theme.cardHue) {
+    if (theme.cardPct !== undefined && theme.cardPct !== null && theme.cardPct < 95 && theme.cardPct > 0) {
+      calculatedCardBg = mix(theme.cardHue, theme.cardPct, '#ffffff');
+    } else {
+      calculatedCardBg = theme.cardHue;
+    }
+  }
+  const finalCardBg = calculatedCardBg || '#ffffff';
+  const cardTitle = theme.cardTitle || 'var(--cardTitle, #0f172a)';
+  const cardBorder = theme.cardBorder || '#e2e8f0';
+  const fontColor = theme.fontColor || '#0f172a';
+
+  // 1. Panel Scoreboard & Botones
+  const previewScoreboardHeader = $('#preview-scoreboard-header');
   if (previewScoreboardHeader) {
     previewScoreboardHeader.style.background = bannerBg;
     previewScoreboardHeader.style.color = bannerInk;
+    previewScoreboardHeader.style.fontFamily = displayFont;
   }
+  const previewCrestDemo = $('#preview-crest-demo');
   if (previewCrestDemo) {
-    const crestVal = $('#club-crest-value')?.value || state.settings?.clubCrest || 'icons/escudo.png';
-    previewCrestDemo.src = crestVal;
+    previewCrestDemo.src = $('#club-crest-value')?.value || state.settings?.clubCrest || 'icons/escudo.png';
   }
+  const previewTeamName = $('#preview-team-name');
   if (previewTeamName) {
     previewTeamName.textContent = state.settings?.teamName || 'Unión Viera';
+    previewTeamName.style.fontFamily = displayFont;
+    previewTeamName.style.color = bannerInk;
   }
+  const previewOppName = $('#preview-opp-name');
+  if (previewOppName) {
+    previewOppName.style.fontFamily = displayFont;
+    previewOppName.style.color = bannerInk;
+  }
+  const previewScore = $('#preview-score');
   if (previewScore) {
-    const ft = theme.fontTitle && theme.fontTitle !== 'auto' ? (TITLE_FONT_MAP[theme.fontTitle] || theme.fontTitle) : null;
-    if (ft) previewScore.style.fontFamily = ft;
+    previewScore.style.fontFamily = displayFont;
+    previewScore.style.color = bannerInk;
   }
-  if (previewScoreboardBody) {
-    const appBg = theme.appBgHue
-      ? `color-mix(in srgb, ${theme.appBgHue} ${theme.appBgPct ?? 12}%, #ffffff)`
-      : (THEME_PRESETS[theme.themeBg || 'default']?.bg || '#f4f6f5');
-    previewScoreboardBody.style.background = appBg;
-    previewScoreboardBody.style.color = theme.fontColor || '#0f172a';
-  }
-  if (previewSampleBtn) {
-    previewSampleBtn.style.background = btnBg;
-    previewSampleBtn.style.setProperty('color', btnInk, 'important');
-  }
-  if (previewBannerBox) {
-    previewBannerBox.style.background = `linear-gradient(135deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 72%, #297053))`;
-    previewBannerBox.style.color = bannerInk;
-  }
-  if (previewBannerBtn) {
-    previewBannerBtn.style.background = btnBg;
-    previewBannerBtn.style.setProperty('color', btnInk, 'important');
-  }
-
   const previewGfNum = $('#preview-gf-num');
-  const previewGaNum = $('#preview-ga-num');
   if (previewGfNum) {
     previewGfNum.style.background = theme.gfBg || '#f0f7f3';
     previewGfNum.style.color = theme.gfInk || '#14532d';
-    if (ft) previewGfNum.style.fontFamily = ft;
+    previewGfNum.style.fontFamily = displayFont;
   }
+  const previewGaNum = $('#preview-ga-num');
   if (previewGaNum) {
     previewGaNum.style.background = theme.gaBg || '#fdf2f4';
     previewGaNum.style.color = theme.gaInk || '#9f1239';
-    if (ft) previewGaNum.style.fontFamily = ft;
+    previewGaNum.style.fontFamily = displayFont;
   }
-
   $$('.cbx-preview-gf-badge').forEach((badge) => {
     badge.style.background = theme.gfBg || '#f0f7f3';
     badge.style.color = theme.gfInk || '#14532d';
     const dot = badge.querySelector('.dot');
     if (dot) dot.style.background = theme.gfColor || theme.accentColor || '#10b981';
   });
-
   $$('.cbx-preview-ga-badge').forEach((badge) => {
     badge.style.background = theme.gaBg || '#fdf2f4';
     badge.style.color = theme.gaInk || '#9f1239';
     const dot = badge.querySelector('.dot');
     if (dot) dot.style.background = theme.gaColor || '#e02444';
   });
-
-  const previewBtn2 = $('#preview-sample-btn2');
-  if (previewBtn2) {
-    previewBtn2.style.background = theme.btn2Bg || '#ffffff';
-    previewBtn2.style.color = theme.btn2Ink || '#0f172a';
+  const previewScoreboardBody = $('#preview-scoreboard-body');
+  if (previewScoreboardBody) {
+    previewScoreboardBody.style.background = finalAppBg;
+    previewScoreboardBody.style.color = fontColor;
   }
-
-  const previewWa = $('#preview-sample-wa');
-  if (previewWa) {
-    previewWa.style.color = theme.waInk || '#053b1d';
+  const previewSampleBtn = $('#preview-sample-btn');
+  if (previewSampleBtn) {
+    previewSampleBtn.style.background = btnBg;
+    previewSampleBtn.style.setProperty('color', btnInk, 'important');
   }
-
-  const previewRes = $('#preview-sample-res');
-  if (previewRes) {
-    previewRes.style.color = theme.resInk || '#ffffff';
+  const previewSampleBtn2 = $('#preview-sample-btn2');
+  if (previewSampleBtn2) {
+    previewSampleBtn2.style.background = btn2Bg;
+    previewSampleBtn2.style.color = btn2Ink;
   }
-
+  const previewSampleWa = $('#preview-sample-wa');
+  if (previewSampleWa) {
+    previewSampleWa.style.color = theme.waInk || '#053b1d';
+  }
+  const previewSampleRes = $('#preview-sample-res');
+  if (previewSampleRes) {
+    previewSampleRes.style.color = theme.resInk || '#ffffff';
+  }
   const previewCardWrap = $('#preview-card-demo-wrap');
-  const previewCardTitle = $('#preview-card-demo-title');
-  const previewCardText = $('#preview-card-demo-text');
   if (previewCardWrap) {
-    const cardBgVal = theme.cardHue && ['#ffffff', '#f8fafc', '#fef9ee', '#f0fdf4', '#eff6ff', '#11221b', '#18181b', '#000000'].includes(theme.cardHue)
-      ? theme.cardHue
-      : (theme.cardHue ? `color-mix(in srgb, ${theme.cardHue} ${theme.cardPct ?? 6}%, #ffffff)` : '#ffffff');
-    previewCardWrap.style.background = cardBgVal;
-    previewCardWrap.style.borderColor = theme.cardBorder || '#e2e8f0';
+    previewCardWrap.style.background = finalCardBg;
+    previewCardWrap.style.borderColor = cardBorder;
   }
+  const previewCardTitle = $('#preview-card-demo-title');
   if (previewCardTitle) {
-    previewCardTitle.style.color = theme.cardTitle || 'var(--cardTitle, #0f172a)';
+    previewCardTitle.style.color = cardTitle;
+    previewCardTitle.style.fontFamily = displayFont;
   }
+  const previewCardText = $('#preview-card-demo-text');
   if (previewCardText) {
-    previewCardText.style.color = theme.fontColor || '#0f172a';
+    previewCardText.style.color = fontColor;
   }
 
+  // 2. Panel Hoy
+  const previewHoyHero = $('#preview-hoy-hero');
+  if (previewHoyHero) {
+    previewHoyHero.style.background = bannerBg;
+    previewHoyHero.style.color = bannerInk;
+  }
+  const previewHoyTitle = $('#preview-hoy-title');
+  if (previewHoyTitle) {
+    previewHoyTitle.style.fontFamily = displayFont;
+    previewHoyTitle.style.color = bannerInk;
+  }
+  $$('#preview-pane-hoy [style*="color:var(--bnInk"]').forEach((el) => {
+    el.style.color = bannerInk;
+  });
+  const previewHoyCard = $('#preview-hoy-card');
+  if (previewHoyCard) {
+    previewHoyCard.style.background = finalCardBg;
+    previewHoyCard.style.borderColor = cardBorder;
+  }
+  const previewHoyCardTitle = $('#preview-hoy-card-title');
+  if (previewHoyCardTitle) {
+    previewHoyCardTitle.style.color = cardTitle;
+    previewHoyCardTitle.style.fontFamily = displayFont;
+  }
+
+  // 3. Panel Convocatoria
+  const previewCallupBanner = $('#preview-callup-banner');
+  if (previewCallupBanner) {
+    previewCallupBanner.style.background = bannerBg;
+    previewCallupBanner.style.color = bannerInk;
+  }
+  const previewCallupBtn = $('#preview-callup-btn');
+  if (previewCallupBtn) {
+    previewCallupBtn.style.background = btnBg;
+    previewCallupBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewCallupCard = $('#preview-callup-card');
+  if (previewCallupCard) {
+    previewCallupCard.style.background = finalCardBg;
+    previewCallupCard.style.borderColor = cardBorder;
+  }
+  const previewCallupMatchHeader = $('#preview-callup-match-header');
+  if (previewCallupMatchHeader) {
+    previewCallupMatchHeader.style.background = bannerBg;
+    previewCallupMatchHeader.style.color = bannerInk;
+  }
+  const previewCallupNum = $('#preview-callup-num');
+  if (previewCallupNum) {
+    previewCallupNum.style.background = bannerBg;
+    previewCallupNum.style.color = bannerInk;
+    previewCallupNum.style.fontFamily = displayFont;
+  }
+  const previewCallupPlayerName = $('#preview-callup-player-name');
+  if (previewCallupPlayerName) {
+    previewCallupPlayerName.style.color = cardTitle;
+  }
+
+  // 4. Panel Lanzadores
+  const previewSpConfigBtn = $('#preview-sp-config-btn');
+  if (previewSpConfigBtn) {
+    previewSpConfigBtn.style.background = btn2Bg;
+    previewSpConfigBtn.style.color = btn2Ink;
+  }
+  const spBgMix = `color-mix(in srgb, ${finalCardBg} 90%, ${btnBg})`;
+  ['#preview-sp-card-1', '#preview-sp-card-2'].forEach((sel) => {
+    const el = $(sel);
+    if (el) {
+      el.style.background = spBgMix;
+      el.style.borderColor = cardBorder;
+    }
+  });
+  ['#preview-sp-icon-1', '#preview-sp-icon-2'].forEach((sel) => {
+    const el = $(sel);
+    if (el) {
+      el.style.background = bannerBg;
+      el.style.color = bannerInk;
+    }
+  });
+  ['#preview-sp-title-1', '#preview-sp-title-2'].forEach((sel) => {
+    const el = $(sel);
+    if (el) el.style.color = cardTitle;
+  });
+  ['#preview-sp-rank-1', '#preview-sp-rank-3'].forEach((sel) => {
+    const el = $(sel);
+    if (el) {
+      el.style.background = bannerBg;
+      el.style.color = bannerInk;
+    }
+  });
+  const spRank2 = $('#preview-sp-rank-2');
+  if (spRank2) {
+    spRank2.style.background = `color-mix(in srgb, ${bannerBg} 16%, #ffffff)`;
+    spRank2.style.color = bannerBg;
+  }
+
+  // 5. Panel Cuerpo Técnico
+  const previewStaffBanner = $('#preview-staff-banner');
+  if (previewStaffBanner) {
+    previewStaffBanner.style.background = bannerBg;
+    previewStaffBanner.style.color = bannerInk;
+  }
+  const previewStaffBtn = $('#preview-staff-btn');
+  if (previewStaffBtn) {
+    previewStaffBtn.style.background = btnBg;
+    previewStaffBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewStaffCard = $('#preview-staff-card');
+  if (previewStaffCard) {
+    previewStaffCard.style.background = finalCardBg;
+    previewStaffCard.style.borderColor = cardBorder;
+  }
+  const previewStaffStrip = $('#preview-staff-strip');
+  if (previewStaffStrip) {
+    previewStaffStrip.style.background = `linear-gradient(120deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 75%, #000000))`;
+  }
+  const previewStaffInitials = $('#preview-staff-avatar-initials');
+  if (previewStaffInitials) {
+    previewStaffInitials.style.fontFamily = displayFont;
+    previewStaffInitials.style.color = bannerBg;
+  }
+  const previewStaffName = $('#preview-staff-name');
+  if (previewStaffName) {
+    previewStaffName.style.color = cardTitle;
+  }
+
+  // Pestaña activa: mantener estilo del botón primario
+  const activeTabBtn = $('.cbx-preview-tab-btn.active');
+  if (activeTabBtn) {
+    activeTabBtn.style.background = btnBg;
+    activeTabBtn.style.setProperty('color', btnInk, 'important');
+  }
+
+  // Compatibilidad con cajas legacy si existen
+  const previewBannerBox = $('#cbx-preview-banner-box');
+  if (previewBannerBox) {
+    previewBannerBox.style.background = `linear-gradient(135deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 72%, #297053))`;
+    previewBannerBox.style.color = bannerInk;
+  }
+  const previewBannerBtn = $('#cbx-preview-banner-btn');
+  if (previewBannerBtn) {
+    previewBannerBtn.style.background = btnBg;
+    previewBannerBtn.style.setProperty('color', btnInk, 'important');
+  }
+
+  // Semáforos
   const sem = state.settings?.sem || DEFAULT_SEM;
   const semMap = {
     'preview-sem-gk': sem.gk || '#0284c7',
@@ -7451,20 +7655,31 @@ function updateThemePreviewBox(theme) {
 }
 
 function updateTacticBoardPreviewBox(pitch, lines, team, rival, arrow) {
-  const pitchEl = $('#cbx-mini-pitch-preview');
-  if (pitchEl) pitchEl.style.background = pitch;
-  $$('#cbx-mini-pitch-preview svg [stroke]').forEach((el) => {
-    if (el.id !== 'mini-arrow-path') el.setAttribute('stroke', lines);
-  });
-  $$('#cbx-mini-pitch-preview svg circle[r="1.2"]').forEach((el) => {
-    el.setAttribute('fill', lines);
+  ['#cbx-mini-pitch-preview', '#preview-tab-mini-pitch'].forEach((sel) => {
+    const pitchEl = $(sel);
+    if (!pitchEl) return;
+    pitchEl.style.background = pitch;
+    pitchEl.querySelectorAll('svg [stroke]').forEach((el) => {
+      if (!el.id.includes('arrow-path')) el.setAttribute('stroke', lines);
+    });
+    pitchEl.querySelectorAll('svg circle[r="1.2"]').forEach((el) => {
+      el.setAttribute('fill', lines);
+    });
+    pitchEl.querySelectorAll('.cbx-mini-token.team').forEach((el) => {
+      el.style.background = team;
+    });
+    pitchEl.querySelectorAll('.cbx-mini-token.rival').forEach((el) => {
+      el.style.background = rival;
+    });
   });
   const arrowPoly = $('#mini-arrow-poly');
   if (arrowPoly) arrowPoly.setAttribute('fill', arrow);
   const arrowPath = $('#mini-arrow-path');
   if (arrowPath) arrowPath.setAttribute('stroke', arrow);
-  $$('.cbx-mini-token.team').forEach((el) => { el.style.background = team; });
-  $$('.cbx-mini-token.rival').forEach((el) => { el.style.background = rival; });
+  const tabArrowPoly = $('#tab-arrow-poly');
+  if (tabArrowPoly) tabArrowPoly.setAttribute('fill', arrow);
+  const tabArrowPath = $('#tab-arrow-path');
+  if (tabArrowPath) tabArrowPath.setAttribute('stroke', arrow);
 }
 
 function renderCustomizerControls() {
@@ -7486,7 +7701,15 @@ function renderCustomizerControls() {
         btn.textContent = 'Auto';
         btn.style.background = '#ffffff';
       }
-      btn.addEventListener('click', () => updateThemeProperty(key, color));
+      btn.addEventListener('click', () => {
+        if (key === 'appBgHue') {
+          updateThemeProperty('appBgHue', color, { appBgPct: 100 });
+        } else if (key === 'cardHue') {
+          updateThemeProperty('cardHue', color, { cardPct: 100 });
+        } else {
+          updateThemeProperty(key, color);
+        }
+      });
       container.appendChild(btn);
     });
 
@@ -7497,7 +7720,15 @@ function renderCustomizerControls() {
     picker.title = 'Selector libre de color';
     picker.dataset.key = key;
     picker.value = currentTheme[key] && currentTheme[key].startsWith('#') ? currentTheme[key] : '#10b981';
-    picker.addEventListener('input', (e) => updateThemeProperty(key, e.target.value));
+    picker.addEventListener('input', (e) => {
+      if (key === 'appBgHue') {
+        updateThemeProperty('appBgHue', e.target.value, { appBgPct: 100 });
+      } else if (key === 'cardHue') {
+        updateThemeProperty('cardHue', e.target.value, { cardPct: 100 });
+      } else {
+        updateThemeProperty(key, e.target.value);
+      }
+    });
     container.appendChild(picker);
   });
 
@@ -7906,14 +8137,36 @@ function initCustomizationListeners() {
     themeForm.addEventListener('submit', (e) => saveThemeSettings(e).catch(handleError));
   }
 
-  // Delegación global para botones de tono de fondo (chips)
+  // Delegación global para botones de tono de fondo (chips) y pestañas de preview
   document.addEventListener('click', (e) => {
+    const tabBtn = e.target.closest('.cbx-preview-tab-btn');
+    if (tabBtn) {
+      const paneKey = tabBtn.dataset.previewPane;
+      $$('.cbx-preview-tab-btn').forEach((btn) => {
+        const isCurrent = btn === tabBtn;
+        btn.classList.toggle('active', isCurrent);
+        if (isCurrent) {
+          btn.style.background = 'var(--btn, #10b981)';
+          btn.style.setProperty('color', 'var(--btnInk, #ffffff)', 'important');
+          btn.style.borderColor = 'transparent';
+        } else {
+          btn.style.background = '#ffffff';
+          btn.style.color = '#334155';
+          btn.style.borderColor = '#cbd5e1';
+        }
+      });
+      $$('.cbx-preview-pane').forEach((pane) => {
+        pane.style.display = (pane.id === `preview-pane-${paneKey}`) ? 'block' : 'none';
+      });
+      return;
+    }
+
     const bgBtn = e.target.closest('.theme-bg-btn');
     if (bgBtn) {
       const bgVal = bgBtn.dataset.bg;
       const hiddenInput = $('#theme-bg-select');
       if (hiddenInput) hiddenInput.value = bgVal;
-      updateThemeProperty('themeBg', bgVal);
+      updateThemeProperty('themeBg', bgVal, { appBgHue: '' });
       return;
     }
 
