@@ -6642,6 +6642,14 @@ const TITLE_FONT_OPTIONS = [
   { id: 'classic', label: 'Merriweather Clásica', sample: 'Unión Viera', font: "'Merriweather', serif" },
 ];
 
+const DEFAULT_TACTIC_BOARD = {
+  pitch: '#1e523d',
+  lines: 'rgba(255,255,255,0.4)',
+  team: '#c8102e',
+  rival: '#111827',
+  arrow: '#facc15'
+};
+
 const EXTENDED_SWATCH_CONFIGS = {
   appBgHue: {
     containerId: 'cbx-app-bg-swatches',
@@ -6662,15 +6670,18 @@ const EXTENDED_SWATCH_CONFIGS = {
     containerId: 'cbx-card-swatches',
     swatches: [
       ['', 'Blanco (por defecto)'],
+      ['#ffffff', 'Blanco puro'],
+      ['#f8fafc', 'Gris perla'],
+      ['#fef9ee', 'Crema suave'],
+      ['#f0fdf4', 'Verde menta'],
+      ['#eff6ff', 'Azul suave'],
+      ['#11221b', 'Noche oscura'],
+      ['#18181b', 'Grafito pro'],
+      ['#000000', 'Negro puro'],
       ['#10b981', 'Esmeralda'],
-      ['#0a251b', 'Verde campo'],
       ['#2563eb', 'Azul'],
-      ['#0369a1', 'Océano'],
-      ['#7c3aed', 'Morado'],
       ['#c8102e', 'Rojo club'],
-      ['#f59e0b', 'Dorado'],
-      ['#64748b', 'Gris'],
-      ['#111827', 'Negro']
+      ['#f59e0b', 'Dorado']
     ]
   },
   cardTitle: {
@@ -6821,6 +6832,86 @@ const EXTENDED_SWATCH_CONFIGS = {
       ['', 'Blanco (por defecto)'],
       ['#0f172a', 'Oscuro'],
       ['#facc15', 'Amarillo']
+    ]
+  },
+  sidebarBg: {
+    containerId: 'cbx-sidebar-bg-swatches',
+    swatches: [
+      ['', 'Auto (Tema)'],
+      ['#0a251b', 'Verde campo'],
+      ['#064e3b', 'Esmeralda'],
+      ['#061021', 'Azul marino'],
+      ['#040806', 'Negro noche'],
+      ['#171d24', 'Gris acero'],
+      ['#170408', 'Rojo burdeos'],
+      ['#110722', 'Púrpura'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  sidebarInk: {
+    containerId: 'cbx-sidebar-ink-swatches',
+    swatches: [
+      ['', 'Auto'],
+      ['#ffffff', 'Blanco'],
+      ['#f59e0b', 'Dorado'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro'],
+      ['#0f172a', 'Oscuro']
+    ]
+  },
+  tbPitch: {
+    containerId: 'cbx-tb-pitch-swatches',
+    swatches: [
+      ['', 'Esmeralda (#1e523d)'],
+      ['#1e523d', 'Esmeralda'],
+      ['#0c3b2e', 'Verde oscuro'],
+      ['#061021', 'Azul marino'],
+      ['#040806', 'Negro OLED'],
+      ['#166534', 'Césped vivo'],
+      ['#1e293b', 'Pizarra gris']
+    ]
+  },
+  tbLines: {
+    containerId: 'cbx-tb-lines-swatches',
+    swatches: [
+      ['', 'Tiza suave'],
+      ['rgba(255,255,255,0.4)', 'Tiza suave'],
+      ['rgba(255,255,255,0.8)', 'Blanco puro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  tbTeam: {
+    containerId: 'cbx-tb-team-swatches',
+    swatches: [
+      ['', 'Rojo (#c8102e)'],
+      ['#c8102e', 'Rojo club'],
+      ['#2563eb', 'Azul real'],
+      ['#10b981', 'Verde'],
+      ['#f59e0b', 'Dorado'],
+      ['#ffffff', 'Blanco'],
+      ['#111827', 'Negro']
+    ]
+  },
+  tbRival: {
+    containerId: 'cbx-tb-rival-swatches',
+    swatches: [
+      ['', 'Negro (#111827)'],
+      ['#111827', 'Negro'],
+      ['#ffffff', 'Blanco'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo'],
+      ['#f59e0b', 'Amarillo']
+    ]
+  },
+  tbArrow: {
+    containerId: 'cbx-tb-arrow-swatches',
+    swatches: [
+      ['', 'Amarillo (#facc15)'],
+      ['#facc15', 'Amarillo'],
+      ['#ffffff', 'Blanco'],
+      ['#ef4444', 'Rojo'],
+      ['#38bdf8', 'Celeste'],
+      ['#4ade80', 'Verde neón']
     ]
   }
 };
@@ -7059,7 +7150,14 @@ function applyCustomTheme(themeInput) {
   // 8. Cálculo de color-mix para fondos e intensidades de app y tarjetas
   const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
   let calculatedAppBg = theme.appBgHue ? mix(theme.appBgHue, theme.appBgPct ?? 12, '#ffffff') : null;
-  let calculatedCardBg = theme.cardHue ? mix(theme.cardHue, theme.cardPct ?? 6, '#ffffff') : null;
+  let calculatedCardBg = null;
+  if (theme.cardHue) {
+    if (['#ffffff', '#f8fafc', '#fef9ee', '#f0fdf4', '#eff6ff', '#11221b', '#18181b', '#000000'].includes(theme.cardHue)) {
+      calculatedCardBg = theme.cardHue;
+    } else {
+      calculatedCardBg = mix(theme.cardHue, theme.cardPct ?? 6, '#ffffff');
+    }
+  }
 
   // Comprobación de luminancia: si la fuente es clara (>170), forzar fondo oscuro para mantener legibilidad
   const cleanHexColor = (fontColor || '#0f172a').replace('#', '');
@@ -7073,13 +7171,30 @@ function applyCustomTheme(themeInput) {
   // Semáforos con significado
   const sem = state.settings?.sem || DEFAULT_SEM;
 
+  // Barra lateral
+  const sidebarBg = theme.sidebarBg || hero;
+  const sidebarInk = theme.sidebarInk || '#ffffff';
+  const sidebarSub = sidebarInk === '#ffffff' ? '#81958d' : `color-mix(in srgb, ${sidebarInk} 70%, transparent)`;
+
+  // Pizarra táctica
+  const tb = theme.tb || state.settings?.tb || DEFAULT_TACTIC_BOARD;
+  const tbPitch = theme.tbPitch || tb.pitch || DEFAULT_TACTIC_BOARD.pitch;
+  const tbLines = theme.tbLines || tb.lines || DEFAULT_TACTIC_BOARD.lines;
+  const tbTeam = theme.tbTeam || tb.team || DEFAULT_TACTIC_BOARD.team;
+  const tbRival = theme.tbRival || tb.rival || DEFAULT_TACTIC_BOARD.rival;
+  const tbArrow = theme.tbArrow || tb.arrow || DEFAULT_TACTIC_BOARD.arrow;
+
   // Inyección de todas las variables en root y body
   for (const target of [root, body]) {
     target.style.setProperty('--acc', theme.accentColor || '#10b981');
     target.style.setProperty('--cbx-acc', theme.accentColor || '#10b981');
     target.style.setProperty('--hero', hero);
     target.style.setProperty('--cbx-hero', hero);
-    target.style.setProperty('--cb-shell-hero', hero);
+    target.style.setProperty('--cb-shell-hero', sidebarBg);
+    target.style.setProperty('--sidebar-bg', sidebarBg);
+    target.style.setProperty('--sidebar-ink', sidebarInk);
+    target.style.setProperty('--sidebar-sub', sidebarSub);
+
     target.style.setProperty('--ui', fontFamVal);
     target.style.setProperty('--cbx-ui', fontFamVal);
     target.style.setProperty('--disp', displayFont);
@@ -7092,6 +7207,7 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--card', finalCardBg);
     target.style.setProperty('--cb-surface-card', finalCardBg);
     target.style.setProperty('--cardTitle', theme.cardTitle || 'var(--ink, #0f172a)');
+    target.style.setProperty('--cardBorder', theme.cardBorder || '#e2e8f0');
 
     target.style.setProperty('--bn', theme.bannerBg || hero);
     target.style.setProperty('--bnInk', theme.bannerInk || '#ffffff');
@@ -7118,7 +7234,24 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--sem-win', sem.win || DEFAULT_SEM.win);
     target.style.setProperty('--sem-draw', sem.draw || DEFAULT_SEM.draw);
     target.style.setProperty('--sem-loss', sem.loss || DEFAULT_SEM.loss);
+
+    // Pizarra táctica
+    target.style.setProperty('--tb-pitch', tbPitch);
+    target.style.setProperty('--tb-lines', tbLines);
+    target.style.setProperty('--tb-team', tbTeam);
+    target.style.setProperty('--tb-rival', tbRival);
+    target.style.setProperty('--tb-arrow', tbArrow);
   }
+
+  // Actualizar DOM directo de la barra lateral si existe
+  const sidebarEl = $('#cb-claude-sidebar');
+  if (sidebarEl) {
+    sidebarEl.style.setProperty('background', sidebarBg, 'important');
+    sidebarEl.style.setProperty('color', sidebarInk, 'important');
+  }
+
+  // Actualizar mini pizarra táctica de previsualización
+  updateTacticBoardPreviewBox(tbPitch, tbLines, tbTeam, tbRival, tbArrow);
 
   // Actualizar tarjeta de vista previa interactiva
   updateThemePreviewBox(theme);
@@ -7205,7 +7338,7 @@ function updateThemePreviewBox(theme) {
   }
   if (previewSampleBtn) {
     previewSampleBtn.style.background = btnBg;
-    previewSampleBtn.style.color = btnInk;
+    previewSampleBtn.style.setProperty('color', btnInk, 'important');
   }
   if (previewBannerBox) {
     previewBannerBox.style.background = `linear-gradient(135deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 72%, #297053))`;
@@ -7213,7 +7346,7 @@ function updateThemePreviewBox(theme) {
   }
   if (previewBannerBtn) {
     previewBannerBtn.style.background = btnBg;
-    previewBannerBtn.style.color = btnInk;
+    previewBannerBtn.style.setProperty('color', btnInk, 'important');
   }
   if (previewGfBadge) {
     previewGfBadge.style.background = theme.gfBg || '#f0f7f3';
@@ -7227,6 +7360,42 @@ function updateThemePreviewBox(theme) {
     const dot = previewGaBadge.querySelector('.dot');
     if (dot) dot.style.background = theme.gaColor || '#e02444';
   }
+
+  const previewCardWrap = $('#preview-card-demo-wrap');
+  const previewCardTitle = $('#preview-card-demo-title');
+  if (previewCardWrap) {
+    const cardBgVal = theme.cardHue && ['#ffffff', '#f8fafc', '#fef9ee', '#f0fdf4', '#eff6ff', '#11221b', '#18181b', '#000000'].includes(theme.cardHue)
+      ? theme.cardHue
+      : (theme.cardHue ? `color-mix(in srgb, ${theme.cardHue} ${theme.cardPct ?? 6}%, #ffffff)` : '#ffffff');
+    previewCardWrap.style.background = cardBgVal;
+    previewCardWrap.style.borderColor = theme.cardBorder || '#e2e8f0';
+  }
+  if (previewCardTitle) {
+    previewCardTitle.style.color = theme.cardTitle || 'var(--cardTitle, #0f172a)';
+  }
+
+  const sidebarPreviewBox = $('#cbx-sidebar-preview-box');
+  if (sidebarPreviewBox) {
+    sidebarPreviewBox.style.background = theme.sidebarBg || hero;
+    sidebarPreviewBox.style.color = theme.sidebarInk || '#ffffff';
+  }
+}
+
+function updateTacticBoardPreviewBox(pitch, lines, team, rival, arrow) {
+  const pitchEl = $('#cbx-mini-pitch-preview');
+  if (pitchEl) pitchEl.style.background = pitch;
+  $$('#cbx-mini-pitch-preview svg [stroke]').forEach((el) => {
+    if (el.id !== 'mini-arrow-path') el.setAttribute('stroke', lines);
+  });
+  $$('#cbx-mini-pitch-preview svg circle[r="1.2"]').forEach((el) => {
+    el.setAttribute('fill', lines);
+  });
+  const arrowPoly = $('#mini-arrow-poly');
+  if (arrowPoly) arrowPoly.setAttribute('fill', arrow);
+  const arrowPath = $('#mini-arrow-path');
+  if (arrowPath) arrowPath.setAttribute('stroke', arrow);
+  $$('.cbx-mini-token.team').forEach((el) => { el.style.background = team; });
+  $$('.cbx-mini-token.rival').forEach((el) => { el.style.background = rival; });
 }
 
 function renderCustomizerControls() {
@@ -7477,7 +7646,8 @@ async function resetExtendedColors() {
   const keysToReset = [
     'gfColor', 'gaColor', 'gfBg', 'gaBg', 'gfInk', 'gaInk',
     'appBgHue', 'cardHue', 'cardTitle', 'btn2Bg', 'btn2Ink',
-    'waInk', 'resInk', 'bannerBg', 'bannerInk', 'btnBg', 'btnInk'
+    'waInk', 'resInk', 'bannerBg', 'bannerInk', 'btnBg', 'btnInk',
+    'sidebarBg', 'sidebarInk', 'cardBorder'
   ];
   keysToReset.forEach((k) => delete t[k]);
   t.appBgPct = 12;
@@ -7491,6 +7661,24 @@ async function resetExtendedColors() {
   }
   syncCustomizerControls(t);
   toast('Colores restablecidos');
+}
+
+async function resetTacticBoardColors() {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.theme) state.settings.theme = {};
+  const t = state.settings.theme;
+  const keysToReset = ['tbPitch', 'tbLines', 'tbTeam', 'tbRival', 'tbArrow'];
+  keysToReset.forEach((k) => delete t[k]);
+  if (t.tb) delete t.tb;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(t));
+  } catch {}
+  applyCustomTheme(t);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  syncCustomizerControls(t);
+  toast('Colores de pizarra restablecidos');
 }
 
 async function setSemanticColor(key, color) {
@@ -7738,6 +7926,12 @@ function initCustomizationListeners() {
   const resetColorsBtn = $('#cbx-reset-colors-btn');
   if (resetColorsBtn) {
     resetColorsBtn.addEventListener('click', () => resetExtendedColors());
+  }
+
+  // Botón restablecer colores de pizarra táctica
+  const resetTacticBtn = $('#cbx-reset-tactic-colors-btn');
+  if (resetTacticBtn) {
+    resetTacticBtn.addEventListener('click', () => resetTacticBoardColors());
   }
 
   // Sliders de intensidad

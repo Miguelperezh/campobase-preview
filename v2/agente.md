@@ -1317,7 +1317,31 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Detección reactiva de luminancia: si el color de texto elegido es claro, la app adapta automáticamente el fondo y las tarjetas a tonos oscuros para salvaguardar la legibilidad y el contraste.
 
 7. **Especificación SDD 012 y Validación:**
-   - Carpeta formal en `specs/012-ajustes-personalizacion-temas-colores-fuentes/` (`spec.md`, `plan.md`, `tasks.md`).
-   - Suite de pruebas en `tests/ajustes-personalizacion-temas-colores.test.js` (5 tests pasando).
-   - **642/642 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+### 30. Entrega v70 (02/10/2026) — Ajustes: Pizarra Táctica Compacta, Personalización de Barra Lateral, Bloques Sólidos y Contraste de Botones (Spec 013)
+
+1. **Pizarra Táctica de Previsualización Compacta y Personalización de Colores (`#tactic-board-colors-card`):**
+   - Mini campo SVG interactivo y compacto (280px máx.) orientado exclusivamente a la previsualización cromática en tiempo real (sin menús tácticos innecesarios de formaciones o sistemas).
+   - Muestra césped, líneas reglamentarias, 3 fichas de equipo propio (1, 4, 9), 2 fichas de rival (R), balón y flecha táctica discontinua.
+   - Controles cromáticos reactivos para Césped (`tbPitch`), Líneas de campo (`tbLines`), Fichas de equipo (`tbTeam`), Fichas de rival (`tbRival`) y Flechas tácticas (`tbArrow`).
+   - Botón directo «Restablecer colores de pizarra» (`resetTacticBoardColors`) para volver a los valores estándar de campo.
+   - Propagación automática de variables `--tb-pitch`, `--tb-lines`, `--tb-team`, `--tb-rival` y `--tb-arrow` a todas las pizarras del sistema (`#cbx-tactics-pitch-board`, `.live-tactics svg`, `.board-wrap svg`).
+
+2. **Personalización del Menú y Barra Lateral Izquierda (`#sidebar-colors-card`):**
+   - Selectores dedicados de fondo de barra lateral (`sidebarBg`) y texto/iconos (`sidebarInk`).
+   - Caja de previsualización en directo `#cbx-sidebar-preview-box` que refleja inmediatamente la estética del menú de navegación.
+   - Inyección dinámica en `--sidebar-bg`, `--sidebar-ink` y `--sidebar-sub`, desacoplando completamente el lateral del color general de la cabecera.
+
+3. **Corrección de Contraste en Botón «Guardar» y Botones Primarios:**
+   - Corrección de la regla CSS destructiva en `styles-redesign.css` que forzaba el texto a negro en elementos `span` bajo `data-has-custom-font-color="true"`.
+   - Modificación del botón de muestra en cabecera a `<button class="primary cbx-preview-banner-btn">` con regla de contraste `color: var(--btnInk, #ffffff) !important;`.
+   - Garantía de tipografía siempre blanca y brillante en botones primarios y de guardado independientemente del tema activo.
+
+4. **Personalización Directa e Intuitiva de Bloques/Tarjetas:**
+   - Swatches con colores sólidos directos (`#ffffff` blanco puro, `#f8fafc` gris suave, `#fef9ee` crema, `#11221b` esmeralda oscuro, `#18181b` grafito) además del color picker libre.
+   - Previsualización en tiempo real de bloque/tarjeta dentro de la tarjeta demo de tema (`#preview-card-demo-wrap`).
+
+5. **Especificación SDD 013 y Validación Automatizada:**
+   - Documentación completa en `specs/013-ajustes-personalizacion-pizarra-lateral-bloques-botones/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/ajustes-pizarra-lateral-bloques.test.js` (7 tests específicos pasando).
+   - **649/649 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
 

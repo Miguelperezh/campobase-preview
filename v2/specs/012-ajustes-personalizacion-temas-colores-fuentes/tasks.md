@@ -7,5 +7,5 @@
 - [x] **Tarea 5**: Crear suite de tests `tests/ajustes-personalizacion-temas-colores.test.js` y verificar paso al 100%.
 - [x] **Tarea 6**: Ejecutar `npm run check && npm test` asegurando 0 errores sintácticos y todos los tests verdes.
 - [x] **Tarea 7**: Actualizar `agente.md` con el informe de la Entrega v69.
-- [ ] **Tarea 8**: Compilar, sincronizar y desplegar a `campobase-preview-deploy/v2/`.
-- [ ] **Tarea 9**: Validar el despliegue en GitHub Pages y entregar respuesta con la URL obligatoria al final.
+- [x] **Tarea 8**: Compilar, sincronizar y desplegar a `campobase-preview-deploy/v2/`.
+- [x] **Tarea 9**: Validar el despliegue en GitHub Pages y entregar respuesta con la URL obligatoria al final.

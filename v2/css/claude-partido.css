@@ -1583,9 +1583,12 @@ body.cb-redesign-active article.panel h3 {
 }
 
 body.cb-redesign-active button.primary:not([disabled]),
-body.cb-redesign-active .primary:not([disabled]) {
-  background: var(--btn, var(--cb-pitch-600, #10b981));
-  color: var(--btnInk, #ffffff);
+body.cb-redesign-active .primary:not([disabled]),
+#cbx-preview-banner-btn,
+.cbx-preview-banner-btn,
+#preview-sample-btn {
+  background: var(--btn, var(--cb-pitch-600, #10b981)) !important;
+  color: var(--btnInk, #ffffff) !important;
 }
 
 body.cb-redesign-active button.secondary:not([disabled]),
@@ -1604,6 +1607,75 @@ body.cb-redesign-active .match-round,
 body.cb-redesign-active .season-round-tag {
   color: var(--resInk, #ffffff);
 }
+
+/* Variables y Previsualización de la Pizarra Táctica */
+:root {
+  --tb-pitch: #1e523d;
+  --tb-lines: rgba(255, 255, 255, 0.4);
+  --tb-team: #c8102e;
+  --tb-rival: #111827;
+  --tb-arrow: #facc15;
+}
+
+#cbx-mini-pitch-preview {
+  background: var(--tb-pitch, #1e523d);
+}
+
+#cbx-mini-pitch-preview #mini-pitch-lines path,
+#cbx-mini-pitch-preview #mini-pitch-lines rect,
+#cbx-mini-pitch-preview #mini-pitch-lines circle,
+#cbx-mini-pitch-preview #mini-pitch-lines line {
+  stroke: var(--tb-lines, rgba(255, 255, 255, 0.4)) !important;
+}
+
+#cbx-mini-pitch-preview #mini-arrow-path {
+  stroke: var(--tb-arrow, #facc15) !important;
+}
+
+#cbx-mini-pitch-preview #mini-arrow-poly {
+  fill: var(--tb-arrow, #facc15) !important;
+}
+
+.cbx-mini-token.team {
+  background: var(--tb-team, #c8102e) !important;
+}
+
+.cbx-mini-token.rival {
+  background: var(--tb-rival, #111827) !important;
+}
+
+/* Conexión a las pizarras tácticas de toda la app */
+#cbx-tactics-pitch-board,
+.live-tactics svg,
+.board-wrap svg {
+  background-color: var(--tb-pitch, #1f5a41) !important;
+}
+
+#cbx-tactics-pitch-board .cbx-tac-player-chip,
+#cbx-tactics-pitch-board [data-team="1"] {
+  background: var(--tb-team, #c8102e) !important;
+}
+
+#cbx-tactics-pitch-board .cbx-tac-rival-marker,
+#cbx-tactics-pitch-board [data-rival="1"] {
+  background: var(--tb-rival, #111827) !important;
+}
+
+/* Estilos de la Barra Lateral personalizada */
+#cb-claude-sidebar {
+  background: var(--sidebar-bg, var(--cb-shell-hero, #0a251b)) !important;
+}
+
+#cb-claude-sidebar .cb-shell-brand strong,
+#cb-claude-sidebar button {
+  color: var(--sidebar-ink, #ffffff) !important;
+}
+
+#cb-claude-sidebar .cb-shell-brand p,
+#cb-claude-sidebar .cb-shell-group h2 {
+  color: var(--sidebar-sub, #81958d) !important;
+}
+
 
 
 
