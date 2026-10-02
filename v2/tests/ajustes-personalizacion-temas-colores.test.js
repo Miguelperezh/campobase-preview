@@ -167,4 +167,36 @@ test('styles-redesign.css garantiza la adaptación fluida a columna única en pa
   assert.match(redesignCss, /\.cbx-preview-tabs\s*\{[^}]*-webkit-overflow-scrolling:\s*touch !important/);
 });
 
+test('css/claude-plantilla.css e index.html vinculan especialistas a cardBg y cardBorder sin forzar tinte de botón', () => {
+  const cssPlantilla = fs.readFileSync('css/claude-plantilla.css', 'utf8');
+  assert.match(cssPlantilla, /\.specialist-item\s*\{[^}]*background:\s*var\(--cardBg,\s*#ffffff\)\s*!important/);
+  assert.match(cssPlantilla, /\.specialist-item\s*\{[^}]*border:\s*1px\s*solid\s*var\(--cardBorder/);
+  assert.doesNotMatch(cssPlantilla, /\.specialist-item\s*\{[^}]*color-mix\([^}]*var\(--btn/, 'specialist-item no debe usar color-mix con --btn');
+
+  // En js/app.js updateThemePreview debe asignar finalCardBg y cardBorder
+  assert.match(app, /el\.style\.background = finalCardBg/);
+  assert.match(app, /el\.style\.borderColor = cardBorder/);
+});
+
+test('css/claude-entreno.css y css/claude-partido.css incluyen adaptación móvil completa para impresión y PDF', () => {
+  const cssEntreno = fs.readFileSync('css/claude-entreno.css', 'utf8');
+  const cssPartido = fs.readFileSync('css/claude-partido.css', 'utf8');
+
+  // Barra flotante en móvil fija y botón salir destacado
+  assert.match(cssEntreno, /@media screen and \(max-width:\s*850px\)/);
+  assert.match(cssEntreno, /\.cb-print-btn-close\s*\{[^}]*order:\s*-1\s*!important/);
+  assert.match(cssEntreno, /\.cb-print-btn-close\s*\{[^}]*grid-column:\s*1\s*\/\s*-1\s*!important/);
+  assert.match(cssEntreno, /\.cb-print-sheet\s*\{[^}]*width:\s*100%\s*!important/);
+
+  // Plan de partido en móvil adaptado
+  assert.match(cssPartido, /@media screen and \(max-width:\s*850px\)/);
+  assert.match(cssPartido, /\.cb-print-sheet\.cbx-pmp-sheet\s*\{[^}]*width:\s*100%\s*!important/);
+});
+
+test('js/app.js no muestra tácticas ficticias fijas (UD Lomo Verde) cuando no hay tácticas guardadas', () => {
+  assert.doesNotMatch(app, /UD Lomo Verde/, 'No deben existir presets ficticios fijados en la vista táctica');
+  assert.match(app, /cbx-saved-tactics-empty/, 'Debe mostrar estado vacío limpio si no hay tácticas');
+});
+
+
 

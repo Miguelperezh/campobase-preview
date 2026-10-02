@@ -6065,24 +6065,26 @@ function renderClaudeTactics() {
   const savedListEl = $('#cbx-saved-tactics-list');
   if (savedListEl) {
     const userTactics = state.tactics || [];
-    const defaultPresets = [
-      { id: 'preset-1', name: 'Salida ante presión alta', formation: '1-3-2-1', situation: 'vs UD Lomo Verde' },
-      { id: 'preset-2', name: 'Córner a favor · bloqueo', formation: 'Balón parado', situation: 'Estrategia ofensiva' },
-      { id: 'preset-3', name: 'Bloqueo bajo con ventaja', formation: '1-4-1-1', situation: 'últimos 10\'' },
-    ];
-    const allToShow = userTactics.length ? userTactics : defaultPresets;
-    savedListEl.innerHTML = allToShow.map((t) => `
-      <div class="cbx-saved-tactic-item">
-        <div class="cbx-saved-tactic-info">
-          <span class="cbx-saved-tactic-name">${escapeHtml(t.name)}</span>
-          <span class="cbx-saved-tactic-sub">${escapeHtml(t.formation || '1-3-2-1')}${t.situation ? ' · ' + escapeHtml(t.situation) : ''}${t.rival ? ' · vs ' + escapeHtml(t.rival) : ''}</span>
+    if (!userTactics.length) {
+      savedListEl.innerHTML = `
+        <div class="cbx-saved-tactics-empty" style="padding:16px 14px;text-align:center;color:var(--cbx-muted, #64748b);font:500 13px var(--cbx-ui, sans-serif)">
+          Aún no tienes tácticas guardadas. Diseña tu pizarra táctica y pulsa «Guardar táctica» para verla aquí.
         </div>
-        <div style="display:flex;gap:6px">
-          <button type="button" class="cbx-btn-view-tactic" data-id="${escapeHtml(t.id)}">Ver</button>
-          ${userTactics.some(ut => ut.id === t.id) ? `<button type="button" class="delete-tactic danger compact" data-id="${escapeHtml(t.id)}">✕</button>` : ''}
+      `;
+    } else {
+      savedListEl.innerHTML = userTactics.map((t) => `
+        <div class="cbx-saved-tactic-item">
+          <div class="cbx-saved-tactic-info">
+            <span class="cbx-saved-tactic-name">${escapeHtml(t.name)}</span>
+            <span class="cbx-saved-tactic-sub">${escapeHtml(t.formation || '1-3-2-1')}${t.situation ? ' · ' + escapeHtml(t.situation) : ''}${t.rival ? ' · vs ' + escapeHtml(t.rival) : ''}</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="cbx-btn-view-tactic" data-id="${escapeHtml(t.id)}">Ver</button>
+            <button type="button" class="delete-tactic danger compact" data-id="${escapeHtml(t.id)}">✕</button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `).join('');
+    }
   }
 }
 
@@ -7631,11 +7633,10 @@ function updateThemePreviewBox(theme) {
     previewSpConfigBtn.style.background = btn2Bg;
     previewSpConfigBtn.style.color = btn2Ink;
   }
-  const spBgMix = `color-mix(in srgb, ${finalCardBg} 90%, ${btnBg})`;
   ['#preview-sp-card-1', '#preview-sp-card-2'].forEach((sel) => {
     const el = $(sel);
     if (el) {
-      el.style.background = spBgMix;
+      el.style.background = finalCardBg;
       el.style.borderColor = cardBorder;
     }
   });
@@ -7659,8 +7660,8 @@ function updateThemePreviewBox(theme) {
   });
   const spRank2 = $('#preview-sp-rank-2');
   if (spRank2) {
-    spRank2.style.background = `color-mix(in srgb, ${bannerBg} 16%, #ffffff)`;
-    spRank2.style.color = bannerBg;
+    spRank2.style.background = `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`;
+    spRank2.style.color = cardTitle;
   }
 
   // 5. Panel Cuerpo Técnico

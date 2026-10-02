@@ -1045,8 +1045,8 @@ export function executePrint(htmlContent) {
         <button type="button" class="cb-print-btn-download" id="cb-print-download-btn">
           📥 Descargar PDF
         </button>
-        <button type="button" class="cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
-          ✕ Salir
+        <button type="button" class="cb-print-btn-close" id="cb-print-close-btn" aria-label="Cerrar y volver a CampoBase">
+          ✕ Salir de la Ficha
         </button>
       </div>
     </div>

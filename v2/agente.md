@@ -1469,7 +1469,26 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - **657/657 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
    - Service worker actualizado a `campobase-v2.44.0-...-20261002-v74-mobile-settings-grid-responsive-fix`.
 
+### 35. Entrega v75 (02/10/2026) — Eliminación de Tácticas Ficticias / Presets de Prueba en Producción
+1. **Eliminación de Tácticas de Prueba Ficticias (`js/app.js`):**
+   - **Diagnóstico:** En la sección «Tácticas guardadas» de la Pizarra Táctica, cuando el usuario no tenía tácticas creadas aún, se inyectaban tres tácticas fijas de prueba («Salida ante presión alta vs UD Lomo Verde», «Córner a favor · bloqueo», «Bloqueo bajo con ventaja»), procedentes de una maqueta estática previa, lo cual daba la impresión de datos inventados / prueba aislada.
+   - **Solución:** Se eliminó la inyección de `defaultPresets` en `renderClaudeTactics()`. Ahora, si el usuario no tiene tácticas guardadas, se muestra un mensaje limpio de estado vacío indicando que puede diseñar su pizarra y pulsar «Guardar táctica» para verla allí. Si existen tácticas creadas por el usuario, se listan única y exclusivamente sus tácticas reales.
+2. **Pruebas y Verificación:**
+   - Test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` comprobando que `UD Lomo Verde` ya no aparece y que existe el contenedor de estado vacío limpio.
 
-
-
-
+### 36. Entrega v76 (02/10/2026) — Corrección Cromática de Especialistas (Sin Tinte Rosáceo) y Experiencia de Impresión / PDF en Móvil
+1. **Desvinculación Cromática de Especialistas respecto al Botón Principal (`css/claude-plantilla.css`, `index.html`, `js/app.js`):**
+   - **Diagnóstico:** En Plantilla -> Especialistas a balón parado (y capitanes), las tarjetas de cada rol («Penaltis», «Faltas», «Córners», «Capitanes») tenían forzado un estilo `background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--btn, #10b981))`. Cuando el usuario configuraba botones rojos o burdeos, las tarjetas se teñían de un color rosáceo/salmón inmutable que ignoraba el color de tarjeta configurado en Ajustes. Asimismo, los badges de 2.º y 3.er lanzador sufrían el mismo tinte.
+   - **Solución:** Se eliminó el `color-mix(..., var(--btn))` de `.specialist-item` y de los badges secundarios. Ahora las tarjetas de especialistas usan directamente `var(--cardBg, #ffffff) !important` y su borde `var(--cardBorder, var(--cbx-line, #e2e8f0)) !important`, reflejando exactamente el color de tarjeta elegido por el usuario. Los badges secundarios usan un fondo neutro coordinado `color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--cardBorder, #e2e8f0))` con el texto en `var(--cardTitle)`.
+   - **Previsualización en Directo:** En el panel de previsualización de Ajustes (pestaña «🎯 Lanzadores»), se actualizaron `#preview-sp-card-1` y `#preview-sp-card-2` tanto en su marcado inline como en la reactividad JavaScript de `updateThemePreview()`, mostrando en tiempo real los cambios de color de tarjetas y bordes.
+2. **Corrección Integral de la Vista de Impresión y PDF en Móvil (`css/claude-entreno.css`, `css/claude-partido.css`, `js/print-session-export.js`):**
+   - **Diagnóstico:** Al abrir la vista de impresión o exportación a PDF (ficha de sesión, ejercicio o plan de partido) en iPhone/Android, el contenedor A4 (`.cb-print-sheet` y `.cbx-pmp-sheet`) tenía un ancho fijo de `794px`, cortando la mitad derecha de la pantalla y desplazando el campo táctico. Además, la barra de acciones flotante colocaba 5 botones en una sola fila horizontal, haciendo que el botón «✕ Salir» desbordara hacia la derecha y quedara completamente fuera del viewport móvil, dejando al usuario bloqueado sin poder cerrar la vista previa.
+   - **Solución:**
+     - Se añadieron reglas `@media screen and (max-width: 850px)` en `css/claude-entreno.css` y `css/claude-partido.css`.
+     - La barra flotante `.cb-print-floating-bar` en móvil se fija en la parte superior (`top: 0; left: 0; right: 0; width: 100%`) con fondo oscuro contrastado (`#0b1e16`) y z-index prioritario (`1000002`).
+     - El botón de cierre `.cb-print-btn-close` se colocó arriba del todo (`order: -1; grid-column: 1 / -1; min-height: 44px;`) en rojo llamativo (`#dc2626`) con texto «✕ Salir de la Ficha», siendo 100% visible, accesible y táctilmente cómodo.
+     - Se ocultó el botón nativo `🖨️ Imprimir` en móvil (que suele fallar o congelarse en Safari/Chrome móvil) y se dispusieron los botones operativos («📄 Abrir Ficha A4», «📥 Descargar PDF», «📲 Compartir») en una rejilla fluida de 2 columnas.
+     - Tanto `.cb-print-sheet` como `.cbx-pmp-sheet` adoptan `width: 100% !important; max-width: 100% !important; min-height: auto !important; height: auto !important; padding: 16px 12px;` con adaptación automática a 1 columna en todas las rejillas internas, diagramas y tablas con desplazamiento táctil horizontal.
+3. **Pruebas y Verificación:**
+   - **660/660 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v76-mobile-print-pdf-specialists-theme-fix`.
