@@ -19,8 +19,8 @@
 - [x] **T4: Documentación en `agente.md` (Sección 23)**
   - [x] Añadir Entrega v63 describiendo los cambios, causas raíz y resultados, preservando intactas las secciones 1 a 22.
 
-- [ ] **T5: Sincronización y despliegue a GitHub Pages**
-  - [ ] Commit y push en `campobase` (rama `implement/claude-hoy-real`).
-  - [ ] Sincronizar directorio `campobase-preview-deploy/v2/`.
-  - [ ] Commit y push en `campobase-preview-deploy` (rama `main`).
-  - [ ] Proveer URL al usuario: `https://miguelperezh.github.io/campobase-preview/v2/`.
+- [x] **T5: Sincronización y despliegue a GitHub Pages**
+  - [x] Commit y push en `campobase` (rama `implement/claude-hoy-real`).
+  - [x] Sincronizar directorio `campobase-preview-deploy/v2/`.
+  - [x] Commit y push en `campobase-preview-deploy` (rama `main`).
+  - [x] Proveer URL al usuario: `https://miguelperezh.github.io/campobase-preview/v2/`.

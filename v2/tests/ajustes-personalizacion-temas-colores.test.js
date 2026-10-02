@@ -135,3 +135,36 @@ test('js/app.js aplica el tema específico de partido (matchPreset) en vivo y re
   assert.match(app, /viewId === 'partido'/);
   assert.match(app, /previousViewId === 'partido'/);
 });
+
+test('index.html y css/claude-hoy.css sitúan la previsualización arriba y hacen configurables los accesos rápidos', () => {
+  const cssHoy = fs.readFileSync('css/claude-hoy.css', 'utf8');
+
+  // theme-preview-card está al principio de settings-grid antes de Identidad del club
+  const previewPos = html.indexOf('id="theme-preview-card"');
+  const clubIdentityPos = html.indexOf('<h3>Identidad del club</h3>');
+  assert.ok(previewPos > 0 && previewPos < clubIdentityPos, 'theme-preview-card debe estar antes de Identidad del club al inicio de Ajustes');
+
+  // preview-pane-hoy incluye pendientes y accesos rápidos
+  assert.match(html, /id="preview-hoy-pending-card"/, 'Falta la tarjeta demo de pendientes en preview Hoy');
+  assert.match(html, /id="preview-hoy-quick-card"/, 'Falta la tarjeta demo de accesos rápidos en preview Hoy');
+
+  // surfaces-buttons-card incluye la caja de preview inline
+  assert.match(html, /id="cbx-surfaces-preview-box"/, 'Falta la caja de preview en vivo en surfaces-buttons-card');
+  assert.match(html, /id="cbx-preview-btn2-sample"/, 'Falta la muestra de botón secundario en surfaces-buttons-card');
+  assert.match(html, /id="cbx-preview-quick-btn-1"/, 'Falta la muestra de accesos rápidos en surfaces-buttons-card');
+
+  // css/claude-hoy.css aplica var(--btn2) y var(--btn2Ink) a los accesos rápidos y pendientes
+  assert.match(cssHoy, /body\.cb-redesign-active #hoy \.today-quick button\s*\{[^}]*background:\s*var\(--btn2/,
+    '.today-quick button debe usar var(--btn2)');
+  assert.match(cssHoy, /body\.cb-redesign-active #hoy \.today-pending button[^{]*\{[^}]*background:\s*var\(--btn2/,
+    '.today-pending button debe usar var(--btn2)');
+});
+
+test('styles-redesign.css garantiza la adaptación fluida a columna única en pantallas móviles', () => {
+  const redesignCss = fs.readFileSync('styles-redesign.css', 'utf8');
+  assert.match(redesignCss, /@media\s*\(max-width:\s*760px\)\s*\{\s*body\.cb-redesign-active \.settings-grid\s*\{[^}]*grid-template-columns:\s*1fr !important/);
+  assert.match(redesignCss, /\.cbx-preview-tab-btn\s*\{[^}]*flex-shrink:\s*0 !important/);
+  assert.match(redesignCss, /\.cbx-preview-tabs\s*\{[^}]*-webkit-overflow-scrolling:\s*touch !important/);
+});
+
+

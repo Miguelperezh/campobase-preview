@@ -1430,5 +1430,46 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - **655/655 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
    - Service worker actualizado a `campobase-v2.44.0-...-20261002-v72-ajustes-live-preview-completo`.
 
+### 33. Entrega v73 (02/10/2026) — Previsualización Principal al Inicio de Ajustes, Mini-Previsualización Inline en Tarjetas y Reparación Integral de Botones de Hoy y Accesos Rápidos
+1. **Reubicación de la Previsualización Principal al Inicio de Ajustes (`#theme-preview-card`):**
+   - Se trasladó `#theme-preview-card` a la posición **#1 de Ajustes** (`grid-column: 1 / -1;`), situándose inmediatamente visible antes de cualquier otro panel en cuanto el usuario entra a la pantalla.
+   - La tarjeta de previsualización cuenta con 6 pestañas interactivas en vivo (Marcador & Botones, Hoy, Convocatoria, Lanzadores, Cuerpo Técnico, Pizarra Táctica).
+   - Se enriqueció la pestaña demo de **«Hoy»** con los bloques de **«Pendiente de hacer»** (con "Falta convocatoria" y "Asistencia pendiente" y sus botones [Abrir]) y **«Accesos Rápidos»** (con los 4 botones: Sesiones, Asistencia, Calendario, Convocatoria), permitiendo comprobar cómo lucen todas las áreas de la pantalla de inicio con los colores configurados.
+
+2. **Mini-Previsualización Inmediata en «Fondos, tarjetas y botones» (`#surfaces-buttons-card`):**
+   - En la tarjeta donde se personalizan los fondos, tarjetas y botones secundarios, se integró una caja de vista previa en directo (`#cbx-surfaces-preview-box`) situada justo bajo los selectores de botones secundarios.
+   - Ofrece retroalimentación visual al instante sobre cómo cambia una tarjeta con su título, un botón secundario de acción («Abrir»), los botones de accesos rápidos («⚡ Sesiones», «📋 Convocatoria»), el botón de WhatsApp y la píldora de resultados (J1 · 3-1).
+
+3. **Reparación Integral de Botones de Hoy y Accesos Rápidos:**
+   - En `css/claude-hoy.css`, `.today-quick button` forzaba `background: var(--cbx-soft) !important;` impidiendo aplicar la personalización de botones secundarios y provocando texto blanco invisible sobre fondo blanco. Se reconfiguró para usar `background: var(--btn2, #ffffff) !important;` y `color: var(--btn2Ink, #0f172a) !important;` con borde `1px solid var(--cardBorder, var(--cbx-line, #cbd5e1))`.
+   - `.today-pending button` y `.today-pending .cbx-btn-secondary` adoptan `var(--btn2)` y `var(--btn2Ink)` con tipografía destacada y borde coordinado con la tarjeta.
+   - En `css/claude-hoy.css`, se blindó el botón `#logout` («Salir») con `::after` para evitar que aparezca como un cuadro en blanco.
+
+4. **Salvaguarda Automática de Contraste:**
+   - En `js/app.js` (`applyTheme` y `updateThemePreview`), se introdujo una comprobación de luminancia relativa (YIQ) que detecta si el fondo y el texto de los botones secundarios tienen contraste insuficiente (< 45). En caso de conflicto (como blanco sobre blanco o negro sobre negro), ajusta automáticamente la tinta a `#0f172a` o `#ffffff` para impedir que el texto quede ilegible o invisible.
+
+5. **Pruebas y Verificación:**
+   - Nuevo test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` para asegurar la posición de la previsualización al inicio de Ajustes, la presencia de pendientes y accesos rápidos en la preview de Hoy, la mini-previsualización en `surfaces-buttons-card` y las reglas de `var(--btn2)` en `css/claude-hoy.css`.
+   - **656/656 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v73-preview-top-hoy-quick-buttons-fix`.
+
+### 34. Entrega v74 (02/10/2026) — Blindaje Responsivo y Fluidez en Vista Móvil (< 760px / iPhone / Android)
+1. **Ajustes y Rejilla a Columna Única en Móviles (`styles-redesign.css`):**
+   - **Diagnóstico:** La regla `body.cb-redesign-active .settings-grid` forzaba `grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)) !important;` fuera de media queries. En pantallas móviles estrechas (< 380px, como iPhone de 375px/390px o Android de 360px), el ancho mínimo de 380px provocaba un ligero desbordamiento horizontal.
+   - **Solución:** Se aplicó `@media (max-width: 760px) { body.cb-redesign-active .settings-grid { grid-template-columns: 1fr !important; gap: 1rem !important; } }`, garantizando una lectura vertical holgada, sin recortes y perfectamente adaptada al 100% del viewport móvil.
+
+2. **Desplazamiento Táctil en Píldoras de Previsualización (`.cbx-preview-tabs`):**
+   - Se añadió `flex-shrink: 0 !important;` a `.cbx-preview-tab-btn` y `-webkit-overflow-scrolling: touch !important;` a `.cbx-preview-tabs`, asegurando que las 6 pestañas de previsualización (Marcador, Hoy, Convocatoria, Lanzadores, Staff, Pizarra) se desplacen con suavidad táctil sin comprimir su texto en pantallas pequeñas.
+
+3. **Adaptación de Cabecera de Marcador en Teléfonos (< 480px):**
+   - En pantallas ultracompactas, `#preview-scoreboard-header` ajusta sus paddings a `10px 8px` y las píldoras de «A favor» / «En contra» a `padding: 3px 7px; font-size: 11px;`, evitando solapamientos entre escudos, nombres y marcadores.
+
+4. **Pruebas y Verificación:**
+   - Test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` para asegurar las reglas móviles de `.settings-grid`, `.cbx-preview-tab-btn` y scroll táctil.
+   - **657/657 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v74-mobile-settings-grid-responsive-fix`.
+
+
+
 
 

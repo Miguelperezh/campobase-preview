@@ -1829,6 +1829,33 @@ body.cb-redesign-active .settings-grid {
   align-items: start !important;
 }
 
+@media (max-width: 760px) {
+  body.cb-redesign-active .settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+.cbx-preview-tab-btn {
+  flex-shrink: 0 !important;
+}
+
+.cbx-preview-tabs {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+@media (max-width: 480px) {
+  #preview-scoreboard-header {
+    padding: 10px 8px !important;
+    gap: 4px !important;
+  }
+  .cbx-preview-gf-badge,
+  .cbx-preview-ga-badge {
+    padding: 3px 7px !important;
+    font-size: 11px !important;
+  }
+}
+
 body.cb-redesign-active .cbx-theme-preview-card,
 body.cb-redesign-active #theme-preview-card {
   grid-column: 1 / -1 !important;
