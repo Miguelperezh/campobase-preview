@@ -86,8 +86,6 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
 
   const format = String(callup?.format || match?.format || state?.format || 'F7').toUpperCase();
   const isF11 = format === 'F11';
-  const totalDuration = isF11 ? 70 : 50;
-  const halfDuration = Math.round(totalDuration / 2);
 
   // Normalizar momentos planificados
   let moments = [];
@@ -110,6 +108,34 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
       formation: isF11 ? '1-4-3-3' : '1-3-2-1',
       team: (availableIds.slice(0, isF11 ? 11 : 7)).map((id, idx) => ({ pos: basePositions[idx] || `P${idx + 1}`, playerId: id })),
     }];
+  }
+
+  // Duración oficial y tiempo de descanso según formato y tramos
+  let totalDuration = isF11 ? 90 : 70;
+  let halfDuration = isF11 ? 45 : 35;
+
+  if (options.totalDuration) {
+    totalDuration = options.totalDuration;
+    halfDuration = options.halfDuration || Math.round(totalDuration / 2);
+  } else if (match?.totalDuration || match?.duration) {
+    totalDuration = match.totalDuration || match.duration;
+    halfDuration = match.halfDuration || match.half || Math.round(totalDuration / 2);
+  } else if (prep?.totalDuration || prep?.duration) {
+    totalDuration = prep.totalDuration || prep.duration;
+    halfDuration = prep.halfDuration || prep.half || Math.round(totalDuration / 2);
+  } else if (!isF11) {
+    const positiveMinutes = moments.map((m) => Number(m.minute) || 0).filter((m) => m > 0);
+    const maxMin = Math.max(0, ...positiveMinutes);
+    if (positiveMinutes.length && maxMin <= 25) {
+      totalDuration = 50;
+      halfDuration = 25;
+    } else if (positiveMinutes.includes(30) && maxMin <= 30) {
+      totalDuration = 60;
+      halfDuration = 30;
+    } else {
+      totalDuration = 70;
+      halfDuration = 35;
+    }
   }
 
   const initialMoment = moments[0] || { minute: 0, formation: isF11 ? '1-4-3-3' : '1-3-2-1', team: [] };
@@ -323,7 +349,9 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
 
   return `
     <div id="cb-print-root" class="cb-print-root cb-print-match-plan-root">
-      <div class="cb-print-sheet cbx-pmp-sheet">
+      
+      <!-- ================= HOJA 1: TITULARES Y CRONOGRAMA ================= -->
+      <div class="cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-1">
         
         <!-- Cabecera Oficial -->
         <header class="cbx-pmp-header">
@@ -387,6 +415,38 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
           </div>
         </section>
 
+        <!-- Pie de página Hoja 1 -->
+        <footer class="cbx-pmp-footer">
+          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página 1 de 2)</span>
+          <span>Impreso el ${esc(nowPrintDate)} · Entrenador: ${esc(coachName)} · Delegado: ${esc(delegateName)}</span>
+        </footer>
+
+      </div>
+
+      <!-- ================= HOJA 2: REPARTO DE MINUTOS Y ACTA ================= -->
+      <div class="cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-2">
+        
+        <!-- Cabecera Compacta Hoja 2 -->
+        <header class="cbx-pmp-header cbx-pmp-header-compact">
+          <div class="cbx-pmp-head-left">
+            <div class="cbx-pmp-crest-box">
+              <img src="${esc(crestUrl)}" class="cbx-pmp-crest-img" alt="Escudo" onerror="this.style.display='none'">
+            </div>
+            <div class="cbx-pmp-head-meta">
+              <span class="cbx-pmp-kicker">${esc(teamName)} · ${esc(format)}</span>
+              <h2 class="cbx-pmp-title" style="font-size: 16px; margin: 0;">REPARTO DE MINUTOS Y ACTA DE CAMPO</h2>
+              <div class="cbx-pmp-match-banner">
+                <span class="cbx-pmp-rival">vs <strong>${esc(opponentName)}</strong> (${esc(venueText)})</span>
+                <span class="cbx-pmp-dot">·</span>
+                <span>${esc(formattedDate)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="cbx-pmp-head-right">
+            <span class="cbx-pmp-badge-accent">PÁGINA 2 DE 2</span>
+          </div>
+        </header>
+
         <!-- Bloque 3: Tabla de Reparto de Minutos Formativos -->
         <section class="cbx-pmp-section">
           <div class="cbx-pmp-sec-head">
@@ -443,13 +503,14 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
           </div>
         </section>
 
-        <!-- Pie de página A4 -->
+        <!-- Pie de página Hoja 2 -->
         <footer class="cbx-pmp-footer">
-          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido</span>
+          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página 2 de 2)</span>
           <span>Impreso el ${esc(nowPrintDate)} · Entrenador: ${esc(coachName)} · Delegado: ${esc(delegateName)}</span>
         </footer>
 
       </div>
+
     </div>
   `;
 }

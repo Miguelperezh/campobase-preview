@@ -1722,13 +1722,42 @@ body.cb-is-printing #cb-print-root {
   padding: 85px 20px 40px;
 }
 
+/* Botón flotante siempre visible para salir de la ficha */
+.cb-print-fab-close {
+  position: fixed !important;
+  top: max(14px, env(safe-area-inset-top, 14px)) !important;
+  right: 14px !important;
+  z-index: 2147483647 !important;
+  min-height: 42px !important;
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  font-weight: 900 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: transform .1s ease !important;
+}
+.cb-print-fab-close:active {
+  transform: scale(0.96) !important;
+}
+@media print {
+  .cb-print-fab-close { display: none !important; }
+}
+
 /* Barra de acciones de impresión (pantalla) */
 .cb-print-floating-bar {
   position: fixed;
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000000;
+  z-index: 2147483646;
   background: #0a251b;
   color: #fff;
   border-radius: 14px;
@@ -2285,10 +2314,11 @@ body.cb-is-printing #cb-print-root {
 @media screen and (max-width: 850px) {
   body.cb-is-printing #cb-print-root {
     padding: max(140px, calc(125px + env(safe-area-inset-top, 20px))) 10px 40px !important;
-    align-items: stretch !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     box-sizing: border-box !important;
   }
 
@@ -2304,7 +2334,7 @@ body.cb-is-printing #cb-print-root {
     border-bottom: 2px solid #10b981 !important;
     padding: max(10px, env(safe-area-inset-top, 10px)) 12px 10px 12px !important;
     box-sizing: border-box !important;
-    z-index: 1000002 !important;
+    z-index: 2147483647 !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6) !important;
   }
 
@@ -2359,14 +2389,15 @@ body.cb-is-printing #cb-print-root {
 
   .cb-print-sheet {
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 794px !important;
     min-height: auto !important;
     max-height: none !important;
     height: auto !important;
-    margin: 0 0 24px 0 !important;
-    padding: 16px 12px !important;
+    margin: 0 auto 28px auto !important;
+    padding: 24px 20px !important;
     box-sizing: border-box !important;
-    border-radius: 12px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
     overflow: visible !important;
   }
 

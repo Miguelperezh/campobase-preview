@@ -1515,9 +1515,12 @@ async function saveCallup(event) {
   const format = existing?.format ?? state.format;
   const config = FORMATS[format];
   const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
-  const targets = calculateMinuteTargets(availableIds, config.duration, config.players, keeperIds);
-  const callup = { id: existing?.id ?? uid(), matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? Date.now(), updatedAt: Date.now() };
-  const nextCallups = [...state.callups.filter(({ id }) => id !== callup.id), callup];
+  const existingForMatch = (!existing && match?.id)
+    ? state.callups.find((c) => c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id))
+    : null;
+  const targetId = existing?.id || existingForMatch?.id || uid();
+  const callup = { id: targetId, matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? existingForMatch?.createdAt ?? Date.now(), updatedAt: Date.now() };
+  const nextCallups = [...state.callups.filter(({ id, matchId: mId }) => id !== callup.id && mId !== match.id), callup];
   const matchesToSave = [{ ...match, callupId: callup.id, format }];
   if (existing?.matchId && existing.matchId !== match.id) {
     const oldMatch = state.matches.find(({ id }) => id === existing.matchId);
@@ -1624,14 +1627,92 @@ function renderClaudeCallup(callup) {
   const format = String(callup.format || state.format).toUpperCase();
   const config = FORMATS[format] || FORMATS.F7;
   const mode = callupPlanModes.get(callup.id) || 'escalonado';
-  let plan;
-  try {
-    if (missingPlayerCount || !keeperIds.length) throw new Error('La convocatoria histórica no permite reconstruir el plan completo.');
-    plan = buildAutoPlan({ format, playerIds: [...available], keeperIds, planMode: mode, playerNumbers: Object.fromEntries(players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
-  } catch { plan = null; }
-  const fieldCount = available.size - keeperIds.length;
   const match = state.matches.find((item) => item.id === callup.matchId || item.callupId === callup.id);
   const matchId = match?.id || '';
+  const prep = matchId ? prepForMatch(matchId) : null;
+  let plan = null;
+
+  if (prep && prep.team && prep.team.length) {
+    try {
+      const moments = normalizeMoments(prep);
+      const D = config.duration;
+      const H = config.half;
+      const field = [...available].filter((id) => !keeperIds.includes(id)).sort((a, b) => {
+        const na = cleanPlayerNumber(players.find((p) => p.id === a)?.number);
+        const nb = cleanPlayerNumber(players.find((p) => p.id === b)?.number);
+        return (Number(na) || 999) - (Number(nb) || 999);
+      });
+      const segs = {};
+      field.forEach((id) => { segs[id] = []; });
+      const gkPlan = [];
+
+      for (let i = 0; i < moments.length; i++) {
+        const from = moments[i].minute;
+        const to = Math.min(D, moments[i + 1]?.minute ?? D);
+        if (to > from) {
+          for (const slot of (moments[i].team || [])) {
+            if (!slot.playerId) continue;
+            if (keeperIds.includes(slot.playerId)) {
+              if (gkPlan.length && gkPlan[gkPlan.length - 1].id === slot.playerId && gkPlan[gkPlan.length - 1].to === from) {
+                gkPlan[gkPlan.length - 1].to = to;
+              } else {
+                gkPlan.push({ id: slot.playerId, from, to });
+              }
+            } else if (segs[slot.playerId]) {
+              const arr = segs[slot.playerId];
+              if (arr.length && arr[arr.length - 1].to === from) {
+                arr[arr.length - 1].to = to;
+              } else {
+                arr.push({ from, to });
+              }
+            }
+          }
+        }
+      }
+
+      const planned = {};
+      field.forEach((id) => {
+        planned[id] = (segs[id] || []).reduce((sum, s) => sum + (s.to - s.from), 0);
+      });
+      gkPlan.forEach((g) => {
+        planned[g.id] = (planned[g.id] || 0) + (g.to - g.from);
+      });
+
+      const changes = [];
+      for (let i = 1; i < moments.length; i++) {
+        const m = moments[i].minute;
+        const diff = describeMoment(moments[i - 1], moments[i]);
+        if (diff.pairs && diff.pairs.length) {
+          diff.pairs.forEach((p) => {
+            if (p.outId && p.inId) changes.push({ m, out: p.outId, inn: p.inId });
+          });
+        }
+      }
+      const groupsMap = {};
+      changes.forEach((c) => {
+        (groupsMap[c.m] = groupsMap[c.m] || []).push(c);
+      });
+      const groups = Object.keys(groupsMap)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((m) => ({ m, list: groupsMap[m] }));
+
+      const fieldTarget = field.length > 0 ? (config.players - 1) * D / field.length : 0;
+      const gkTarget = keeperIds.length > 0 ? D / keeperIds.length : 0;
+
+      plan = { format, D, H, slots: config.players - 1, gks: keeperIds, field, gkPlan, segs, planned, groups, fieldTarget, gkTarget };
+    } catch {
+      plan = null;
+    }
+  }
+
+  if (!plan) {
+    try {
+      if (missingPlayerCount || !keeperIds.length) throw new Error('La convocatoria histórica no permite reconstruir el plan completo.');
+      plan = buildAutoPlan({ format, playerIds: [...available], keeperIds, planMode: mode, playerNumbers: Object.fromEntries(players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
+    } catch { plan = null; }
+  }
+  const fieldCount = available.size - keeperIds.length;
   const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(callup.date || ''))?.[1];
   const roster = players.map((player) => {
     const isCalled = available.has(player.id);
@@ -1656,8 +1737,26 @@ function renderClaudeCallup(callup) {
   </article>`;
 }
 
+function deduplicateCallups(callups = []) {
+  const map = new Map();
+  for (const c of callups) {
+    const key = c.matchId ? `match:${c.matchId}` : `custom:${c.opponent}_${c.date}`;
+    const prev = map.get(key);
+    if (!prev) {
+      map.set(key, c);
+    } else {
+      const prevTime = Number(prev.updatedAt || prev.createdAt || 0);
+      const currTime = Number(c.updatedAt || c.createdAt || 0);
+      if (currTime >= prevTime) {
+        map.set(key, c);
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 function renderCallups() {
-  const list = [...state.callups].sort((a,b)=>b.date.localeCompare(a.date));
+  const list = deduplicateCallups(state.callups).sort((a,b)=>b.date.localeCompare(a.date));
   if (document.body.classList.contains('cb-redesign-active')) {
     $('#callups-list').innerHTML = list.length ? list.map(renderClaudeCallup).join('') : empty('Todavía no hay convocatorias.');
     return;
@@ -7261,9 +7360,10 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--cb-surface-bg', finalAppBg);
     target.style.setProperty('--cardBg', finalCardBg);
     target.style.setProperty('--card', finalCardBg);
-    target.style.setProperty('--cb-surface-card', finalCardBg);
-    target.style.setProperty('--cardTitle', theme.cardTitle || 'var(--ink, #0f172a)');
+    target.style.setProperty('--cardTitle', theme.cardTitle || fontColor || 'var(--ink, #0f172a)');
     target.style.setProperty('--cardBorder', theme.cardBorder || '#e2e8f0');
+    target.style.setProperty('--cbx-ink', fontColor || theme.cardTitle || 'var(--ink, #0f172a)');
+    target.style.setProperty('--cbx-line', theme.cardBorder || '#e2e8f0');
 
     target.style.setProperty('--bn', heroBase);
     target.style.setProperty('--bnInk', theme.bannerInk || '#ffffff');

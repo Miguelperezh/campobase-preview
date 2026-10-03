@@ -1492,3 +1492,36 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
 3. **Pruebas y Verificación:**
    - **660/660 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
    - Service worker actualizado a `campobase-v2.44.0-...-20261002-v76-mobile-print-pdf-specialists-theme-fix`.
+
+### 37. Entrega v77 (03/10/2026) — Corrección de Colores Inmutables, Plan de Partido 2 Páginas, Cálculo 70 min F7, Convocatorias y FAB Móvil
+1. **Textos y Dorsales Inmutables en Especialistas y Convocatoria (`css/claude-plantilla.css`, `css/claude-partido.css`, `js/app.js`):**
+   - **Diagnóstico:** En Plantilla -> Especialistas y en Convocatoria (jugadores, reparto por puestos y tramos), los textos y dorsales no respetaban el color de fuente (`fontColor`), color de títulos (`cardTitle`) ni los bordes/fondos configurados en Ajustes, mostrándose como textos negros rígidos dentro de casillas blancas.
+   - **Solución:**
+     - En `js/app.js`, `applyCustomTheme(theme)` ahora inyecta automáticamente `--cbx-ink` a partir de `fontColor` / `cardTitle`, y `--cbx-line` a partir de `cardBorder`.
+     - En `css/claude-plantilla.css`, `.specialist-rank-row strong`, `.specialist-item h4` y `.specialist-number` quedan vinculados a `var(--cardTitle, var(--cbx-ink))` y su fondo/borde a `var(--cardBg)` y `var(--cardBorder)`.
+     - En `css/claude-partido.css`, `.cbx-callup-person strong`, `.cbx-plan-row > span`, `.cbx-plan-row > b` y `.cbx-plan-change` respetan los colores configurados. En `.cbx-callup-metrics > div` se erradicó el verde `#f0f8f3` fijo, adoptando `var(--cardBg)` y `var(--bg)` adaptables.
+
+2. **Cronograma y Visibilidad de Minutos en Plan de Partido (`styles-redesign.css`, `css/claude-partido.css`):**
+   - **Diagnóstico:** Una regla CSS de alta especificidad en `styles-redesign.css` (`body.cb-redesign-active[data-has-custom-font-color="true"] span:not(...)`) forzaba texto negro (`#000000`) sobre todos los spans, provocando que las píldoras oscuras de minutos («MINUTO 17'», «MINUTO 35'», «CRONOGRAMA») quedaran ilegibles (texto negro sobre fondo oscuro).
+   - **Solución:** Se protegieron las píldoras y badges en la regla de exclusión de `styles-redesign.css` para `.cbx-pmp-min-pill`, `.cbx-pmp-badge-accent`, `.cbx-pmp-tag-in`, `.cbx-pmp-tag-out`, `.cbx-pmp-tag-move`, `.cbx-pmp-tag-gk`, `.cb-print-floating-bar *` y `.cb-print-sheet *`. En `css/claude-partido.css`, `.cbx-pmp-min-pill` y `.cbx-pmp-badge-accent` adoptan `var(--bn, var(--cbx-hero))` con texto blanco forzado (`#ffffff !important`).
+
+3. **Descarga de PDF de 2 Páginas Completas (`js/print-match-plan.js`, `js/print-session-export.js`):**
+   - **Diagnóstico:** El generador de PDF solo guardaba 1 página porque el documento no estaba dividido en elementos de página `.cb-print-page`. `generatePdfBlob` renderizaba el contenedor completo y lo recortaba a los 297mm de la primera página, perdiendo la tabla de minutos y el acta de campo.
+   - **Solución:** `buildMatchPlanHtml` divide la ficha en 2 hojas A4 independientes con clases `cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-1` y `cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-2`. `generatePdfBlob` itera por todos los elementos con `.cb-print-page` y crea páginas secuenciales con `doc.addPage('a4', 'portrait')`, generando un PDF limpio y completo de 2 páginas.
+
+4. **Cálculo de Minutos en F7 y Tramo hasta los 70 Minutos Oficiales (`js/print-match-plan.js`):**
+   - **Diagnóstico:** La duración estaba fijada estáticamente a `totalDuration = 50; halfDuration = 25;` en F7. En partidos reales de Alevines con cambios al minuto 50, los cambios sumaban 0 min (50'-50') y el cómputo totalizaba sobre `/ 50'` dejando a los jugadores sin sus minutos reglamentarios.
+   - **Solución:** Se implementó detección dinámica de duración y descanso. Si el partido cuenta con tramos superiores a 25 min (como 35' o 50'), `totalDuration` se establece en 70 minutos oficiales (descanso a los 35 min). Los jugadores que entran al minuto 50 disputan el tramo final 50'–70' (20 min) y los porcentajes y sumas reflejan con exactitud los 70 minutos.
+
+5. **Eliminación de Rival Duplicado en Convocatorias ("Huracán A") (`js/app.js`):**
+   - **Diagnóstico:** Al guardar una convocatoria desde el formulario (`saveCallup`), si el usuario no tenía el id en el campo hidden del form, se generaba un nuevo `uid()`, duplicando la tarjeta del rival en el listado.
+   - **Solución:** `saveCallup` ahora busca previamente si ya existe una convocatoria registrada para ese partido (`state.callups.find(c => c.matchId === match.id)`) y reutiliza su identificador (`existingForMatch.id`). Además, `nextCallups` filtra por `mId !== match.id` y `renderCallups()` ejecuta `deduplicateCallups(callups)` asegurando que nunca se muestre más de una convocatoria por partido.
+
+6. **Sincronización del Plan por Tramos en Convocatoria con la Preparación (`js/app.js`):**
+   - **Diagnóstico:** La vista de convocatoria generaba su plan por tramos llamando siempre al algoritmo automático `buildAutoPlan()`, ignorando las sustituciones reales configuradas manualmente por el entrenador en Preparación de partido.
+   - **Solución:** En `renderClaudeCallup`, se obtiene la preparación guardada para ese encuentro mediante `prepForMatch(matchId)` y se derivan los tramos, segmentos y rotaciones directamente a partir de sus momentos planificados (`normalizeMoments(prep)`), reflejando con total fidelidad los cambios definidos por el entrenador.
+
+7. **Botón FAB Flotante Independiente en Móvil (`js/print-session-export.js`, `css/claude-entreno.css`):**
+   - Se añadió un botón flotante persistente `.cb-print-fab-close` con z-index ultra-prioritario (`2147483647`) fijado en la pantalla que permite salir de cualquier ficha A4 o vista de impresión en dispositivos táctiles en cualquier momento sin depender del scroll.
+   - Se verificaron 666/666 tests unitarios y de integración pasando al 100%.
+

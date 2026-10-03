@@ -767,9 +767,13 @@ function generateStandalonePrintPage(htmlContent) {
 }
 
 function isMobileDevice() {
+  if (typeof window === 'undefined') return false;
+  if (window.innerWidth <= 850) return true;
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  return /iPhone|iPod|Android.*Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  if (/iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
+  if (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua)) return true;
+  return Boolean(window.navigator?.standalone);
 }
 
 export async function ensurePdfLibraries() {
@@ -796,9 +800,12 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
   const element = targetElement || document.getElementById('cb-print-root');
   if (!element) return null;
 
-  const floatingBar = element.querySelector('.cb-print-floating-bar');
+  const floatingBar = element.querySelector('.cb-print-floating-bar') || (typeof document !== 'undefined' ? document.querySelector('.cb-print-floating-bar') : null);
+  const fabBtn = element.querySelector('.cb-print-fab-close') || (typeof document !== 'undefined' ? document.querySelector('.cb-print-fab-close') : null);
   const prevBarDisplay = floatingBar ? floatingBar.style.display : null;
+  const prevFabDisplay = fabBtn ? fabBtn.style.display : null;
   if (floatingBar) floatingBar.style.display = 'none';
+  if (fabBtn) fabBtn.style.display = 'none';
 
   try {
     const doc = new jsPDF({
@@ -824,7 +831,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
         backgroundColor: '#ffffff',
         logging: false,
         windowWidth: 794,
-        imageTimeout: 2000,
+        imageTimeout: 3000,
       });
 
       const timeoutPromise = new Promise((_, reject) => {
@@ -846,6 +853,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
     return null;
   } finally {
     if (floatingBar) floatingBar.style.display = prevBarDisplay || '';
+    if (fabBtn) fabBtn.style.display = prevFabDisplay || '';
   }
 }
 
@@ -1051,6 +1059,14 @@ export function executePrint(htmlContent) {
       </div>
     </div>
   `;
+  // Botón FAB independiente para móvil y pantallas táctiles (dentro del contenedor pero fixed en pantalla)
+  const fabCloseBtn = document.createElement('button');
+  fabCloseBtn.type = 'button';
+  fabCloseBtn.className = 'cb-print-fab-close';
+  fabCloseBtn.id = 'cb-print-fab-close';
+  fabCloseBtn.setAttribute('aria-label', 'Cerrar ficha y volver a CampoBase');
+  fabCloseBtn.innerHTML = '✕ Salir';
+  container.prepend(fabCloseBtn);
   container.prepend(floatingBar);
   container.setAttribute('data-print', 'on');
   document.body.appendChild(container);
@@ -1101,6 +1117,9 @@ export function executePrint(htmlContent) {
       });
       if (container && container.parentNode) {
         container.remove();
+      }
+      if (fabCloseBtn && fabCloseBtn.parentNode) {
+        fabCloseBtn.remove();
       }
       previouslyOpenDialogs.forEach((d) => {
         try { if (!d.open && typeof d.showModal === 'function') d.showModal(); } catch {}
@@ -1209,6 +1228,13 @@ export function executePrint(htmlContent) {
       } catch (err) {
         triggerBrowserPrint(container, cleanup);
       }
+    });
+  }
+
+  if (typeof fabCloseBtn?.addEventListener === 'function') {
+    fabCloseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      cleanup();
     });
   }
 
