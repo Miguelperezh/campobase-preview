@@ -1,3 +1,4 @@
+import { applyComponentColors, observeComponentColors, configurableButtons } from './theme-component-colors.js?v=color-controls-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -9,7 +10,7 @@ import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from
 import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v54-delegate-permissions-speed-fix';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
-import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
+import { LIVE_FORMATIONS, LIVE_OPPONENT, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
@@ -84,6 +85,9 @@ const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'S
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
+if (typeof window !== 'undefined') {
+  window.__campobaseState = state;
+}
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const ACTIVE_VIEW_KEY = 'campobase.activeView';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
@@ -650,6 +654,19 @@ async function refresh() {
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
+  try {
+    const cachedTheme = JSON.parse(localStorage.getItem('campobase.theme') || 'null');
+    if (cachedTheme && typeof cachedTheme === 'object') {
+      state.settings.theme = {
+        ...cachedTheme,
+        ...(state.settings.theme || {}),
+        views: {
+          ...(cachedTheme.views || {}),
+          ...(state.settings.theme?.views || {}),
+        },
+      };
+    }
+  } catch {}
   if (!Array.isArray(state.settings.presets) || !state.settings.presets.length) {
     try {
       const cachedPresets = JSON.parse(localStorage.getItem('campobase.presets') || 'null');
@@ -1616,6 +1633,76 @@ async function synchronizeRotationCounters() {
 const callupPlanModes = new Map();
 let pendingPrepAfterCallupMatchId = '';
 
+async function generateAndSaveCallupRotation(callupId, matchId) {
+  const callup = state.callups.find((c) => c.id === callupId);
+  if (!callup) return;
+  const availableIds = callup.availableIds || [];
+  if (!availableIds.length) return toast('La convocatoria no tiene jugadores disponibles.');
+  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  const mode = callupPlanModes.get(callup.id) || 'escalonado';
+  let auto;
+  try {
+    auto = buildAutoPlan({
+      format: callup.format || state.format || 'F7',
+      playerIds: availableIds,
+      keeperIds,
+      planMode: mode,
+    });
+  } catch (err) {
+    return toast('No se pudo calcular la rotación: ' + (err.message || 'datos incompletos'));
+  }
+
+  const targetMatchId = matchId || callup.matchId;
+  if (!targetMatchId) return toast('Asocia la convocatoria a un partido para guardar la rotación.');
+
+  let prep = prepForMatch(targetMatchId);
+  const isF11 = String(callup.format || state.format).toUpperCase() === 'F11';
+  const formation = prep?.formacion || (isF11 ? '1-4-3-3' : '1-3-2-1');
+
+  const baseSlots = isF11
+    ? ['Portero', 'Lateral derecho', 'Central derecho', 'Central izquierdo', 'Lateral izquierdo', 'Pivote', 'Interior derecho', 'Interior izquierdo', 'Extremo derecho', 'Delantero', 'Extremo izquierdo']
+    : ['Portero', 'Lateral derecho', 'Central', 'Lateral izquierdo', 'Medio centro', 'Medio centro', 'Delantero'];
+
+  const initialField = [];
+  const firstGk = keeperIds[0];
+  if (firstGk) initialField.push({ pos: 'Portero', playerId: firstGk });
+  const otherStarters = availableIds.filter((id) => id !== firstGk).slice(0, (isF11 ? 11 : 7) - (firstGk ? 1 : 0));
+  otherStarters.forEach((id, idx) => {
+    initialField.push({ pos: baseSlots[idx + (firstGk ? 1 : 0)] || 'Campo', playerId: id });
+  });
+
+  const moments = [{ id: 'inicio', minute: 0, formation, team: initialField }];
+
+  for (const group of auto.groups) {
+    let team = moments.at(-1).team.map((slot) => ({ ...slot }));
+    for (const change of group.list) {
+      const index = team.findIndex((slot) => slot.playerId === (change.out || change.sale));
+      const inId = change.inn || change.entra;
+      if (index >= 0 && availableIds.includes(inId)) {
+        team = asignarJugador(team, index, inId);
+      }
+    }
+    moments.push({ id: uid(), minute: group.m, formation, team });
+  }
+
+  const prepPayload = {
+    ...(prep || {}),
+    id: prep?.id || uid(),
+    matchId: targetMatchId,
+    formacion: formation,
+    team: moments[0].team,
+    moments,
+    totalDuration: auto.D,
+    halfDuration: auto.H,
+    updatedAt: Date.now(),
+  };
+
+  await put('preparaciones', prepPayload);
+  await refresh(true);
+  renderCallups();
+  toast('Rotación equitativa generada y guardada con éxito.');
+}
+
 function renderClaudeCallup(callup) {
   const available = new Set(callup.availableIds || []);
   const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
@@ -1726,13 +1813,21 @@ function renderClaudeCallup(callup) {
   }).join('') : '';
   const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
   return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
-    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span>${available.size} convocados</span><span>${exclusions.length} fuera</span></div></header>
+    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span class="cbx-callup-badge-in">${available.size} convocados</span><span class="cbx-callup-badge-out">${exclusions.length} fuera</span></div></header>
       <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
       <ul class="cbx-callup-roster">${roster}</ul>
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" aria-label="Modo del plan de cambios"><button type="button" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes || '<p class="meta">No hay cambios previstos.</p>'}</div>` : '<p class="meta">No se puede calcular un plan fiable para este registro histórico.</p>'}</section>
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+        <div style="padding:12px 6px;text-align:center;">
+          <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}" style="min-height:36px;padding:0 14px;border-radius:10px;font:800 12px var(--cbx-ui);background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;border:0;cursor:pointer;">⚡ Generar rotación equitativa</button>
+            ${matchId ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:36px;padding:0 12px;border-radius:10px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Editar en Preparación</button>` : ''}
+          </div>
+        </div>
+      `}</div>` : '<p class="meta">No se puede calcular un plan fiable para este registro histórico.</p>'}</section>
     </div>
   </article>`;
 }
@@ -2598,10 +2693,21 @@ function renderTacticsBoard(which) {
   }
   const cur = sc.state();
   const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === cur.formacion ? 'selected' : ''}>${f}</option>`).join('');
+  const rivalBtnLabel = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
   root.innerHTML = `
     <article class="panel live-tactics">
-      <div class="section-head"><div><p class="eyebrow">Planteamiento</p><h3>Pizarra táctica en vivo</h3></div><button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button></div>
-      <div class="formacion-row"><label for="${sc.p}-formacion">Táctica:</label><select id="${sc.p}-formacion">${formacionOptions}</select></div>
+      <div class="section-head">
+        <div><p class="eyebrow">Planteamiento</p><h3>Pizarra táctica en vivo</h3></div>
+        <div class="button-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-head-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
+          <button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button>
+        </div>
+      </div>
+      <div class="formacion-row">
+        <label for="${sc.p}-formacion">Táctica:</label>
+        <select id="${sc.p}-formacion">${formacionOptions}</select>
+        <button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
+      </div>
       <div class="board-wrap"><svg id="${sc.p}-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica en vivo"></svg></div>
       <div class="tactic-tools live-tactics-tools" id="${sc.p}-tools" role="toolbar" aria-label="Herramientas de la pizarra en vivo"></div>
       <div class="live-tactics-slots" id="${sc.p}-slots"></div>
@@ -2633,14 +2739,17 @@ function arrangeClaudeLiveBoard(sc) {
   chips.setAttribute('role', 'group');
   chips.setAttribute('aria-label', 'Sistema táctico');
   chips.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-live-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('') +
-    `<button type="button" class="cbx-live-rival-btn" id="live-rival-toggle-btn" aria-pressed="${String(liveTacticsShowOpponent)}" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer">${liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button>`;
+    `<button type="button" class="cbx-live-rival-btn live-rival-btn" id="live-rival-toggle-btn" aria-pressed="${String(liveTacticsShowOpponent)}" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer">${liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button>`;
   select.after(chips);
   chips.addEventListener('click', (event) => {
     const rivalBtn = event.target.closest('#live-rival-toggle-btn');
     if (rivalBtn) {
       liveTacticsShowOpponent = !liveTacticsShowOpponent;
-      rivalBtn.textContent = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
-      rivalBtn.setAttribute('aria-pressed', String(liveTacticsShowOpponent));
+      const label = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      $$('.live-rival-btn, #live-rival-toggle-btn').forEach((b) => {
+        b.textContent = label;
+        b.setAttribute('aria-pressed', String(liveTacticsShowOpponent));
+      });
       renderTacticsBoardSvg(sc);
       renderTacticsBoardSvg(sc, sc.boardFull());
       toast(liveTacticsShowOpponent ? 'Rival visible en partido en vivo.' : 'Rival oculto.');
@@ -2695,8 +2804,9 @@ function renderTacticsBoardSvg(sc, target) {
     parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.8" fill="#0f172a"/><text x="${p.x}" y="${p.y + 3.7}" class="tac-player-label name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
   if (liveTacticsShowOpponent || t.showOpponent) {
-    (t.opponent || []).forEach((p, i) => {
-      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n || (i + 1))}</text></g>`);
+    const oppList = (t.opponent && t.opponent.length) ? t.opponent : LIVE_OPPONENT;
+    oppList.forEach((p, i) => {
+      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0" fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num" fill="#ffffff" font-size="3.6" font-weight="900" text-anchor="middle">${escapeHtml(p.n || (i + 1))}</text></g>`);
     });
   }
   const ball = t.ball || { x: 50, y: 50 };
@@ -2858,6 +2968,24 @@ function wireTacticsBoard(sc) {
   };
   if (tools) tools.addEventListener('click', (e) => { const b = e.target.closest('[data-live-tool]'); if (b) setTool(b.dataset.liveTool); });
   if (toolsFull) toolsFull.addEventListener('click', (e) => { const b = e.target.closest('[data-live-tool]'); if (b) setTool(b.dataset.liveTool); });
+
+  const liveRivalBtns = [
+    $(`#${sc.p}-toggle-rival-btn`),
+    $(`#${sc.p}-toggle-rival-head-btn`),
+  ].filter(Boolean);
+  liveRivalBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      liveTacticsShowOpponent = !liveTacticsShowOpponent;
+      const label = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      $$('.live-rival-btn, #live-rival-toggle-btn').forEach((b) => {
+        b.textContent = label;
+        b.setAttribute('aria-pressed', String(liveTacticsShowOpponent));
+      });
+      renderTacticsBoardSvg(sc);
+      renderTacticsBoardSvg(sc, sc.boardFull());
+      toast(liveTacticsShowOpponent ? 'Rival visible en partido en vivo.' : 'Rival oculto.');
+    });
+  });
 
   const popup = sc.popup();
   const popupSelect = sc.popupSelect();
@@ -4680,7 +4808,7 @@ function renderPrepBoard(targetSvg = null) {
   });
   if (prepShowRival) {
     const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
-    OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
+    OPP.forEach((p, i) => parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0" fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num" fill="#ffffff" font-size="3.6" font-weight="900" text-anchor="middle">${escapeHtml(p.n)}</text></g>`));
   }
   parts.push('<g class="tac-ball" data-piece="ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
   svg.innerHTML = parts.join('');
@@ -4745,8 +4873,14 @@ function wirePrepEditor() {
     toggleRivalBtn.addEventListener('click', () => {
       prepShowRival = !prepShowRival;
       toggleRivalBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      toggleRivalBtn.setAttribute('aria-pressed', String(prepShowRival));
+      toggleRivalBtn.classList.toggle('active', prepShowRival);
       const pillBtn = $('#prep-toggle-rival-pill');
-      if (pillBtn) pillBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      if (pillBtn) {
+        pillBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+        pillBtn.setAttribute('aria-pressed', String(prepShowRival));
+        pillBtn.classList.toggle('active', prepShowRival);
+      }
       renderPrepBoard();
       toast(prepShowRival ? 'Rival visible en la preparación.' : 'Rival oculto.');
     });
@@ -5782,12 +5916,29 @@ function showExerciseDetail(exerciseId) {
   if (dialog) dialog.scrollTop = 0;
 }
 
+async function toggleTrainingSessionCompleted(id) {
+  const session = state.trainingSessions.find((s) => s.id === id);
+  if (!session) return;
+  const isCompleted = !session.completed;
+  const updated = {
+    ...session,
+    completed: isCompleted,
+    updatedAt: Date.now(),
+  };
+  await put('settings', updated);
+  await refresh(true);
+  renderTrainingSessions();
+  toast(isCompleted ? 'Entrenamiento archivado como realizado.' : 'Entrenamiento desmarcado y movido a pendientes.');
+}
+
 function renderTrainingSessions() {
-  const sessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+  const allSessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+  const activeSessions = allSessions.filter((s) => !s.completed);
+  const completedSessions = allSessions.filter((s) => !!s.completed);
 
   if (document.body.classList.contains('cb-redesign-active')) {
     const root = $('#sessions-list');
-    if (!sessions.length) {
+    if (!allSessions.length) {
       root.innerHTML = `<div class="cbx-card empty-state" style="text-align:center;padding:32px 16px;">
         <h3 style="font:800 20px var(--cbx-disp);text-transform:uppercase;color:var(--cbx-ink);margin-bottom:8px;">Todavía no hay sesiones de entrenamiento guardadas</h3>
         <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">Usa «+ Sesión» para crear una sesión o «WhatsApp semana» para compartir horarios.</p>
@@ -5795,13 +5946,15 @@ function renderTrainingSessions() {
       return;
     }
 
-    root.innerHTML = `<div class="cbx-sessions-grid">${sessions.map((session) => {
+    const renderCard = (session) => {
       const targetDuration = Number(session.targetDuration) || 60;
       const totalDuration = Number(session.totalDuration) || (session.blocks || []).reduce((acc, b) => acc + (Number(b.duration) || 0), 0);
 
       // Status pill
       let statusPill = '';
-      if (totalDuration < targetDuration) {
+      if (session.completed) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-green" style="background:var(--btn, #10b981);color:var(--btnInk, #ffffff);font-weight:800;">✓ Realizado</span>`;
+      } else if (totalDuration < targetDuration) {
         statusPill = `<span class="cbx-session-pill cbx-session-pill-amber">Quedan ${targetDuration - totalDuration} min</span>`;
       } else if (totalDuration === targetDuration) {
         statusPill = `<span class="cbx-session-pill cbx-session-pill-green">Completa</span>`;
@@ -5863,7 +6016,7 @@ function renderTrainingSessions() {
       }).join('');
 
       return `
-        <article class="cbx-session-card panel session-card" data-session-id="${session.id}">
+        <article class="cbx-session-card panel session-card ${session.completed ? 'is-completed' : ''}" data-session-id="${session.id}">
           <div class="cbx-session-pills-row">
             <span class="cbx-session-pill cbx-session-pill-date">${escapeHtml(dateFormatted)}${escapeHtml(timeStr)}</span>
             ${statusPill}
@@ -5885,6 +6038,9 @@ function renderTrainingSessions() {
             <button type="button" class="open-whatsapp-session cbx-btn-wa" data-id="${session.id}">📱 WhatsApp</button>
             <button type="button" class="print-session cbx-btn-sub" data-id="${session.id}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir</button>
             <button type="button" class="edit-session cbx-btn-sub" data-id="${session.id}">✏️ Editar</button>
+            <button type="button" class="toggle-session-completed cbx-btn-completed ${session.completed ? 'is-completed' : ''}" data-id="${session.id}" title="${session.completed ? 'Marcar como pendiente' : 'Marcar como realizado'}">
+              ${session.completed ? '✓ Realizado' : '○ Realizado'}
+            </button>
           </div>
           <details class="cbx-session-more-details">
             <summary>Más opciones</summary>
@@ -5895,11 +6051,36 @@ function renderTrainingSessions() {
           </details>
         </article>
       `;
-    }).join('')}</div>`;
+    };
+
+    let html = '';
+    if (activeSessions.length) {
+      html += `<div class="cbx-sessions-grid">${activeSessions.map(renderCard).join('')}</div>`;
+    } else if (completedSessions.length) {
+      html += `<div class="cbx-card empty-state" style="text-align:center;padding:24px 16px;margin-bottom:16px;">
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">No hay entrenamientos pendientes. Todos los entrenamientos están archivados como realizados abajo.</p>
+      </div>`;
+    }
+
+    if (completedSessions.length) {
+      html += `
+        <details class="cbx-completed-sessions-accordion" ${!activeSessions.length ? 'open' : ''}>
+          <summary class="cbx-completed-sessions-summary">
+            <span>📁 Entrenamientos realizados (${completedSessions.length})</span>
+            <span class="cbx-accordion-indicator">▾</span>
+          </summary>
+          <div class="cbx-sessions-grid cbx-completed-sessions-grid">
+            ${completedSessions.map(renderCard).join('')}
+          </div>
+        </details>
+      `;
+    }
+
+    root.innerHTML = html;
     return;
   }
 
-  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
+  $('#sessions-list').innerHTML = allSessions.length ? allSessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
     const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration, session.pitch);
     const badgeExtra = durationInfo.badgeText
@@ -6063,19 +6244,30 @@ function renderClaudeTactics() {
         aspect: claudeTacticAspect,
         showOpponent: claudeTacticShowRival,
       };
+      if (claudeTacticShowRival && (!claudeTacticDraft.opponent || !claudeTacticDraft.opponent.length)) {
+        const aspectOpp = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, true);
+        claudeTacticDraft.opponent = aspectOpp.opponent;
+      }
     } else {
       claudeTacticDraft.showOpponent = claudeTacticShowRival;
+      if (claudeTacticShowRival && (!claudeTacticDraft.opponent || !claudeTacticDraft.opponent.length)) {
+        const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, true);
+        claudeTacticDraft.opponent = aspectData.opponent;
+      }
     }
     boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
-    claudeBoardController = initTacticBoard({
-      board: boardEl,
-      tools: null,
-      getState: () => claudeTacticDraft,
-      setState: (ns) => { claudeTacticDraft = ns; },
-      render: () => {
-        boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
-      },
-    });
+    if (!claudeBoardController || !boardEl.__hasTacticListener) {
+      boardEl.__hasTacticListener = true;
+      claudeBoardController = initTacticBoard({
+        board: boardEl,
+        tools: null,
+        getState: () => claudeTacticDraft,
+        setState: (ns) => { claudeTacticDraft = ns; },
+        render: () => {
+          boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
+        },
+      });
+    }
   }
 
   const guidesTitle = $('#cbx-guides-title');
@@ -6823,12 +7015,49 @@ const EXTENDED_SWATCH_CONFIGS = {
       ['#facc15', 'Amarillo']
     ]
   },
+  waBg: {
+    containerId: 'cbx-wa-bg-swatches',
+    swatches: [
+      ['', 'Verde WhatsApp (#25d366)'],
+      ['#25d366', 'Verde WhatsApp'],
+      ['#10b981', 'Esmeralda'],
+      ['#0a251b', 'Verde campo'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo club'],
+      ['#111827', 'Negro']
+    ]
+  },
   waInk: {
     containerId: 'cbx-wa-ink-swatches',
     swatches: [
       ['', 'Verde oscuro (por defecto)'],
       ['#ffffff', 'Blanco'],
-      ['#0f172a', 'Negro']
+      ['#0f172a', 'Negro'],
+      ['#053b1d', 'Verde oscuro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  dorsalBg: {
+    containerId: 'cbx-dorsal-bg-swatches',
+    swatches: [
+      ['', 'Auto (Tema)'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#111827', 'Negro'],
+      ['#c8102e', 'Rojo club'],
+      ['#2563eb', 'Azul real'],
+      ['#f59e0b', 'Dorado'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  dorsalInk: {
+    containerId: 'cbx-dorsal-ink-swatches',
+    swatches: [
+      ['', 'Auto (Blanco)'],
+      ['#ffffff', 'Blanco'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro']
     ]
   },
   resInk: {
@@ -6963,6 +7192,56 @@ const EXTENDED_SWATCH_CONFIGS = {
       ['#0f172a', 'Oscuro']
     ]
   },
+  spLeadBg: {
+    containerId: 'cbx-sp-lead-bg-swatches',
+    swatches: [
+      ['', 'Rojo (#c8102e por defecto)'],
+      ['#c8102e', 'Rojo club'],
+      ['#dc2626', 'Rojo fuego'],
+      ['#b91c1c', 'Granate'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#1e3a8a', 'Azul marino'],
+      ['#2563eb', 'Azul real'],
+      ['#f59e0b', 'Dorado'],
+      ['#111827', 'Negro']
+    ]
+  },
+  spLeadInk: {
+    containerId: 'cbx-sp-lead-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#ffffff', 'Blanco'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro']
+    ]
+  },
+  spSubBg: {
+    containerId: 'cbx-sp-sub-bg-swatches',
+    swatches: [
+      ['', 'Gris suave (por defecto)'],
+      ['#f1f5f9', 'Gris suave'],
+      ['#e2e8f0', 'Gris perla'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#dbeafe', 'Azul suave'],
+      ['#fde8ec', 'Rojo suave'],
+      ['#fff8eb', 'Dorado suave'],
+      ['#111827', 'Negro']
+    ]
+  },
+  spSubInk: {
+    containerId: 'cbx-sp-sub-ink-swatches',
+    swatches: [
+      ['', 'Oscuro (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco'],
+      ['#334155', 'Gris pizarra'],
+      ['#0a251b', 'Verde campo'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
   tbPitch: {
     containerId: 'cbx-tb-pitch-swatches',
     swatches: [
@@ -7020,11 +7299,163 @@ const EXTENDED_SWATCH_CONFIGS = {
   }
 };
 
+const CAMPOBASE_VIEW_IDS = [
+  'hoy', 'plantilla', 'cuerpo-tecnico', 'convocatorias',
+  'partido', 'delegado', 'preparacion', 'calendario',
+  'asistencia', 'ejercicios', 'sesiones', 'tacticas', 'ajustes', 'exercise-detail', 'comunicador'
+];
+
+function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, defaultBtn2, defaultBtn2Ink, defaultCardBg, defaultCardBorder, defaultFontColor) {
+  const viewsData = theme?.views || {};
+  CAMPOBASE_VIEW_IDS.forEach((viewId) => {
+    const viewEl = document.getElementById(viewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[viewId]);
+    if (!viewEl) return;
+    const v = viewsData[viewId] || (viewId === 'exercise-detail' ? viewsData.ejercicios : null) || {};
+
+    const bn = v.bannerBg || theme?.bannerBg || defaultHero || '#0a251b';
+    const bnInk = v.bannerInk || theme?.bannerInk || '#ffffff';
+    const btn = v.btnBg || theme?.btnBg || defaultBtn || '#10b981';
+    const btnInk = v.btnInk || theme?.btnInk || defaultBtnInk || '#ffffff';
+    const btn2 = v.btn2Bg || theme?.btn2Bg || defaultBtn2 || '#ffffff';
+    const btn2Ink = v.btn2Ink || theme?.btn2Ink || defaultBtn2Ink || '#0f172a';
+    const vFontColor = v.fontColor || v.textColor || theme?.fontColor || defaultFontColor || '#0f172a';
+    const cardTitle = v.cardTitle || theme?.cardTitle || vFontColor || '#0f172a';
+    const cardBg = v.cardBg || v.cardHue || theme?.cardHue || defaultCardBg || '#ffffff';
+    const cardBorder = v.cardBorder || theme?.cardBorder || defaultCardBorder || '#e2e8f0';
+    const dorsalBg = v.dorsalBg || theme?.dorsalBg || bn;
+    const dorsalInk = v.dorsalInk || theme?.dorsalInk || bnInk;
+    const waBg = v.waBg || theme?.waBg || '#25d366';
+    const waInk = v.waInk || theme?.waInk || '#ffffff';
+    const gfBg = v.gfBg || theme?.gfBg || '#f0f7f3';
+    const gfInk = v.gfInk || theme?.gfInk || '#14532d';
+    const gaBg = v.gaBg || theme?.gaBg || '#fdf2f4';
+    const gaInk = v.gaInk || theme?.gaInk || '#9f1239';
+    const spLeadBg = v.spLeadBg || theme?.spLeadBg || '#c8102e';
+    const spLeadInk = v.spLeadInk || theme?.spLeadInk || '#ffffff';
+    const spSubBg = v.spSubBg || theme?.spSubBg || '#f1f5f9';
+    const spSubInk = v.spSubInk || theme?.spSubInk || '#0f172a';
+    const tbPitch = v.tbPitch || theme?.tbPitch || '#064e3b';
+    const tbLines = v.tbLines || theme?.tbLines || '#ffffff';
+    const tbTeam = v.tbTeam || theme?.tbTeam || '#10b981';
+    const tbRival = v.tbRival || theme?.tbRival || '#ef4444';
+    const tbArrow = v.tbArrow || theme?.tbArrow || '#fbbf24';
+
+    const todayMatchBg = v.todayMatchBg || bn;
+    const todayMatchInk = v.todayMatchInk || bnInk;
+    const callupBtnBg = v.callupBtnBg || v.btnBg || btn;
+    const callupBtnInk = v.callupBtnInk || v.btnInk || btnInk;
+    const callupHeaderBg = v.callupHeaderBg || bn;
+    const callupHeaderInk = v.callupHeaderInk || bnInk;
+    const callupBadgeBg = v.callupBadgeBg || 'rgba(255, 255, 255, 0.2)';
+    const callupBadgeInk = v.callupBadgeInk || '#ffffff';
+    const callupOutBg = v.callupOutBg || '#ef4444';
+    const callupOutInk = v.callupOutInk || '#ffffff';
+    const planModeTrack = v.planModeTrack || 'color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--cardBorder, #e2e8f0))';
+    const planModeBg = v.planModeBg || 'transparent';
+    const planModeInk = v.planModeInk || 'var(--cbx-muted, #64748b)';
+    const planModeActiveBg = v.planModeActiveBg || 'var(--cardBg, #ffffff)';
+    const planModeActiveInk = v.planModeActiveInk || 'var(--cardTitle, #0f172a)';
+
+    const prepHeaderBg = v.prepHeaderBg || bn;
+    const prepHeaderInk = v.prepHeaderInk || bnInk;
+    const prepStatusBg = v.prepStatusBg || '#fff1d6';
+    const prepStatusInk = v.prepStatusInk || '#8a5900';
+    const whistleBg = v.whistleBg || bn;
+    const whistleInk = v.whistleInk || bnInk;
+    const printBg = v.printBg || btn2;
+    const printInk = v.printInk || btn2Ink;
+    const editBg = v.editBg || btn2;
+    const editInk = v.editInk || btn2Ink;
+    const completedBg = v.completedBg || '#f1f5f9';
+    const completedInk = v.completedInk || '#0f172a';
+    const completedActiveBg = v.completedActiveBg || btn;
+    const completedActiveInk = v.completedActiveInk || btnInk;
+    const calloutBg = v.calloutBg || 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))';
+    const calloutInk = v.calloutInk || vFontColor;
+
+    viewEl.style.setProperty('--bn', bn);
+    viewEl.style.setProperty('--bnInk', bnInk);
+    viewEl.style.setProperty('--btn', btn);
+    viewEl.style.setProperty('--btnBg', btn);
+    viewEl.style.setProperty('--btnInk', btnInk);
+    viewEl.style.setProperty('--btn2', btn2);
+    viewEl.style.setProperty('--btn2Bg', btn2);
+    viewEl.style.setProperty('--btn2Ink', btn2Ink);
+    viewEl.style.setProperty('--view-font-color', vFontColor);
+    viewEl.style.setProperty('--cardTitle', cardTitle);
+    viewEl.style.setProperty('--cardBg', cardBg);
+    viewEl.style.setProperty('--cardBorder', cardBorder);
+    viewEl.style.setProperty('--dorsal-bg', dorsalBg);
+    viewEl.style.setProperty('--dorsal-ink', dorsalInk);
+    viewEl.style.setProperty('--wa-bg', waBg);
+    viewEl.style.setProperty('--wa-ink', waInk);
+    viewEl.style.setProperty('--waInk', waInk);
+    viewEl.style.setProperty('--gfBg', gfBg);
+    viewEl.style.setProperty('--gfInk', gfInk);
+    viewEl.style.setProperty('--gaBg', gaBg);
+    viewEl.style.setProperty('--gaInk', gaInk);
+    viewEl.style.setProperty('--sp-lead-bg', spLeadBg);
+    viewEl.style.setProperty('--sp-lead-ink', spLeadInk);
+    viewEl.style.setProperty('--sp-sub-bg', spSubBg);
+    viewEl.style.setProperty('--sp-sub-ink', spSubInk);
+    viewEl.style.setProperty('--tb-pitch', tbPitch);
+    viewEl.style.setProperty('--tb-lines', tbLines);
+    viewEl.style.setProperty('--tb-team', tbTeam);
+    viewEl.style.setProperty('--tb-rival', tbRival);
+    viewEl.style.setProperty('--tb-arrow', tbArrow);
+
+    viewEl.style.setProperty('--today-match-bg', todayMatchBg);
+    viewEl.style.setProperty('--today-match-ink', todayMatchInk);
+    viewEl.style.setProperty('--callup-btn-bg', callupBtnBg);
+    viewEl.style.setProperty('--callup-btn-ink', callupBtnInk);
+    viewEl.style.setProperty('--callup-header-bg', callupHeaderBg);
+    viewEl.style.setProperty('--callup-header-ink', callupHeaderInk);
+    viewEl.style.setProperty('--callup-badge-bg', callupBadgeBg);
+    viewEl.style.setProperty('--callup-badge-ink', callupBadgeInk);
+    viewEl.style.setProperty('--callup-out-bg', callupOutBg);
+    viewEl.style.setProperty('--callup-out-ink', callupOutInk);
+    viewEl.style.setProperty('--plan-mode-track', planModeTrack);
+    viewEl.style.setProperty('--plan-mode-bg', planModeBg);
+    viewEl.style.setProperty('--plan-mode-ink', planModeInk);
+    viewEl.style.setProperty('--plan-mode-active-bg', planModeActiveBg);
+    viewEl.style.setProperty('--plan-mode-active-ink', planModeActiveInk);
+    viewEl.style.setProperty('--prep-header-bg', prepHeaderBg);
+    viewEl.style.setProperty('--prep-header-ink', prepHeaderInk);
+    viewEl.style.setProperty('--prep-status-bg', prepStatusBg);
+    viewEl.style.setProperty('--prep-status-ink', prepStatusInk);
+    viewEl.style.setProperty('--whistle-bg', whistleBg);
+    viewEl.style.setProperty('--whistle-ink', whistleInk);
+    viewEl.style.setProperty('--print-bg', printBg);
+    viewEl.style.setProperty('--print-ink', printInk);
+    viewEl.style.setProperty('--edit-bg', editBg);
+    viewEl.style.setProperty('--edit-ink', editInk);
+    viewEl.style.setProperty('--completed-bg', completedBg);
+    viewEl.style.setProperty('--completed-ink', completedInk);
+    viewEl.style.setProperty('--completed-active-bg', completedActiveBg);
+    viewEl.style.setProperty('--completed-active-ink', completedActiveInk);
+    viewEl.style.setProperty('--callout-bg', calloutBg);
+    viewEl.style.setProperty('--callout-ink', calloutInk);
+    viewEl.style.setProperty('--cbx-acc', v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--accent', v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--close-bg', v.closeBg || btn2);
+    viewEl.style.setProperty('--close-ink', v.closeInk || btn2Ink);
+    viewEl.style.setProperty('--view-font-color', vFontColor);
+    viewEl.style.setProperty('--badge-bg', v.badgeBg || '#f1f5f9');
+    viewEl.style.setProperty('--badge-ink', v.badgeInk || vFontColor);
+  });
+}
+
 function applyCustomTheme(themeInput) {
   let localTheme = {};
   try {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
   } catch {}
+
+  const mergedViews = {
+    ...(state.settings?.theme?.views || {}),
+    ...(localTheme.views || {}),
+    ...(themeInput?.views || {}),
+  };
 
   const theme = {
     themeBg: 'default',
@@ -7037,7 +7468,8 @@ function applyCustomTheme(themeInput) {
     fontTitle: 'auto',
     ...(state.settings?.theme || {}),
     ...localTheme,
-    ...(themeInput || {})
+    ...(themeInput || {}),
+    views: mergedViews,
   };
 
   const root = document.documentElement;
@@ -7372,7 +7804,15 @@ function applyCustomTheme(themeInput) {
 
     target.style.setProperty('--btn2', theme.btn2Bg || '#ffffff');
     target.style.setProperty('--btn2Ink', btn2InkVal);
+    target.style.setProperty('--wa-bg', theme.waBg || '#25d366');
+    target.style.setProperty('--wa-ink', theme.waInk || '#053b1d');
     target.style.setProperty('--waInk', theme.waInk || '#053b1d');
+    target.style.setProperty('--dorsal-bg', theme.dorsalBg || theme.bannerBg || heroBase);
+    target.style.setProperty('--dorsal-ink', theme.dorsalInk || theme.bannerInk || '#ffffff');
+    target.style.setProperty('--sp-lead-bg', theme.spLeadBg || '#c8102e');
+    target.style.setProperty('--sp-lead-ink', theme.spLeadInk || '#ffffff');
+    target.style.setProperty('--sp-sub-bg', theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${theme.cardBorder || '#e2e8f0'})`);
+    target.style.setProperty('--sp-sub-ink', theme.spSubInk || theme.cardTitle || fontColor || '#0f172a');
     target.style.setProperty('--resInk', theme.resInk || '#ffffff');
 
     target.style.setProperty('--gf', theme.gfColor || theme.accentColor || '#10b981');
@@ -7397,6 +7837,17 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--tb-team', tbTeam);
     target.style.setProperty('--tb-rival', tbRival);
     target.style.setProperty('--tb-arrow', tbArrow);
+    // Barra inferior minimizada
+    const bottomNavBg = theme.bottomNavBg || '#ffffff';
+    const bottomNavInk = theme.bottomNavInk || '#64748b';
+    const bottomNavActive = theme.bottomNavActive || theme.btnBg || '#c8102e';
+    target.style.setProperty('--bottom-nav-bg', bottomNavBg);
+    target.style.setProperty('--bottom-nav-ink', bottomNavInk);
+    target.style.setProperty('--bottom-nav-active', bottomNavActive);
+    target.style.setProperty('--sub-nav-bg', theme.subNavBg || '#f1f5f9');
+    target.style.setProperty('--sub-nav-ink', theme.subNavInk || '#334155');
+    target.style.setProperty('--sub-nav-active-bg', theme.subNavActiveBg || '#ffffff');
+    target.style.setProperty('--sub-nav-active-ink', theme.subNavActiveInk || bottomNavActive);
   }
 
   // Aplicar fondo directamente en el canvas HTML y body
@@ -7408,7 +7859,27 @@ function applyCustomTheme(themeInput) {
   if (sidebarEl) {
     sidebarEl.style.setProperty('background', sidebarBg, 'important');
     sidebarEl.style.setProperty('color', sidebarInk, 'important');
+    sidebarEl.style.setProperty('--sidebar-bg', sidebarBg);
+    sidebarEl.style.setProperty('--sidebar-ink', sidebarInk);
+    sidebarEl.style.setProperty('--sidebar-sub', sidebarSub);
   }
+
+  const bottomNavBg = theme.bottomNavBg || '#ffffff';
+  const bottomNavInk = theme.bottomNavInk || '#64748b';
+  const bottomNavActive = theme.bottomNavActive || theme.btnBg || '#c8102e';
+  // Actualizar DOM directo de la barra inferior minimizada si existe
+  const bottomNavEl = $('#cb-bottom-nav');
+  if (bottomNavEl) {
+    bottomNavEl.style.setProperty('background', bottomNavBg, 'important');
+    bottomNavEl.style.setProperty('--bottom-nav-bg', bottomNavBg);
+    bottomNavEl.style.setProperty('--bottom-nav-ink', bottomNavInk);
+    bottomNavEl.style.setProperty('--bottom-nav-active', bottomNavActive);
+  }
+
+  // Aplicar colores y estilos exclusivos por pestaña (scoped theme per view)
+  applyViewScopedTheme(theme, heroBase, btnBgVal, btnInkVal, btn2BgVal, btn2InkVal, finalCardBg, theme.cardBorder || '#e2e8f0', fontColor);
+
+  applyComponentColors(theme);
 
   // Actualizar mini pizarra táctica de previsualización
   updateTacticBoardPreviewBox(tbPitch, tbLines, tbTeam, tbRival, tbArrow);
@@ -7586,9 +8057,15 @@ function updateThemePreviewBox(theme) {
     previewSampleBtn2.style.background = btn2Bg;
     previewSampleBtn2.style.color = btn2Ink;
   }
+  const waBgVal = theme.waBg || '#25d366';
+  const waInkVal = theme.waInk || '#053b1d';
+  const dorsalBgVal = theme.dorsalBg || theme.bannerBg || hero;
+  const dorsalInkVal = theme.dorsalInk || theme.bannerInk || '#ffffff';
+
   const previewSampleWa = $('#preview-sample-wa');
   if (previewSampleWa) {
-    previewSampleWa.style.color = theme.waInk || '#053b1d';
+    previewSampleWa.style.background = waBgVal;
+    previewSampleWa.style.color = waInkVal;
   }
   const previewSampleRes = $('#preview-sample-res');
   if (previewSampleRes) {
@@ -7625,9 +8102,27 @@ function updateThemePreviewBox(theme) {
     }
   });
   const surfacesWa = $('#cbx-preview-wa-sample');
-  if (surfacesWa) surfacesWa.style.color = theme.waInk || '#053b1d';
+  if (surfacesWa) {
+    surfacesWa.style.background = waBgVal;
+    surfacesWa.style.color = waInkVal;
+  }
   const surfacesRes = $('#cbx-preview-res-sample');
   if (surfacesRes) surfacesRes.style.color = theme.resInk || '#ffffff';
+
+  const dorsalBox = $('#cbx-preview-dorsal-box');
+  if (dorsalBox) {
+    dorsalBox.style.background = finalCardBg;
+    dorsalBox.style.borderColor = cardBorder;
+  }
+  const dorsalBadge = $('#cbx-preview-dorsal-badge');
+  if (dorsalBadge) {
+    dorsalBadge.style.background = dorsalBgVal;
+    dorsalBadge.style.color = dorsalInkVal;
+  }
+  $$('.preview-sp-dorsal-circle').forEach((badge) => {
+    badge.style.background = dorsalBgVal;
+    badge.style.color = dorsalInkVal;
+  });
 
   const previewCardWrap = $('#preview-card-demo-wrap');
   if (previewCardWrap) {
@@ -7718,8 +8213,8 @@ function updateThemePreviewBox(theme) {
   }
   const previewCallupNum = $('#preview-callup-num');
   if (previewCallupNum) {
-    previewCallupNum.style.background = bannerBg;
-    previewCallupNum.style.color = bannerInk;
+    previewCallupNum.style.background = dorsalBgVal;
+    previewCallupNum.style.color = dorsalInkVal;
     previewCallupNum.style.fontFamily = displayFont;
   }
   const previewCallupPlayerName = $('#preview-callup-player-name');
@@ -7727,7 +8222,38 @@ function updateThemePreviewBox(theme) {
     previewCallupPlayerName.style.color = cardTitle;
   }
 
-  // 4. Panel Lanzadores
+  // 4. Panel Lanzadores y Tarjeta de Especialistas
+  const spLeadBg = theme.spLeadBg || '#c8102e';
+  const spLeadInk = theme.spLeadInk || '#ffffff';
+  const spSubBg = theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`;
+  const spSubInk = theme.spSubInk || cardTitle;
+
+  const spBox = $('#cbx-specialists-preview-box');
+  if (spBox) {
+    spBox.style.background = finalCardBg;
+    spBox.style.borderColor = cardBorder;
+  }
+  const spTitle = $('#cbx-sp-preview-title');
+  if (spTitle) {
+    spTitle.style.color = cardTitle;
+    spTitle.style.fontFamily = displayFont;
+  }
+  const spLeadRow = $('#cbx-sp-preview-row-lead');
+  if (spLeadRow) {
+    spLeadRow.style.background = spLeadBg;
+    spLeadRow.style.color = spLeadInk;
+  }
+  const spSubRow = $('#cbx-sp-preview-row-sub');
+  if (spSubRow) {
+    spSubRow.style.background = spSubBg;
+    spSubRow.style.color = spSubInk;
+    spSubRow.style.borderColor = cardBorder;
+  }
+  $$('#cbx-specialists-preview-box [data-sp-dorsal]').forEach((badge) => {
+    badge.style.background = dorsalBgVal;
+    badge.style.color = dorsalInkVal;
+  });
+
   const previewSpConfigBtn = $('#preview-sp-config-btn');
   if (previewSpConfigBtn) {
     previewSpConfigBtn.style.background = btn2Bg;
@@ -7754,14 +8280,14 @@ function updateThemePreviewBox(theme) {
   ['#preview-sp-rank-1', '#preview-sp-rank-3'].forEach((sel) => {
     const el = $(sel);
     if (el) {
-      el.style.background = bannerBg;
-      el.style.color = bannerInk;
+      el.style.background = spLeadBg;
+      el.style.color = spLeadInk;
     }
   });
   const spRank2 = $('#preview-sp-rank-2');
   if (spRank2) {
-    spRank2.style.background = `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`;
-    spRank2.style.color = cardTitle;
+    spRank2.style.background = spSubBg;
+    spRank2.style.color = spSubInk;
   }
 
   // 5. Panel Cuerpo Técnico
@@ -7811,6 +8337,21 @@ function updateThemePreviewBox(theme) {
   if (previewBannerBtn) {
     previewBannerBtn.style.background = btnBg;
     previewBannerBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewBannerBtn2 = $('#cbx-preview-banner-btn2');
+  if (previewBannerBtn2) {
+    previewBannerBtn2.style.background = btn2Bg;
+    previewBannerBtn2.style.setProperty('color', btn2Ink, 'important');
+  }
+
+  const fontPreviewBox = $('#cbx-font-preview-box');
+  if (fontPreviewBox) {
+    fontPreviewBox.style.background = finalCardBg;
+    fontPreviewBox.style.borderColor = cardBorder;
+    const fontSample = $('#cbx-font-preview-sample');
+    if (fontSample) fontSample.style.color = fontColor;
+    const fontVal = $('#cbx-font-preview-val');
+    if (fontVal) fontVal.textContent = fontColor;
   }
 
   // Semáforos
@@ -8128,7 +8669,7 @@ async function resetExtendedColors() {
   const keysToReset = [
     'gfColor', 'gaColor', 'gfBg', 'gaBg', 'gfInk', 'gaInk',
     'appBgHue', 'cardHue', 'cardTitle', 'btn2Bg', 'btn2Ink',
-    'waInk', 'resInk', 'bannerBg', 'bannerInk', 'btnBg', 'btnInk',
+    'waBg', 'waInk', 'dorsalBg', 'dorsalInk', 'resInk', 'bannerBg', 'bannerInk', 'btnBg', 'btnInk',
     'sidebarBg', 'sidebarInk', 'cardBorder'
   ];
   keysToReset.forEach((k) => delete t[k]);
@@ -8143,6 +8684,23 @@ async function resetExtendedColors() {
   }
   syncCustomizerControls(t);
   toast('Colores restablecidos');
+}
+
+async function resetSpecialistsColors() {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.theme) state.settings.theme = {};
+  const t = state.settings.theme;
+  const keysToReset = ['spLeadBg', 'spLeadInk', 'spSubBg', 'spSubInk'];
+  keysToReset.forEach((k) => delete t[k]);
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(t));
+  } catch {}
+  applyCustomTheme(t);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  syncCustomizerControls(t);
+  toast('Colores de especialistas restablecidos');
 }
 
 async function resetTacticBoardColors() {
@@ -8253,7 +8811,1147 @@ function updateThemeProperty(prop, val, extra = {}) {
     localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
   } catch {}
   applyCustomTheme(currentTheme);
+  updateThemePreviewBox(currentTheme);
 }
+
+function updateViewThemeProperty(viewId, prop, val) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+  };
+  if (!currentTheme.views) currentTheme.views = {};
+  if (!currentTheme.views[viewId]) currentTheme.views[viewId] = {};
+  currentTheme.views[viewId][prop] = val;
+  if (state.settings) state.settings.theme = currentTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
+}
+
+function resetViewTheme(viewId) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+  };
+  if (currentTheme.views && currentTheme.views[viewId]) {
+    delete currentTheme.views[viewId];
+  }
+  if (state.settings?.theme?.views && state.settings.theme.views[viewId]) {
+    delete state.settings.theme.views[viewId];
+  }
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
+}
+
+function copyViewThemeToAll(viewId) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+  };
+  if (!currentTheme.views) currentTheme.views = {};
+  const source = currentTheme.views[viewId] || {};
+  CAMPOBASE_VIEW_IDS.forEach((id) => {
+    currentTheme.views[id] = { ...(currentTheme.views[id] || {}), ...source };
+  });
+  if (state.settings) state.settings.theme = currentTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
+}
+
+function openQuickColorDialog(targetKind = null) {
+  const dialog = $('#cbx-quick-color-dialog');
+  const titleEl = $('#cbx-quick-color-title');
+  const bodyEl = $('#cbx-quick-color-body');
+  const resetBtn = $('#cbx-quick-color-reset');
+  const saveBtn = $('#cbx-quick-color-save');
+  const copyAllBtn = $('#cbx-quick-color-copy-all');
+  if (!dialog || !bodyEl) return;
+
+  const VIEWS_INFO = [
+    { id: 'exercise-detail', name: 'Ficha de ejercicio', icon: '📖', subtabs: [{ id: 'general', label: 'Texto, fondos y cierre' }] },
+    { id: 'comunicador', name: 'Comunicador WhatsApp', icon: '💬', subtabs: [{ id: 'general', label: 'Texto, fondos y botones' }] },
+    { id: 'plantilla', name: 'Plantilla', icon: '👥', desc: 'Jugadores, minutos y dorsales', hasDorsales: true, hasSetPieces: true, subtabs: [{ id: 'general', label: '📋 General & Dorsales' }, { id: 'specialists', label: '🎯 Balón Parado' }] },
+    { id: 'cuerpo-tecnico', name: 'Cuerpo Técnico', icon: '💬', desc: 'Entrenadores y WhatsApp', hasWa: true, subtabs: [{ id: 'general', label: '📋 Técnicos & WhatsApp' }] },
+    { id: 'convocatorias', name: 'Convocatoria', icon: '📋', desc: 'Bajas, dorsales y envío', hasDorsales: true, hasWa: true, subtabs: [{ id: 'general', label: '📋 Convocatoria & Tarjetas' }] },
+    { id: 'partido', name: 'Partido en Vivo', icon: '⚽', desc: 'Marcador, cambios y pizarra', hasDorsales: true, hasGoals: true, hasTacticBoard: true, subtabs: [{ id: 'live', label: '⚽ Marcador & Goles' }, { id: 'tactic-board', label: '📐 Pizarra en Vivo' }] },
+    { id: 'tacticas', name: 'Tácticas', icon: '📐', desc: 'Pizarra interactiva libre', hasTacticBoard: true, subtabs: [{ id: 'general', label: '📑 Hero, Botones & Callout' }, { id: 'tactic-board', label: '📐 Pizarra Táctica' }] },
+    { id: 'preparacion', name: 'Preparación', icon: '⏱️', desc: 'Alineación y plan PDF', hasDorsales: true, subtabs: [{ id: 'general', label: '📋 Tarjetas de Partido & Acciones' }] },
+    { id: 'sesiones', name: 'Sesiones', icon: '⏱️', desc: 'Planificación por bloques', hasWa: true, subtabs: [{ id: 'general', label: '⏱️ Acciones, Silbato & Fichas' }] },
+    { id: 'hoy', name: 'Tu Día', icon: '🏠', desc: 'Resumen diario y marcador', subtabs: [{ id: 'general', label: '🏠 Resumen & Tarjeta de Marcador' }] },
+    { id: 'calendario', name: 'Calendario', icon: '📅', desc: 'Próximos partidos y resultados', subtabs: [{ id: 'general', label: '📅 Partidos & Resultados' }] },
+    { id: 'asistencia', name: 'Asistencia', icon: '📝', desc: 'Control de faltas y dorsales', hasDorsales: true, subtabs: [{ id: 'general', label: '📝 Asistencia & Dorsales' }] },
+    { id: 'ejercicios', name: 'Ejercicios', icon: '📖', desc: 'Biblioteca de fichas tácticas', subtabs: [{ id: 'general', label: '📖 Biblioteca de Fichas' }] },
+    { id: 'ajustes', name: 'Ajustes', icon: '⚙️', desc: 'Preferencias y temas', subtabs: [{ id: 'general', label: '⚙️ Ajustes del Sistema' }] },
+  ];
+
+  const activeDomView = document.querySelector('.view.active')?.id || '';
+  let currentViewId = activeDomView && VIEWS_INFO.some(v => v.id === activeDomView) ? activeDomView : 'plantilla';
+  let currentSubTab = 'general';
+
+  if (targetKind) {
+    if (targetKind === 'dorsales') { currentViewId = 'plantilla'; currentSubTab = 'general'; }
+    else if (targetKind === 'specialists') { currentViewId = 'plantilla'; currentSubTab = 'specialists'; }
+    else if (targetKind === 'whatsapp') { currentViewId = 'cuerpo-tecnico'; currentSubTab = 'general'; }
+    else if (targetKind === 'callups') { currentViewId = 'convocatorias'; currentSubTab = 'general'; }
+    else if (targetKind === 'live') { currentViewId = 'partido'; currentSubTab = 'live'; }
+    else if (targetKind === 'tactic-board') { currentViewId = 'tacticas'; currentSubTab = 'tactic-board'; }
+    else if (VIEWS_INFO.some(v => v.id === targetKind)) {
+      currentViewId = targetKind;
+      currentSubTab = VIEWS_INFO.find(v => v.id === targetKind).subtabs[0].id;
+    }
+  }
+
+  let currentTab = currentSubTab;
+  if (currentSubTab === 'general') {
+    if (currentViewId === 'plantilla') currentTab = 'dorsales';
+    else if (currentViewId === 'cuerpo-tecnico') currentTab = 'whatsapp';
+    else if (currentViewId === 'convocatorias') currentTab = 'callups';
+    else currentTab = 'banners';
+  }
+
+  function updateQcPreviews(kind, prop, val) {
+    const pBanner = $('#qc-mock-banner');
+    const pBannerTitle = $('#qc-mock-banner-title');
+    const pBtn = $('#qc-mock-btn');
+    const pBtn2 = $('#qc-mock-btn2');
+    const pCard = $('#qc-mock-card');
+    const pCardTitle = $('#qc-mock-card-title');
+    const pCardText = $('#qc-mock-card-text');
+    const pDorsal1 = $('#qc-mock-dorsal-1');
+    const pDorsal2 = $('#qc-mock-dorsal-2');
+    const pWa = $('#qc-mock-wa');
+    const pGf = $('#qc-mock-live-gf');
+    const pGa = $('#qc-mock-live-ga');
+    const pSpLead = $('#qc-mock-sp-lead');
+    const pSpSub = $('#qc-mock-sp-sub');
+    const pPitch = $('#qc-mock-tb-pitch');
+    const pTeam = $('#qc-mock-tb-team');
+    const pRival = $('#qc-mock-tb-rival');
+    const pArrow = $('#qc-mock-tb-arrow');
+
+    const pTodayMatch = $('#qc-mock-today-match');
+    const pTodayMatchScore = $('#qc-mock-today-score');
+    const pCallupHeader = $('#qc-mock-callup-header');
+    const pCallupBadge = $('#qc-mock-callup-badge');
+    const pCallupOut = $('#qc-mock-callup-out');
+    const pPrepHeader = $('#qc-mock-prep-header');
+    const pWhistleBtn = $('#qc-mock-btn-whistle');
+    const pPrintBtn = $('#qc-mock-btn-print');
+    const pEditBtn = $('#qc-mock-btn-edit');
+    const pCompletedBtn = $('#qc-mock-btn-completed');
+    const pCallout = $('#qc-mock-callout');
+    const pCalloutText = $('#qc-mock-callout-text');
+
+    if (prop === 'bannerBg' && pBanner) pBanner.style.background = val;
+    if (prop === 'bannerInk') {
+      if (pBanner) pBanner.style.color = val;
+      if (pBannerTitle) pBannerTitle.style.color = val;
+    }
+    if (prop === 'btnBg' && pBtn) pBtn.style.background = val;
+    if (prop === 'btnInk' && pBtn) pBtn.style.color = val;
+    if (prop === 'btn2Bg' && pBtn2) pBtn2.style.background = val;
+    if (prop === 'btn2Ink' && pBtn2) pBtn2.style.color = val;
+    if (prop === 'cardBg' && pCard) pCard.style.background = val;
+    if (prop === 'cardBorder' && pCard) pCard.style.borderColor = val;
+    if (prop === 'cardTitle' && pCardTitle) pCardTitle.style.color = val;
+    if ((prop === 'fontColor' || prop === 'textColor') && pCardText) pCardText.style.color = val;
+    if (prop === 'dorsalBg') {
+      if (pDorsal1) pDorsal1.style.background = val;
+      if (pDorsal2) pDorsal2.style.background = val;
+      const cd1 = $('#qc-mock-callup-dorsal-1');
+      if (cd1) cd1.style.background = val;
+    }
+    if (prop === 'dorsalInk') {
+      if (pDorsal1) pDorsal1.style.color = val;
+      if (pDorsal2) pDorsal2.style.color = val;
+      const cd1 = $('#qc-mock-callup-dorsal-1');
+      if (cd1) cd1.style.color = val;
+    }
+    if (prop === 'waBg') {
+      if (pWa) pWa.style.background = val;
+      const w1 = $('#qc-mock-wa-1');
+      if (w1) w1.style.background = val;
+      const cw = $('#qc-mock-callup-wa');
+      if (cw) cw.style.background = val;
+      const sbwa = $('#qc-mock-btn-wa');
+      if (sbwa) sbwa.style.background = val;
+    }
+    if (prop === 'waInk') {
+      if (pWa) pWa.style.color = val;
+      const w1 = $('#qc-mock-wa-1');
+      if (w1) w1.style.color = val;
+      const cw = $('#qc-mock-callup-wa');
+      if (cw) cw.style.color = val;
+      const sbwa = $('#qc-mock-btn-wa');
+      if (sbwa) sbwa.style.color = val;
+    }
+    if (prop === 'spLeadBg' && pSpLead) pSpLead.style.background = val;
+    if (prop === 'spLeadInk' && pSpLead) pSpLead.style.color = val;
+    if (prop === 'spSubBg' && pSpSub) pSpSub.style.background = val;
+    if (prop === 'spSubInk' && pSpSub) pSpSub.style.color = val;
+    if (prop === 'gfBg' && pGf) pGf.style.background = val;
+    if (prop === 'gfInk' && pGf) pGf.style.color = val;
+    if (prop === 'gaBg' && pGa) pGa.style.background = val;
+    if (prop === 'gaInk' && pGa) pGa.style.color = val;
+    if (prop === 'tbPitch' && pPitch) pPitch.style.background = val;
+    if (prop === 'tbLines' && pPitch) pPitch.style.borderColor = val;
+    if (prop === 'tbTeam' && pTeam) pTeam.style.background = val;
+    if (prop === 'tbRival' && pRival) pRival.style.background = val;
+    if (prop === 'tbArrow' && pArrow) {
+      pArrow.style.background = val;
+      const arrowText = $('#qc-mock-tb-arrow-text');
+      if (arrowText) arrowText.style.color = val;
+    }
+
+    if (prop === 'todayMatchBg' && pTodayMatch) pTodayMatch.style.background = val;
+    if (prop === 'todayMatchInk' && pTodayMatch) {
+      pTodayMatch.style.color = val;
+      if (pTodayMatchScore) pTodayMatchScore.style.color = val;
+      pTodayMatch.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'callupHeaderBg' && pCallupHeader) pCallupHeader.style.background = val;
+    if (prop === 'callupHeaderInk' && pCallupHeader) {
+      pCallupHeader.style.color = val;
+      pCallupHeader.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'callupBadgeBg' && pCallupBadge) pCallupBadge.style.background = val;
+    if (prop === 'callupBadgeInk' && pCallupBadge) pCallupBadge.style.color = val;
+    if (prop === 'callupOutBg' && pCallupOut) pCallupOut.style.background = val;
+    if (prop === 'callupOutInk' && pCallupOut) pCallupOut.style.color = val;
+    if (prop === 'prepHeaderBg' && pPrepHeader) pPrepHeader.style.background = val;
+    if (prop === 'prepHeaderInk' && pPrepHeader) {
+      pPrepHeader.style.color = val;
+      pPrepHeader.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'whistleBg' && pWhistleBtn) pWhistleBtn.style.background = val;
+    if (prop === 'whistleInk' && pWhistleBtn) pWhistleBtn.style.color = val;
+    if (prop === 'printBg' && pPrintBtn) pPrintBtn.style.background = val;
+    if (prop === 'printInk' && pPrintBtn) pPrintBtn.style.color = val;
+    if (prop === 'editBg' && pEditBtn) pEditBtn.style.background = val;
+    if (prop === 'editInk' && pEditBtn) pEditBtn.style.color = val;
+    if (prop === 'completedBg' && pCompletedBtn) pCompletedBtn.style.background = val;
+    if (prop === 'completedInk' && pCompletedBtn) pCompletedBtn.style.color = val;
+    if (prop === 'calloutBg' && pCallout) pCallout.style.background = val;
+    if (prop === 'calloutInk') {
+      if (pCallout) pCallout.style.color = val;
+      if (pCalloutText) pCalloutText.style.color = val;
+    }
+  }
+
+  function renderContent() {
+    let localTheme = {};
+    try { localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
+    const theme = {
+      ...(state.settings?.theme || {}),
+      ...localTheme,
+    };
+    const viewsData = theme.views || {};
+    const vSettings = viewsData[currentViewId] || {};
+
+    const activeViewConfig = VIEWS_INFO.find((v) => v.id === currentViewId) || VIEWS_INFO[0];
+    const subtabs = activeViewConfig.subtabs || [{ id: 'general', label: 'General' }];
+    if (!subtabs.some((st) => st.id === currentSubTab)) {
+      currentSubTab = subtabs[0].id;
+    }
+
+    currentTab = currentSubTab;
+    if (currentSubTab === 'general') {
+      if (currentViewId === 'plantilla') currentTab = 'dorsales';
+      else if (currentViewId === 'cuerpo-tecnico') currentTab = 'whatsapp';
+      else if (currentViewId === 'convocatorias') currentTab = 'callups';
+      else currentTab = 'banners';
+    }
+
+    const val = (prop, fallback) => vSettings[prop] !== undefined ? vSettings[prop] : (theme[prop] !== undefined ? theme[prop] : fallback);
+
+    const bannerBg = val('bannerBg', '#0a251b');
+    const bannerInk = val('bannerInk', '#ffffff');
+    const btnBg = val('btnBg', '#10b981');
+    const btnInk = val('btnInk', '#ffffff');
+    const btn2Bg = val('btn2Bg', '#ffffff');
+    const btn2Ink = val('btn2Ink', '#0f172a');
+    const fontColor = val('fontColor', val('textColor', '#0f172a'));
+    const cardTitle = val('cardTitle', '#0f172a');
+    const cardBg = val('cardBg', val('cardHue', '#ffffff'));
+    const cardBorder = val('cardBorder', '#e2e8f0');
+    const dorsalBg = val('dorsalBg', bannerBg);
+    const dorsalInk = val('dorsalInk', bannerInk);
+    const waBg = val('waBg', '#25d366');
+    const waInk = val('waInk', '#ffffff');
+    const gfBg = val('gfBg', '#f0f7f3');
+    const gfInk = val('gfInk', '#14532d');
+    const gaBg = val('gaBg', '#fdf2f4');
+    const gaInk = val('gaInk', '#9f1239');
+    const spLeadBg = val('spLeadBg', '#c8102e');
+    const spLeadInk = val('spLeadInk', '#ffffff');
+    const spSubBg = val('spSubBg', '#f1f5f9');
+    const spSubInk = val('spSubInk', '#0f172a');
+    const tbPitch = val('tbPitch', '#064e3b');
+    const tbLines = val('tbLines', '#ffffff');
+    const tbTeam = val('tbTeam', '#10b981');
+    const tbRival = val('tbRival', '#ef4444');
+    const tbArrow = val('tbArrow', '#fbbf24');
+
+    const todayMatchBg = val('todayMatchBg', bannerBg);
+    const todayMatchInk = val('todayMatchInk', bannerInk);
+    const callupHeaderBg = val('callupHeaderBg', bannerBg);
+    const callupHeaderInk = val('callupHeaderInk', bannerInk);
+    const callupBadgeBg = val('callupBadgeBg', 'rgba(255, 255, 255, 0.2)');
+    const callupBadgeInk = val('callupBadgeInk', '#ffffff');
+    const callupOutBg = val('callupOutBg', btnBg);
+    const callupOutInk = val('callupOutInk', btnInk);
+    const prepHeaderBg = val('prepHeaderBg', bannerBg);
+    const prepHeaderInk = val('prepHeaderInk', bannerInk);
+    const whistleBg = val('whistleBg', bannerBg);
+    const whistleInk = val('whistleInk', bannerInk);
+    const printBg = val('printBg', btn2Bg);
+    const printInk = val('printInk', btn2Ink);
+    const editBg = val('editBg', btn2Bg);
+    const editInk = val('editInk', btn2Ink);
+    const completedBg = val('completedBg', '#f1f5f9');
+    const completedInk = val('completedInk', '#0f172a');
+    const calloutBg = val('calloutBg', '#dcfce7');
+    const calloutInk = val('calloutInk', fontColor);
+
+    const viewsBarHtml = `
+      <div class="cbx-qc-views-bar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;border-bottom:1px solid var(--cardBorder, #e2e8f0);margin-bottom:6px;scrollbar-width:thin;">
+        ${VIEWS_INFO.map(v => `
+          <button type="button" class="cbx-qc-view-chip ${v.id === currentViewId ? 'active' : ''}" data-view="${v.id}" style="padding:6px 12px;border-radius:999px;border:1px solid ${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${v.id === currentViewId ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">
+            ${v.icon} ${v.name}
+          </button>
+        `).join('')}
+      </div>
+    `;
+
+    const subtabsBarHtml = subtabs.length > 1 ? `
+      <div class="cbx-qc-subtabs-row" style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;margin-bottom:6px;scrollbar-width:thin;">
+        ${subtabs.map(st => `
+          <button type="button" class="cbx-qc-subtab-chip ${st.id === currentSubTab ? 'active' : ''}" data-subtab="${st.id}" style="padding:5px 12px;border-radius:8px;border:1px solid ${st.id === currentSubTab ? '#059669' : 'var(--cardBorder, #cbd5e1)'};background:${st.id === currentSubTab ? '#059669' : 'color-mix(in srgb, var(--cardBg, #ffffff) 96%, var(--cardBorder, #e2e8f0))'};color:${st.id === currentSubTab ? '#ffffff' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;">
+            ${st.label}
+          </button>
+        `).join('')}
+      </div>
+    ` : '';
+
+    const viewNoticeHtml = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 88%, var(--cardBorder, #e2e8f0));padding:8px 12px;border-radius:10px;font-size:12px;border:1px solid var(--cardBorder, #e2e8f0);margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">
+          🎨 Ajustes exclusivos para: <u>${activeViewConfig.name}</u>
+        </span>
+        <span style="font-size:11px;font-weight:800;color:#047857;background:#dcfce7;padding:2px 8px;border-radius:999px;">
+          Independiente de las demás pantallas
+        </span>
+      </div>
+    `;
+
+    const colorRow = (label, propName, currentVal, fallbackVal, presets = []) => `
+      <div style="display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0));padding:10px 12px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font:700 13px var(--cbx-ui);color:var(--cardTitle, #0f172a);">${label}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" data-prop="${propName}" value="${currentVal || fallbackVal}" style="width:36px;height:32px;padding:1px;border-radius:6px;border:1px solid #cbd5e1;cursor:pointer;background:transparent;">
+            <code style="font-size:11px;color:var(--cbx-muted, #64748b);min-width:55px;">${currentVal || fallbackVal}</code>
+          </div>
+        </div>
+        ${presets && presets.length ? `
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;align-items:center;">
+            <span style="font-size:11px;color:var(--cbx-muted, #64748b);">Sugerencias:</span>
+            ${presets.map((p) => `
+              <button type="button" class="cbx-swatch-btn" data-prop="${propName}" data-val="${p.val}" title="${p.name}" style="background:${p.val};width:22px;height:22px;border-radius:50%;border:2px solid ${p.val === '#ffffff' ? '#cbd5e1' : '#ffffff'};box-shadow:0 1px 3px rgba(0,0,0,0.2);cursor:pointer;padding:0;"></button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    let previewHtml = '';
+    let controlsHtml = '';
+
+    if (currentSubTab === 'tactic-board') {
+      previewHtml = `
+        <div id="qc-mock-tb-pitch" style="padding:10px;background:${tbPitch};border-radius:12px;display:flex;justify-content:space-around;align-items:center;min-height:75px;border:2px solid ${tbLines};">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div id="qc-mock-tb-team" style="width:32px;height:32px;border-radius:50%;background:${tbTeam};border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;color:#ffffff;font:800 13px var(--disp);box-shadow:0 2px 4px rgba(0,0,0,0.4);">9</div>
+            <span style="font-size:10px;font-weight:700;color:#ffffff;">Tu Equipo</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div id="qc-mock-tb-rival" style="width:32px;height:32px;border-radius:50%;background:${tbRival};border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;color:#ffffff;font:800 13px var(--disp);box-shadow:0 2px 4px rgba(0,0,0,0.4);">R4</div>
+            <span style="font-size:10px;font-weight:700;color:#ffffff;">Rival</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div id="qc-mock-tb-arrow" style="width:28px;height:4px;background:${tbArrow};border-radius:2px;"></div>
+            <span id="qc-mock-tb-arrow-text" style="font-size:10px;font-weight:700;color:${tbArrow};">Trazo</span>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Césped (fondo de la pizarra)', 'tbPitch', tbPitch, '#064e3b', [
+          { name: 'Césped Clásico', val: '#064e3b' }, { name: 'Césped Profundo', val: '#022c22' }, { name: 'Verde Vivo', val: '#047857' }, { name: 'Pizarra Negra', val: '#0f172a' }, { name: 'Azul Táctico', val: '#0f2942' }
+        ])}
+        ${colorRow('Líneas del campo', 'tbLines', tbLines, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#facc15' }, { name: 'Gris Claro', val: '#cbd5e1' }
+        ])}
+        ${colorRow('Fichas de tu equipo', 'tbTeam', tbTeam, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Club', val: '#2563eb' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#eab308' }, { name: 'Rojo', val: '#dc2626' }
+        ])}
+        ${colorRow('Fichas del rival', 'tbRival', tbRival, '#ef4444', [
+          { name: 'Rojo Alerta', val: '#ef4444' }, { name: 'Granate', val: '#991b1b' }, { name: 'Naranja', val: '#ea580c' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#ca8a04' }
+        ])}
+        ${colorRow('Flechas y dibujos tácticos', 'tbArrow', tbArrow, '#fbbf24', [
+          { name: 'Amarillo Neón', val: '#fbbf24' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Cyan Eléctrico', val: '#06b6d4' }, { name: 'Rojo Marcador', val: '#f87171' }
+        ])}
+      `;
+    } else if (currentSubTab === 'specialists') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-sp-lead" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:${spLeadBg};color:${spLeadInk};">
+            <span style="font:800 12px var(--cbx-ui);">1.er lanzador (Principal)</span>
+            <strong>Capitán Ejemplo</strong>
+          </div>
+          <div id="qc-mock-sp-sub" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:${spSubBg};color:${spSubInk};border:1px solid #cbd5e1;">
+            <span style="font:800 12px var(--cbx-ui);">2.º lanzador (Suplente)</span>
+            <strong>Segundo Ejemplo</strong>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo 1.er Lanzador (Principal)', 'spLeadBg', spLeadBg, '#c8102e', [
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Real', val: '#1e40af' }, { name: 'Verde Élite', val: '#059669' }, { name: 'Dorado', val: '#d97706' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto 1.er Lanzador', 'spLeadInk', spLeadInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo 2.º Lanzador (Suplente)', 'spSubBg', spSubBg, '#f1f5f9', [
+          { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Oscuro Sutil', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto 2.º Lanzador', 'spSubInk', spSubInk, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Verde', val: '#065f46' }
+        ])}
+      `;
+    } else if (currentSubTab === 'live') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Partido en Vivo</span>
+              <h4 id="qc-mock-banner-title" style="margin:1px 0 0;font:800 15px var(--disp);color:${bannerInk};">Marcador 3 - 1</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Finalizar</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Pausa</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <button type="button" id="qc-mock-live-gf" style="flex:1;padding:10px 12px;border-radius:10px;background:${gfBg};color:${gfInk};border:1px solid currentColor;font:800 13px var(--cbx-ui);text-align:center;">+ Gol Nuestro</button>
+            <button type="button" id="qc-mock-live-ga" style="flex:1;padding:10px 12px;border-radius:10px;background:${gaBg};color:${gaInk};border:1px solid currentColor;font:800 13px var(--cbx-ui);text-align:center;">+ Gol Rival</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 14px var(--disp);">9</span>
+            <span id="qc-mock-card-title" style="font-weight:700;font-size:13px;color:${cardTitle};">Goleador del Encuentro</span>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Verde Hero', val: '#0a251b' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Gris Carbón', val: '#0f1113' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Botón + Gol Nuestro', 'gfBg', gfBg, '#f0f7f3', [
+          { name: 'Verde Pastel', val: '#f0f7f3' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Azul Suave', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Botón + Gol Nuestro', 'gfInk', gfInk, '#14532d', [
+          { name: 'Verde Oscuro', val: '#14532d' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Botón + Gol Rival', 'gaBg', gaBg, '#fdf2f4', [
+          { name: 'Rojo Pastel', val: '#fdf2f4' }, { name: 'Rojo Vivo', val: '#ef4444' }
+        ])}
+        ${colorRow('Texto Botón + Gol Rival', 'gaInk', gaInk, '#9f1239', [
+          { name: 'Rojo Oscuro', val: '#9f1239' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo del Dorsal en Cambios', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Texto Principal (Minutos, incidencias)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres de Jugadores y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }
+        ])}
+      `;
+    } else if (currentViewId === 'hoy') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera de Tu Día</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Tu Día en CampoBase</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Principal</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Secundario</button>
+            </div>
+          </div>
+          <div id="qc-mock-today-match" style="padding:12px 14px;background:${todayMatchBg};color:${todayMatchInk};border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:0.9;">
+              <strong style="color:${todayMatchInk};">C.F. UNIÓN VIERA ALEVÍN D vs HURACÁN A</strong>
+              <span style="padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:${todayMatchInk};">Finalizado</span>
+            </div>
+            <div id="qc-mock-today-score" style="font:800 24px var(--disp);text-align:center;color:${todayMatchInk};">1 - 15</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;opacity:0.85;">
+              <span style="color:${todayMatchInk};">09:00 · Casa · Alfonso Silva</span>
+              <span style="color:${todayMatchInk};">Asistencia registrada</span>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:10px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;display:flex;flex-direction:column;gap:4px;">
+            <strong id="qc-mock-card-title" style="font-size:13px;color:${cardTitle};">Próximos Eventos y Estado</strong>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12px;color:${fontColor};line-height:1.4;">Resumen general de la jornada, asistencias y notas informativas.</p>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo de Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título de Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Tarjeta Marcador / Partido', 'todayMatchBg', todayMatchBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Gris Grafito', val: '#1e293b' }, { name: 'Negro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y Números del Marcador', 'todayMatchInk', todayMatchInk, bannerInk, [
+          { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Amarillo Oro', val: '#facc15' }, { name: 'Gris Claro', val: '#e2e8f0' }, { name: 'Verde Claro', val: '#a7f3d0' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas, datos)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Títulos y Nombres', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Fondo de Tarjetas', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }, { name: 'Marfil', val: '#fafaf9' }
+        ])}
+        ${colorRow('Borde de Tarjetas', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }, { name: 'Oscuro Sutil', val: '#334155' }
+        ])}
+      `;
+    } else if (currentViewId === 'convocatorias') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Convocatorias</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Convocatorias</h4>
+            </div>
+            <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Convocatoria</button>
+          </div>
+          <div id="qc-mock-card" style="padding:0;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div id="qc-mock-callup-header" style="padding:10px 14px;background:${callupHeaderBg};color:${callupHeaderInk};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;color:${callupHeaderInk};">F7 · LIGA · 09:00</span>
+                <h4 style="margin:1px 0 0;font:800 14px var(--disp);color:${callupHeaderInk};">HURACÁN A</h4>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span id="qc-mock-callup-badge" style="padding:3px 8px;border-radius:999px;background:${callupBadgeBg};color:${callupBadgeInk};font:800 11px var(--cbx-ui);">14 convocados</span>
+                <span id="qc-mock-callup-out" style="padding:3px 8px;border-radius:999px;background:${callupOutBg};color:${callupOutInk};font:800 11px var(--cbx-ui);">0 fuera</span>
+              </div>
+            </div>
+            <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="qc-mock-callup-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">10</span>
+                <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Jugador Convocado</strong>
+              </div>
+              <button type="button" id="qc-mock-wa" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:700 11px var(--cbx-ui);">💬 WhatsApp</button>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Cabecera Tarjeta de Convocatoria', 'callupHeaderBg', callupHeaderBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Cabecera Tarjeta de Convocatoria', 'callupHeaderInk', callupHeaderInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Píldora «14 convocados»', 'callupBadgeBg', callupBadgeBg, 'rgba(255, 255, 255, 0.2)', [
+          { name: 'Translúcido Blanco', val: 'rgba(255, 255, 255, 0.2)' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Gris Nieve', val: '#f1f5f9' }
+        ])}
+        ${colorRow('Texto Píldora «14 convocados»', 'callupBadgeInk', callupBadgeInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Oscuro', val: '#0f172a' }, { name: 'Verde Oscuro', val: '#065f46' }
+        ])}
+        ${colorRow('Fondo Botón / Píldora «0 fuera»', 'callupOutBg', callupOutBg, btnBg, [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Dorado', val: '#f59e0b' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Texto Botón / Píldora «0 fuera»', 'callupOutInk', callupOutInk, btnInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#eab308' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo Botón WhatsApp', 'waBg', waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }, { name: 'Verde Campo', val: '#10b981' }
+        ])}
+        ${colorRow('Texto WhatsApp', 'waInk', waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul', val: '#2563eb' }, { name: 'Rojo', val: '#dc2626' }
+        ])}
+        ${colorRow('Botón Principal (Texto)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'preparacion') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Preparación</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Preparación de Partidos</h4>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:0;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div id="qc-mock-prep-header" style="padding:10px 14px;background:${prepHeaderBg};color:${prepHeaderInk};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;color:${prepHeaderInk};">Próximo Rival</span>
+                <h4 style="margin:1px 0 0;font:800 14px var(--disp);color:${prepHeaderInk};">UD. Jinámar</h4>
+              </div>
+              <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:${prepHeaderInk};">Jornada 5</span>
+            </div>
+            <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">8</span>
+                <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Medio Centro Titular</strong>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" id="qc-mock-btn" style="flex:1;padding:7px 10px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 11.5px var(--cbx-ui);text-align:center;">Preparar partido</button>
+                <button type="button" id="qc-mock-btn2" style="flex:1;padding:7px 10px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 11.5px var(--cbx-ui);text-align:center;">Convocar y preparar</button>
+                <button type="button" id="qc-mock-btn-print" style="flex:1;padding:7px 10px;border-radius:8px;background:${printBg};color:${printInk};border:1px solid #cbd5e1;font:700 11.5px var(--cbx-ui);text-align:center;">🖨️ Imprimir plan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Cabecera Tarjeta de Partido', 'prepHeaderBg', prepHeaderBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Cabecera Tarjeta de Partido', 'prepHeaderInk', prepHeaderInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón Acción Principal («Preparar partido»)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Acción Principal', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Acción Secundaria («Convocar y preparar»)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Acción Secundaria', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «Imprimir plan» (Fondo)', 'printBg', printBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón «Imprimir plan» (Texto)', 'printInk', printInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'sesiones') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Sesiones</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Sesiones de Entrenamiento</h4>
+            </div>
+            <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Sesión</button>
+          </div>
+          <div id="qc-mock-card" style="padding:12px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div>
+              <strong id="qc-mock-card-title" style="font-size:14px;color:${cardTitle};cursor:pointer;">Entrenamiento: Posesión y Finalización</strong>
+              <p id="qc-mock-card-text" style="margin:2px 0 0;font-size:12px;color:${fontColor};">1. Calentamiento: Rondos 4x2 (15′) · 2. Partido (30′)</p>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button type="button" id="qc-mock-btn-whistle" style="flex:1;padding:6px 4px;border-radius:8px;background:${whistleBg};color:${whistleInk};border:0;font:700 11px var(--cbx-ui);text-align:center;">⏱️ Silbato</button>
+              <button type="button" id="qc-mock-btn-wa" style="flex:1;padding:6px 4px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:800 11px var(--cbx-ui);text-align:center;">📱 WhatsApp</button>
+              <button type="button" id="qc-mock-btn-print" style="flex:1;padding:6px 4px;border-radius:8px;background:${printBg};color:${printInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">🖨️ Imprimir</button>
+              <button type="button" id="qc-mock-btn-edit" style="flex:1;padding:6px 4px;border-radius:8px;background:${editBg};color:${editInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">✏️ Editar</button>
+              <button type="button" id="qc-mock-btn-completed" style="flex:1;padding:6px 4px;border-radius:8px;background:${completedBg};color:${completedInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">✓ Realizado</button>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón «+ Sesión» (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Botón «+ Sesión»', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón «⏱️ Silbato» (Fondo)', 'whistleBg', whistleBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Botón «⏱️ Silbato»', 'whistleInk', whistleInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Botón «📱 WhatsApp» (Fondo)', 'waBg', waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }
+        ])}
+        ${colorRow('Texto Botón «📱 WhatsApp»', 'waInk', waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Oscuro', val: '#053b1d' }
+        ])}
+        ${colorRow('Botón «🖨️ Imprimir» (Fondo)', 'printBg', printBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón «🖨️ Imprimir»', 'printInk', printInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «✏️ Editar» (Fondo)', 'editBg', editBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón «✏️ Editar»', 'editInk', editInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «✓ Realizado» (Fondo)', 'completedBg', completedBg, '#f1f5f9', [
+          { name: 'Gris Suave', val: '#f1f5f9' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Azul Suave', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Botón «✓ Realizado»', 'completedInk', completedInk, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Verde', val: '#15803d' }
+        ])}
+        ${colorRow('Título de Sesión (Enlace)', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }
+        ])}
+        ${colorRow('Nombres de Ejercicios y Textos', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'tacticas' && currentSubTab === 'general') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:14px 16px;background:${bannerBg};color:${bannerInk};border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Pizarra Táctica & Estrategia</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 17px var(--disp);color:${bannerInk};">Tácticas</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Táctica</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Mostrar rival</button>
+            </div>
+          </div>
+          <div id="qc-mock-callout" style="padding:10px 14px;background:${calloutBg};border-radius:10px;border:1px solid #cbd5e1;">
+            <p id="qc-mock-callout-text" style="margin:0;font-size:12px;color:${calloutInk};line-height:1.4;">
+              Arrastra los jugadores en la pizarra para organizar la salida de balón, presión y bloque defensivo.
+            </p>
+          </div>
+          <div id="qc-mock-card" style="padding:10px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;display:flex;flex-direction:column;gap:4px;">
+            <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Sistema F7 1-3-2-1 (Árbol)</strong>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12px;color:${fontColor};">Equilibrio entre líneas y progresión por bandas.</p>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Hero Banner Fondo', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Hero Banner Texto', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón «+ Táctica» (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Botón «+ Táctica»', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario («Mostrar rival»)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón Secundario', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Caja Informativa (Callout / pestaña verde)', 'calloutBg', calloutBg, '#dcfce7', [
+          { name: 'Verde Menta Suave', val: '#dcfce7' }, { name: 'Gris Nieve', val: '#f8fafc' }, { name: 'Amarillo Alerta', val: '#fef3c7' }, { name: 'Azul Tenue', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Caja Informativa', 'calloutInk', calloutInk, fontColor, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Verde Bosque', val: '#166534' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Nombres y Títulos de Tácticas', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Texto Principal (Descripción)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else {
+      // standard / 'general'
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera de ${activeViewConfig.name}</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">${activeViewConfig.name}</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Principal</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Secundario</button>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:12px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${activeViewConfig.hasDorsales ? `
+                  <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">7</span>
+                ` : ''}
+                <strong id="qc-mock-card-title" style="font-size:14px;color:${cardTitle};">Elemento / Nombre de Ejemplo</strong>
+              </div>
+              ${activeViewConfig.hasWa ? `
+                <button type="button" id="qc-mock-wa" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:700 11px var(--cbx-ui);">💬 WhatsApp</button>
+              ` : ''}
+            </div>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12.5px;color:${fontColor};line-height:1.4;">
+              Texto descriptivo de la pantalla: datos, etiquetas, párrafos informativos y métricas de ${activeViewConfig.name}.
+            </p>
+          </div>
+        </div>
+      `;
+
+      controlsHtml = `
+        ${colorRow('Fondo de Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Verde Hero', val: '#0a251b' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Granate', val: '#170408' }, { name: 'Gris Carbón', val: '#0f1113' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título de Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }, { name: 'Dorado', val: '#f59e0b' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Dorado', val: '#f59e0b' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Gris', val: '#475569' }
+        ])}
+        ${colorRow('Texto Principal de la Pestaña', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Azul Noche', val: '#0a1c36' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos de Tarjetas', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${activeViewConfig.hasDorsales ? `
+          ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+            { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#eab308' }, { name: 'Blanco', val: '#ffffff' }
+          ])}
+          ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+            { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Dorado', val: '#f59e0b' }
+          ])}
+        ` : ''}
+        ${activeViewConfig.hasWa ? `
+          ${colorRow('Fondo Botón WhatsApp', 'waBg', waBg, '#25d366', [
+            { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }, { name: 'Verde Campo', val: '#10b981' }, { name: 'Negro Elegante', val: '#0f172a' }
+          ])}
+          ${colorRow('Texto e Icono WhatsApp', 'waInk', waInk, '#ffffff', [
+            { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }, { name: 'Negro', val: '#0f172a' }
+          ])}
+        ` : ''}
+        ${colorRow('Fondo de Tarjetas y Paneles', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Gris Nieve', val: '#f8fafc' }, { name: 'Marfil Suave', val: '#fafaf9' }, { name: 'Menta Tenue', val: '#f0fdf4' }
+        ])}
+        ${colorRow('Borde de Tarjetas y Paneles', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }, { name: 'Oscuro Sutil', val: '#334155' }, { name: 'Verde Tenue', val: '#bbf7d0' }
+        ])}
+      `;
+    }
+
+
+    controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
+    controlsHtml += colorRow('Etiquetas de las fichas · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
+    controlsHtml += colorRow('Etiquetas de las fichas · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
+    const extraRows = (entries) => entries.map(([label, prop, fallback]) => colorRow(label, prop, val(prop, fallback), fallback, [])).join('');
+    if (currentViewId === 'convocatorias') controlsHtml += extraRows([
+      ['Botón + Convocatoria · Fondo', 'callupBtnBg', btnBg], ['Botón + Convocatoria · Texto', 'callupBtnInk', btnInk],
+      ['Plan por tramos · Fondo del selector', 'planModeTrack', '#e2e8f0'],
+      ['Plan · Opción inactiva fondo', 'planModeBg', '#f1f5f9'], ['Plan · Opción inactiva texto', 'planModeInk', '#334155'],
+      ['Plan · Opción activa fondo', 'planModeActiveBg', '#ffffff'], ['Plan · Opción activa texto', 'planModeActiveInk', '#0f172a']
+    ]);
+    if (currentViewId === 'sesiones') controlsHtml += extraRows([
+      ['Realizado marcado · Fondo', 'completedActiveBg', btnBg], ['Realizado marcado · Texto', 'completedActiveInk', btnInk]
+    ]);
+    if (currentViewId === 'exercise-detail') controlsHtml += extraRows([
+      ['Cerrar ejercicio · Fondo', 'closeBg', btn2Bg], ['Cerrar ejercicio · Texto', 'closeInk', btn2Ink]
+    ]);
+    controlsHtml += `<details><summary>Menú lateral y navegación inferior (independientes)</summary>${[
+      ['Menú lateral · Fondo', 'sidebarBg', '#0a251b'], ['Menú lateral · Texto', 'sidebarInk', '#ffffff'],
+      ['Barra inferior · Fondo', 'bottomNavBg', '#ffffff'], ['Barra inferior · Texto e iconos', 'bottomNavInk', '#64748b'],
+      ['Barra inferior · Texto e iconos activos', 'bottomNavActive', '#c8102e'],
+      ['Subpestañas · Fondo', 'subNavBg', '#f1f5f9'], ['Subpestañas · Texto', 'subNavInk', '#334155'],
+      ['Subpestaña activa · Fondo', 'subNavActiveBg', '#ffffff'], ['Subpestaña activa · Texto', 'subNavActiveInk', '#c8102e']
+    ].map(([label, prop, fallback]) => colorRow(label, prop, theme[prop] || fallback, fallback, [])).join('')}</details>`;
+
+
+    const buttonRoot = document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
+    const buttonChoices = [...configurableButtons(buttonRoot), ...[...document.querySelectorAll('dialog[open][data-theme-view]')].filter((dialog) => dialog.dataset.themeView === currentViewId).flatMap(configurableButtons)];
+    if (buttonChoices.length) controlsHtml += `<details id="qc-individual-buttons"><summary>Configurar un botón concreto</summary><label>Botón<select id="qc-button-selector">${buttonChoices.map(({ selector, label }) => `<option value="${escapeHtml(selector)}">${escapeHtml(label)}</option>`).join('')}</select></label><label>Fondo<input type="color" id="qc-button-bg"></label><label>Texto e iconos<input type="color" id="qc-button-ink"></label><button type="button" id="qc-button-reset" class="secondary">Restablecer este botón</button></details>`;
+
+    titleEl.textContent = `⚙️ Personalizar: ${activeViewConfig.name}`;
+    bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + previewHtml + controlsHtml;
+
+
+    const buttonSelector = bodyEl.querySelector('#qc-button-selector');
+    if (buttonSelector) {
+      const asHex = (value) => {
+        if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
+        const rgb = String(value).match(/\d+/g);
+        return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
+      };
+      const refreshButtonPickers = () => {
+        const target = document.querySelector(buttonSelector.value);
+        if (!target) return;
+        const style = getComputedStyle(target);
+        bodyEl.querySelector('#qc-button-bg').value = asHex(style.backgroundColor);
+        bodyEl.querySelector('#qc-button-ink').value = asHex(style.color);
+      };
+      buttonSelector.addEventListener('change', refreshButtonPickers);
+      for (const prop of ['bg', 'ink']) bodyEl.querySelector('#qc-button-' + prop).addEventListener('input', (event) => {
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.buttonColors || {}) };
+        colours[buttonSelector.value] = { ...colours[buttonSelector.value], [prop]: event.target.value };
+        updateViewThemeProperty(currentViewId, 'buttonColors', colours);
+      });
+      bodyEl.querySelector('#qc-button-reset').onclick = () => {
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.buttonColors || {}) };
+        delete colours[buttonSelector.value];
+        updateViewThemeProperty(currentViewId, 'buttonColors', colours);
+        refreshButtonPickers();
+      };
+      refreshButtonPickers();
+    }
+
+    // Listeners para cambio de pestaña principal
+    bodyEl.querySelectorAll('.cbx-qc-view-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        currentViewId = chip.dataset.view;
+        const cfg = VIEWS_INFO.find((v) => v.id === currentViewId) || VIEWS_INFO[0];
+        currentSubTab = cfg.subtabs ? cfg.subtabs[0].id : 'general';
+        renderContent();
+      });
+    });
+
+    // Listeners para cambio de subpestaña
+    bodyEl.querySelectorAll('.cbx-qc-subtab-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        currentSubTab = chip.dataset.subtab;
+        renderContent();
+      });
+    });
+
+    // Listeners para color pickers
+    bodyEl.querySelectorAll('input[type="color"][data-prop]').forEach((picker) => {
+      picker.addEventListener('input', (e) => {
+        const prop = e.target.dataset.prop;
+        const val = e.target.value;
+        const codeEl = e.target.nextElementSibling;
+        if (codeEl) codeEl.textContent = val;
+        if (['sidebarBg', 'sidebarInk', 'bottomNavBg', 'bottomNavInk', 'bottomNavActive', 'subNavBg', 'subNavInk', 'subNavActiveBg', 'subNavActiveInk'].includes(prop)) updateThemeProperty(prop, val);
+        else updateViewThemeProperty(currentViewId, prop, val);
+        updateQcPreviews(currentTab, prop, val);
+      });
+    });
+
+    // Listeners para swatches de sugerencias
+    bodyEl.querySelectorAll('.cbx-swatch-btn').forEach((swatch) => {
+      swatch.addEventListener('click', () => {
+        const prop = swatch.dataset.prop;
+        const val = swatch.dataset.val;
+        const picker = bodyEl.querySelector(`input[data-prop="${prop}"]`);
+        if (picker) {
+          picker.value = val;
+          const codeEl = picker.nextElementSibling;
+          if (codeEl) codeEl.textContent = val;
+        }
+        if (['sidebarBg', 'sidebarInk', 'bottomNavBg', 'bottomNavInk', 'bottomNavActive', 'subNavBg', 'subNavInk', 'subNavActiveBg', 'subNavActiveInk'].includes(prop)) updateThemeProperty(prop, val);
+        else updateViewThemeProperty(currentViewId, prop, val);
+        updateQcPreviews(currentTab, prop, val);
+      });
+    });
+  }
+
+  resetBtn.onclick = async () => {
+    resetViewTheme(currentViewId);
+    if (currentTab === 'dorsales') {
+      let t = {};
+      try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
+      delete t.dorsalBg; delete t.dorsalInk;
+      if (state.settings?.theme) { delete state.settings.theme.dorsalBg; delete state.settings.theme.dorsalInk; }
+      localStorage.setItem('campobase.theme', JSON.stringify(t));
+      applyCustomTheme(t);
+    } else if (currentTab === 'whatsapp') {
+      let t = {};
+      try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
+      delete t.waBg; delete t.waInk;
+      if (state.settings?.theme) { delete state.settings.theme.waBg; delete state.settings.theme.waInk; }
+      localStorage.setItem('campobase.theme', JSON.stringify(t));
+      applyCustomTheme(t);
+    } else if (currentTab === 'tactic-board') {
+      await resetTacticBoardColors();
+    } else if (currentTab === 'live') {
+      let t = {};
+      try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
+      delete t.gfBg; delete t.gfInk; delete t.gaBg; delete t.gaInk;
+      if (state.settings?.theme) { delete state.settings.theme.gfBg; delete state.settings.theme.gfInk; delete state.settings.theme.gaBg; delete state.settings.theme.gaInk; }
+      localStorage.setItem('campobase.theme', JSON.stringify(t));
+      applyCustomTheme(t);
+    }
+    if (roleCanUseOwnerFeatures(state.role)) {
+      await put('settings', state.settings).catch(() => {});
+    }
+    const cfg = VIEWS_INFO.find((v) => v.id === currentViewId) || { name: 'Pestaña' };
+    toast(`Colores de «${cfg.name}» restablecidos.`);
+    renderContent();
+  };
+
+  if (copyAllBtn) {
+    copyAllBtn.onclick = async () => {
+      copyViewThemeToAll(currentViewId);
+      if (roleCanUseOwnerFeatures(state.role)) {
+        await put('settings', state.settings).catch(() => {});
+      }
+      const cfg = VIEWS_INFO.find((v) => v.id === currentViewId) || { name: 'Pestaña' };
+      toast(`Colores de «${cfg.name}» copiados a todas las pestañas.`);
+      renderContent();
+    };
+  }
+
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      try {
+        localStorage.setItem('campobase.theme', JSON.stringify(state.settings?.theme || {}));
+      } catch {}
+      if (roleCanUseOwnerFeatures(state.role)) {
+        if (!state.settings) state.settings = { id: 'main' };
+        state.settings.updatedAt = Date.now();
+        await put('settings', state.settings).catch(() => {});
+      }
+      toast('✅ Todos los colores guardados correctamente');
+      dialog.close();
+    };
+  }
+
+  renderContent();
+  dialog.showModal();
+}
+window.openQuickColorDialog = openQuickColorDialog;
+
 
 function initCustomizationListeners() {
   const uploadBtn = $('#upload-crest-btn');
@@ -8438,6 +10136,12 @@ function initCustomizationListeners() {
     resetTacticBtn.addEventListener('click', () => resetTacticBoardColors());
   }
 
+  // Botón restablecer colores de especialistas
+  const resetSpecialistsBtn = $('#cbx-reset-specialists-btn');
+  if (resetSpecialistsBtn) {
+    resetSpecialistsBtn.addEventListener('click', () => resetSpecialistsColors());
+  }
+
   // Sliders de intensidad
   const appBgSlider = $('#cbx-app-bg-pct-slider');
   const appBgValText = $('#cbx-app-bg-pct-val');
@@ -8511,7 +10215,12 @@ async function savePins(ownerPin, delegatePin) {
 
 function applyRole(role) {
   state.role = role;
+  if (typeof window !== 'undefined') {
+    window.__campobaseRole = role;
+  }
+  document.body.dataset.userRole = role;
   try { sessionStorage.setItem(SESSION_ROLE_KEY, role); } catch { /* La app sigue operativa aunque el navegador bloquee el almacenamiento de sesión. */ }
+  try { localStorage.setItem('campobase.lastAuthRole', role); } catch {}
   const userId = getBoundSaasUserId();
   if (userId) {
     try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
@@ -10114,6 +11823,13 @@ function wireEvents() {
   $('#kit-settings-form')?.addEventListener('submit', (event) => saveKitSettings(event).catch(handleError));
 
   document.addEventListener('click', (event) => {
+    const gearBtn = event.target.closest('#topbar-quick-color-btn, .topbar-gear-btn, .cbx-context-gear-btn, [data-gear-target]');
+    if (gearBtn) {
+      event.preventDefault();
+      openQuickColorDialog(gearBtn.dataset.gearTarget || null);
+      return;
+    }
+
     const openSetPiecesBtn = event.target.closest('#open-set-pieces-btn, .open-set-pieces-trigger');
     if (openSetPiecesBtn) {
       populateSetPiecesForm();
@@ -10758,6 +12474,11 @@ function wireEvents() {
     if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
     const waPlayerBtn = target.closest('.open-whatsapp-player');
     if (target.id === 'open-whatsapp-week-header-btn' || target.closest('#open-whatsapp-week-header-btn')) openWhatsAppDialog({ mode: 'week' });
+    if (target.matches('.toggle-session-completed') || target.closest('.toggle-session-completed')) {
+      const completedBtn = target.closest('.toggle-session-completed') || target;
+      toggleTrainingSessionCompleted(completedBtn.dataset.id).catch(handleError);
+      return;
+    }
     if (target.matches('.open-whistle-session') || target.closest('.open-whistle-session')) {
       const whistleBtn = target.closest('.open-whistle-session') || target;
       openWhistleDialog(whistleBtn.dataset.id, whistleBtn.dataset.blockIndex);
@@ -10887,8 +12608,22 @@ function wireEvents() {
 
     if (target.id === 'cbx-toggle-rival-btn' || target.closest('#cbx-toggle-rival-btn')) {
       claudeTacticShowRival = !claudeTacticShowRival;
-      if (claudeTacticDraft) {
+      if (!claudeTacticDraft) {
+        const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
+        claudeTacticDraft = {
+          ...aspectData,
+          id: `claude-tactic-${claudeTacticFormation}-${claudeTacticAspect}`,
+          name: `Sistema ${claudeTacticFormation} · ${aspectData.title || claudeTacticAspect}`,
+          formation: claudeTacticFormation,
+          aspect: claudeTacticAspect,
+          showOpponent: claudeTacticShowRival,
+        };
+      } else {
         claudeTacticDraft.showOpponent = claudeTacticShowRival;
+        if (claudeTacticShowRival) {
+          const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, true);
+          claudeTacticDraft.opponent = aspectData.opponent;
+        }
       }
       renderClaudeTactics();
       toast(claudeTacticShowRival ? 'Rival visible en la pizarra.' : 'Rival oculto. Mostrando solo tu equipo.');
@@ -10985,8 +12720,9 @@ function wireEvents() {
     const editPlayerStatsBtn = target.closest('.edit-player-stats');
     if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
     const deletePlayerBtn = target.closest('.delete-player');
-    if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(true); renderPlayers(); }
     if (target.matches('[data-callup-plan-mode]')) { callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
+    const genRotationBtn = target.closest('.cbx-generate-callup-rotation-btn');
+    if (genRotationBtn) { await generateAndSaveCallupRotation(genRotationBtn.dataset.callupId, genRotationBtn.dataset.matchId); }
     if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
@@ -11357,6 +13093,7 @@ async function init() {
     });
   }
   wireEvents(); networkStatus();
+  observeComponentColors();
   realtimeCloudStore = createCampoBaseCloudStore();
   configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));

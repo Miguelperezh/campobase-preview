@@ -49,7 +49,7 @@ body.cb-redesign-active #hoy button.secondary *,
 body.cb-redesign-active #hoy .cbx-btn-secondary * {
   color: var(--btn2Ink, #0f172a) !important;
 }
-body.cb-redesign-active #hoy [class*="open-whatsapp"] { background:#25d366 !important; color:#053b1d !important; border:0 !important; }
+body.cb-redesign-active #hoy [class*="open-whatsapp"] { background: var(--wa-bg, #25d366) !important; color: var(--wa-ink, var(--waInk, #053b1d)) !important; border:0 !important; }
 body.cb-redesign-active #hoy .today-pending {
   padding: 12px !important;
   background: var(--cardBg, #ffffff) !important;
@@ -99,13 +99,13 @@ body.cb-redesign-active #hoy .today-quick button * {
 }
 body.cb-redesign-active #hoy .today-empty { background:var(--cbx-soft) !important; color:var(--cbx-muted) !important; padding:16px !important; font:500 14px/1.5 var(--cbx-ui) !important; }
 body.cb-redesign-active #hoy .cbx-session-track { display:flex; height:10px; gap:2px; border-radius:5px; overflow:hidden; margin-top:10px; }
-body.cb-redesign-active #hoy .cbx-today-match-score { background:var(--bn, var(--cbx-hero, #0a251b)) !important; }
-body.cb-redesign-active #hoy .cbx-today-match-score .today-event-meta span,body.cb-redesign-active #hoy .cbx-today-match-score .today-event-meta strong { color:#c6d5ce !important; text-align:center; }
+body.cb-redesign-active #hoy .cbx-today-match-score { background:var(--today-match-bg, var(--bn, var(--cbx-hero, #0a251b))) !important; color:var(--today-match-ink, #ffffff) !important; }
+body.cb-redesign-active #hoy .cbx-today-match-score .today-event-meta span,body.cb-redesign-active #hoy .cbx-today-match-score .today-event-meta strong { color:color-mix(in srgb, var(--today-match-ink, #ffffff) 85%, transparent) !important; text-align:center; }
 body.cb-redesign-active #hoy .cbx-today-score { display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:10px; align-items:center; padding:18px 0 6px; }
 body.cb-redesign-active #hoy .cbx-today-score > div { display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
-body.cb-redesign-active #hoy .cbx-today-score strong { font:800 16px/1.1 var(--cbx-disp) !important; color:#fff !important; text-transform:uppercase; }
-body.cb-redesign-active #hoy .cbx-today-score b { font:900 48px/1 var(--cbx-disp) !important; color:#fff !important; white-space:nowrap; }
-body.cb-redesign-active #hoy .cbx-today-score small { color:#c6d5ce !important; }
+body.cb-redesign-active #hoy .cbx-today-score strong { font:800 16px/1.1 var(--cbx-disp) !important; color:var(--today-match-ink, #ffffff) !important; text-transform:uppercase; }
+body.cb-redesign-active #hoy .cbx-today-score b { font:900 48px/1 var(--cbx-disp) !important; color:var(--today-match-ink, #ffffff) !important; white-space:nowrap; }
+body.cb-redesign-active #hoy .cbx-today-score small { color:color-mix(in srgb, var(--today-match-ink, #ffffff) 80%, transparent) !important; }
 body.cb-redesign-active #hoy .cbx-today-score img,body.cb-redesign-active #hoy .cbx-opponent-crest { height:50px; width:50px; border-radius:12px; background:#fff; object-fit:contain; display:grid; place-items:center; font:900 18px var(--cbx-disp); }
 body.cb-redesign-active #hoy .cbx-live-badge { display:inline-block; padding:4px 9px; border-radius:999px; background:var(--cbx-red); color:#fff !important; font:800 12px var(--cbx-ui); }
 body.cb-redesign-active #hoy .cbx-season-strip { display:flex; gap:6px; overflow-x:auto; }

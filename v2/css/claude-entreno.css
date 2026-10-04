@@ -47,8 +47,8 @@ body.cb-redesign-active #sesiones > .cbx-banner .cbx-btn-whatsapp-week {
   padding: 0 16px;
   border-radius: 12px;
   border: 0;
-  background: #25d366 !important;
-  color: #053b1d !important;
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, var(--waInk, #053b1d)) !important;
   font: 800 13px var(--cbx-ui) !important;
   cursor: pointer;
   display: inline-flex;
@@ -311,11 +311,17 @@ body.cb-redesign-active #sesiones .cbx-session-block-play:hover {
 }
 
 /* Fila de botones de acción de sesión */
+/* Fila de botones de acción de sesión */
 body.cb-redesign-active #sesiones .cbx-session-actions-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
   gap: 6px;
+  flex-wrap: wrap;
   margin-top: 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-actions-row > button {
+  flex: 1 1 calc(20% - 6px);
+  min-width: 62px;
 }
 
 body.cb-redesign-active #sesiones .cbx-btn-whistle {
@@ -323,8 +329,8 @@ body.cb-redesign-active #sesiones .cbx-btn-whistle {
   padding: 0 6px;
   border-radius: 10px;
   border: 0;
-  background: var(--cbx-hero);
-  color: #fff;
+  background: var(--whistle-bg, var(--bn, #0a251b)) !important;
+  color: var(--whistle-ink, var(--bnInk, #ffffff)) !important;
   font: 700 12.5px var(--cbx-ui);
   cursor: pointer;
   display: inline-flex;
@@ -339,8 +345,8 @@ body.cb-redesign-active #sesiones .cbx-btn-wa {
   padding: 0 6px;
   border-radius: 10px;
   border: 0;
-  background: #25d366;
-  color: #053b1d;
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, #ffffff) !important;
   font: 800 12.5px var(--cbx-ui);
   cursor: pointer;
   display: inline-flex;
@@ -350,13 +356,13 @@ body.cb-redesign-active #sesiones .cbx-btn-wa {
   white-space: nowrap;
 }
 
-body.cb-redesign-active #sesiones .cbx-btn-sub {
+body.cb-redesign-active #sesiones .print-session.cbx-btn-sub {
   height: 38px;
   padding: 0 6px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: var(--cbx-ink);
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  background: var(--print-bg, var(--btn2, #ffffff)) !important;
+  color: var(--print-ink, var(--btn2Ink, #0f172a)) !important;
   font: 700 12.5px var(--cbx-ui);
   cursor: pointer;
   display: inline-flex;
@@ -366,8 +372,68 @@ body.cb-redesign-active #sesiones .cbx-btn-sub {
   white-space: nowrap;
 }
 
+body.cb-redesign-active #sesiones .edit-session.cbx-btn-sub {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  background: var(--edit-bg, var(--btn2, #ffffff)) !important;
+  color: var(--edit-ink, var(--btn2Ink, #0f172a)) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-completed {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--cardBorder, #cbd5e1);
+  background: var(--completed-bg, #f1f5f9) !important;
+  color: var(--completed-ink, #0f172a) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-completed.is-completed {
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+  border-color: var(--btn, #10b981) !important;
+}
+
+/* Evitar que botones que son enlaces textuales hereden estilos de botón genéricos */
+body.cb-redesign-active #sesiones .view-session.link-button,
+body.cb-redesign-active #sesiones .cbx-session-name button,
+body.cb-redesign-active #sesiones .session-exercise-link,
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  display: inline !important;
+}
+body.cb-redesign-active #sesiones .view-session.link-button,
+body.cb-redesign-active #sesiones .cbx-session-name button {
+  color: var(--cardTitle, #0f172a) !important;
+}
+body.cb-redesign-active #sesiones .session-exercise-link,
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  color: var(--view-font-color, #0f172a) !important;
+}
+
 body.cb-redesign-active #sesiones .cbx-btn-sub:hover {
-  background: #f8fafc;
+  filter: brightness(0.96);
 }
 
 /* Desplegable de más opciones */
@@ -394,6 +460,47 @@ body.cb-redesign-active #sesiones .cbx-session-more-details button {
   min-height: 32px;
   padding: 4px 10px;
   font-size: 11.5px;
+}
+
+/* Acordeón de entrenamientos realizados */
+body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion {
+  margin-top: 24px;
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  border-radius: var(--cbx-r-card, 16px);
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 88%, #f8fafc);
+  overflow: hidden;
+  box-shadow: var(--cbx-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font: 800 15px var(--cbx-ui);
+  color: var(--cardTitle, #334155);
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, #f1f5f9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s ease;
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary::-webkit-details-marker {
+  display: none;
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary:hover {
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 85%, #e2e8f0);
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary .cbx-accordion-indicator {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion[open] .cbx-completed-sessions-summary .cbx-accordion-indicator {
+  transform: rotate(180deg);
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-grid {
+  padding: 16px;
+  border-top: 1px solid var(--cardBorder, #e2e8f0);
+  opacity: 0.92;
 }
 
 /* Responsivo para móviles */
@@ -1150,14 +1257,15 @@ body.cb-redesign-active .cbx-tactics-page {
 
 /* Hero Banner */
 body.cb-redesign-active .cbx-tactics-hero {
-  background: linear-gradient(135deg, #062b1d 0%, #0d4a34 100%);
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--btn, #10b981) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, #0a251b), color-mix(in srgb, var(--bn, #0a251b) 75%, #000000)) !important;
   border-radius: 18px;
   padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 4px 16px rgba(6, 43, 29, 0.25);
-  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  color: var(--bnInk, #ffffff) !important;
 }
 
 body.cb-redesign-active .cbx-tactics-hero-text {
@@ -1170,14 +1278,14 @@ body.cb-redesign-active .cbx-tactics-eyebrow {
   font: 800 11px var(--cbx-disp);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #34d399;
+  color: color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;
 }
 
 body.cb-redesign-active .cbx-tactics-title {
   font: 900 24px var(--cbx-disp);
   letter-spacing: -0.02em;
   margin: 0;
-  color: #ffffff;
+  color: var(--bnInk, #ffffff) !important;
   line-height: 1.1;
 }
 
@@ -1185,8 +1293,8 @@ body.cb-redesign-active .btn-new-tactic-claude {
   height: 38px;
   padding: 0 16px;
   border-radius: 10px;
-  background: #10b981;
-  color: #ffffff;
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
   border: 0;
   font: 700 13px var(--cbx-ui);
   cursor: pointer;
@@ -1195,7 +1303,7 @@ body.cb-redesign-active .btn-new-tactic-claude {
 }
 
 body.cb-redesign-active .btn-new-tactic-claude:hover {
-  background: #059669;
+  filter: brightness(1.08);
 }
 
 /* Card Principal Pizarra */
@@ -1311,7 +1419,7 @@ body.cb-redesign-active .cbx-tool-btn-label {
 
 /* Callout informativo */
 body.cb-redesign-active .cbx-tactics-callout {
-  background: #f0fdf4;
+  background: var(--callout-bg, #f0fdf4);
   border: 1px solid #bbf7d0;
   border-radius: 12px;
   padding: 10px 14px;
@@ -1319,7 +1427,7 @@ body.cb-redesign-active .cbx-tactics-callout {
 
 body.cb-redesign-active .cbx-tactics-callout p {
   font: 500 12.5px var(--cbx-ui);
-  color: #166534;
+  color: var(--callout-ink, #166534);
   line-height: 1.4;
   margin: 0;
 }

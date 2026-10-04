@@ -1,0 +1,29 @@
+/* Only colour controls and the reported session action overflow. */
+body.cb-redesign-active #sesiones .cbx-session-actions-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 7px;
+}
+body.cb-redesign-active #sesiones .cbx-session-actions-row > button {
+  min-width: 0;
+  width: 100%;
+  min-height: 40px;
+  height: auto;
+  padding: 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+body.cb-redesign-active #exercise-detail-dialog,
+body.cb-redesign-active #whatsapp-dialog,
+body.cb-redesign-active #whatsapp-dialog #whatsapp-form {
+  background: var(--cardBg, #ffffff) !important;
+  color: var(--view-font-color, #0f172a) !important;
+}
+body.cb-redesign-active #cb-bottom-nav {
+  background: var(--bottom-nav-bg, #ffffff) !important;
+}
+body.cb-redesign-active #cb-bottom-nav .cb-nav-tab { background: transparent !important; }
+body.cb-redesign-active #convocatorias .cbx-plan-mode-track { border-radius: 999px; }
+
+body.cb-redesign-active #cb-bottom-nav .cb-nav-tab.active::before { background: var(--bottom-nav-active, #c8102e) !important; }
+body.cb-redesign-active #cb-sub-nav { background: var(--sub-nav-bg, #f1f5f9) !important; }
