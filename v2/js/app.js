@@ -1,4 +1,4 @@
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription } from './theme-component-colors.js?v=color-controls-3';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription } from './theme-component-colors.js?v=color-controls-4';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -880,7 +880,7 @@ function renderSquadSpecialistsBar() {
 
   const playersById = new Map(state.players.map((player) => [player.id, player]));
   const specialistCard = (title, icon, assignments, isCaptain = false) => `
-    <section class="specialist-item" aria-label="${escapeHtml(title)}">
+    <section class="specialist-item" data-specialist-kind="${isCaptain ? 'captain' : 'launcher'}" aria-label="${escapeHtml(title)}">
       <div class="specialist-item-head"><span class="sp-icon" aria-hidden="true">${icon}</span><h4>${escapeHtml(title)}</h4></div>
       <div class="specialist-rank-list">
         ${assignments.map((id, index) => {
@@ -889,7 +889,7 @@ function renderSquadSpecialistsBar() {
             ? ['1.er capitán', '2.º capitán', '3.er capitán'][index]
             : ['1.er lanzador', '2.º lanzador'][index];
           const number = player ? cleanPlayerNumber(player.number) : '';
-          return `<div class="specialist-rank-row${player ? '' : ' unassigned'}">
+          return `<div class="specialist-rank-row${player ? '' : ' unassigned'}" data-specialist-rank="${index + 1}">
             <span class="specialist-rank">${rank}</span>
             <strong>${player ? escapeHtml(player.name) : 'Sin asignar'}</strong>
             ${number ? `<span class="specialist-number" aria-label="Dorsal ${escapeHtml(number)}">${escapeHtml(number)}</span>` : ''}
@@ -906,7 +906,7 @@ function renderSquadSpecialistsBar() {
           <p class="meta">Especialistas a balón parado asignados para faltas, córners, penaltis y capitanía</p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-          <button type="button" class="secondary open-set-pieces-trigger">Configurar lanzadores</button>
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="specialists" aria-label="Ajustar colores de lanzadores y capitanes">⚙️</button><button type="button" class="secondary open-set-pieces-trigger">Configurar lanzadores</button>
           <button type="button" class="secondary share-database-mobile-btn" style="display:none;" title="Pasar lanzadores y plantilla a tu móvil por WhatsApp o AirDrop">📲 Pasar al móvil</button>
         </div>
       </div>
@@ -1633,74 +1633,21 @@ async function synchronizeRotationCounters() {
 const callupPlanModes = new Map();
 let pendingPrepAfterCallupMatchId = '';
 
-async function generateAndSaveCallupRotation(callupId, matchId) {
-  const callup = state.callups.find((c) => c.id === callupId);
+const callupSuggestedPlans = new Map();
+function suggestCallupRotation(callupId) {
+  const callup = state.callups.find((item) => item.id === callupId);
   if (!callup) return;
-  const availableIds = callup.availableIds || [];
-  if (!availableIds.length) return toast('La convocatoria no tiene jugadores disponibles.');
-  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
-  const mode = callupPlanModes.get(callup.id) || 'escalonado';
-  let auto;
+  const playerIds = callup.availableIds || [];
+  const keeperIds = playerIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
   try {
-    auto = buildAutoPlan({
-      format: callup.format || state.format || 'F7',
-      playerIds: availableIds,
-      keeperIds,
-      planMode: mode,
-    });
-  } catch (err) {
-    return toast('No se pudo calcular la rotación: ' + (err.message || 'datos incompletos'));
-  }
-
-  const targetMatchId = matchId || callup.matchId;
-  if (!targetMatchId) return toast('Asocia la convocatoria a un partido para guardar la rotación.');
-
-  let prep = prepForMatch(targetMatchId);
-  const isF11 = String(callup.format || state.format).toUpperCase() === 'F11';
-  const formation = prep?.formacion || (isF11 ? '1-4-3-3' : '1-3-2-1');
-
-  const baseSlots = isF11
-    ? ['Portero', 'Lateral derecho', 'Central derecho', 'Central izquierdo', 'Lateral izquierdo', 'Pivote', 'Interior derecho', 'Interior izquierdo', 'Extremo derecho', 'Delantero', 'Extremo izquierdo']
-    : ['Portero', 'Lateral derecho', 'Central', 'Lateral izquierdo', 'Medio centro', 'Medio centro', 'Delantero'];
-
-  const initialField = [];
-  const firstGk = keeperIds[0];
-  if (firstGk) initialField.push({ pos: 'Portero', playerId: firstGk });
-  const otherStarters = availableIds.filter((id) => id !== firstGk).slice(0, (isF11 ? 11 : 7) - (firstGk ? 1 : 0));
-  otherStarters.forEach((id, idx) => {
-    initialField.push({ pos: baseSlots[idx + (firstGk ? 1 : 0)] || 'Campo', playerId: id });
-  });
-
-  const moments = [{ id: 'inicio', minute: 0, formation, team: initialField }];
-
-  for (const group of auto.groups) {
-    let team = moments.at(-1).team.map((slot) => ({ ...slot }));
-    for (const change of group.list) {
-      const index = team.findIndex((slot) => slot.playerId === (change.out || change.sale));
-      const inId = change.inn || change.entra;
-      if (index >= 0 && availableIds.includes(inId)) {
-        team = asignarJugador(team, index, inId);
-      }
-    }
-    moments.push({ id: uid(), minute: group.m, formation, team });
-  }
-
-  const prepPayload = {
-    ...(prep || {}),
-    id: prep?.id || uid(),
-    matchId: targetMatchId,
-    formacion: formation,
-    team: moments[0].team,
-    moments,
-    totalDuration: auto.D,
-    halfDuration: auto.H,
-    updatedAt: Date.now(),
-  };
-
-  await put('preparaciones', prepPayload);
-  await refresh(true);
-  renderCallups();
-  toast('Rotación equitativa generada y guardada con éxito.');
+    if (playerIds.some((id) => !state.players.some((player) => player.id === id)) || !keeperIds.length) throw new Error('Faltan fichas o un portero');
+    const mode = callupPlanModes.get(callup.id) || 'escalonado';
+    const plan = buildAutoPlan({ format: callup.format || state.format || 'F7', playerIds, keeperIds, planMode: mode,
+      playerNumbers: Object.fromEntries(state.players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
+    callupSuggestedPlans.set(callup.id, { mode, plan });
+    renderCallups();
+    toast('Sugerencia calculada. Tu preparación guardada sigue intacta.');
+  } catch (error) { toast('No se pudo calcular la sugerencia: ' + error.message); }
 }
 
 function renderClaudeCallup(callup) {
@@ -1799,6 +1746,8 @@ function renderClaudeCallup(callup) {
       plan = buildAutoPlan({ format, playerIds: [...available], keeperIds, planMode: mode, playerNumbers: Object.fromEntries(players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
     } catch { plan = null; }
   }
+  const suggested = callupSuggestedPlans.get(callup.id);
+  if (suggested?.mode === mode) plan = suggested.plan;
   const fieldCount = available.size - keeperIds.length;
   const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(callup.date || ''))?.[1];
   const roster = players.map((player) => {
@@ -1819,11 +1768,11 @@ function renderClaudeCallup(callup) {
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row"><button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
         <div style="padding:12px 6px;text-align:center;">
           <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-            <button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}" style="min-height:36px;padding:0 14px;border-radius:10px;font:800 12px var(--cbx-ui);background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;border:0;cursor:pointer;">⚡ Generar rotación equitativa</button>
+
             ${matchId ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:36px;padding:0 12px;border-radius:10px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Editar en Preparación</button>` : ''}
           </div>
         </div>
@@ -2699,7 +2648,7 @@ function renderTacticsBoard(which) {
       <div class="section-head">
         <div><p class="eyebrow">Planteamiento</p><h3>Pizarra táctica en vivo</h3></div>
         <div class="button-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-          <button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-head-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="${which === 'delegate' ? 'delegate-board' : 'live-board'}" aria-label="Ajustar colores de esta pizarra">⚙️</button><button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-head-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
           <button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button>
         </div>
       </div>
@@ -7398,6 +7347,12 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     viewEl.style.setProperty('--sp-lead-ink', spLeadInk);
     viewEl.style.setProperty('--sp-sub-bg', spSubBg);
     viewEl.style.setProperty('--sp-sub-ink', spSubInk);
+    for (const rank of [1, 2, 3]) {
+      viewEl.style.setProperty('--captain-' + rank + '-bg', v['captain' + rank + 'Bg'] || (rank === 1 ? spLeadBg : spSubBg));
+      viewEl.style.setProperty('--captain-' + rank + '-ink', v['captain' + rank + 'Ink'] || (rank === 1 ? spLeadInk : spSubInk));
+    }
+    viewEl.style.setProperty('--season-goals-for', v.seasonGoalsForColor || v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--season-goals-against', v.seasonGoalsAgainstColor || '#e11d48');
     viewEl.style.setProperty('--tb-pitch', tbPitch);
     viewEl.style.setProperty('--tb-lines', tbLines);
     viewEl.style.setProperty('--tb-team', tbTeam);
@@ -7412,6 +7367,8 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     viewEl.style.setProperty('--callup-header-ink', callupHeaderInk);
     viewEl.style.setProperty('--callup-badge-bg', callupBadgeBg);
     viewEl.style.setProperty('--callup-badge-ink', callupBadgeInk);
+    viewEl.style.setProperty('--callup-status-bg', v.badgeBg || '#dcfce7');
+    viewEl.style.setProperty('--callup-status-ink', v.badgeInk || vFontColor);
     viewEl.style.setProperty('--callup-out-bg', callupOutBg);
     viewEl.style.setProperty('--callup-out-ink', callupOutInk);
     viewEl.style.setProperty('--plan-mode-track', planModeTrack);
@@ -8825,6 +8782,14 @@ function updateViewThemeProperty(viewId, prop, val) {
   };
   if (!currentTheme.views) currentTheme.views = {};
   if (!currentTheme.views[viewId]) currentTheme.views[viewId] = {};
+  if (viewId === 'plantilla' && /^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) {
+    const view = currentTheme.views[viewId];
+    for (const rank of [1, 2, 3]) {
+      const prefix = rank === 1 ? 'spLead' : 'spSub';
+      view['captain' + rank + 'Bg'] ||= view[prefix + 'Bg'] || currentTheme[prefix + 'Bg'] || (rank === 1 ? '#c8102e' : '#f1f5f9');
+      view['captain' + rank + 'Ink'] ||= view[prefix + 'Ink'] || currentTheme[prefix + 'Ink'] || (rank === 1 ? '#ffffff' : '#0f172a');
+    }
+  }
   currentTheme.views[viewId][prop] = val;
   if (state.settings) state.settings.theme = currentTheme;
   try {
@@ -8913,6 +8878,8 @@ function openQuickColorDialog(targetKind = null) {
     else if (targetKind === 'whatsapp') { currentViewId = 'cuerpo-tecnico'; currentSubTab = 'general'; }
     else if (targetKind === 'callups') { currentViewId = 'convocatorias'; currentSubTab = 'general'; }
     else if (targetKind === 'live') { currentViewId = 'partido'; currentSubTab = 'live'; }
+    else if (targetKind === 'delegate-board') { currentViewId = 'delegado'; currentSubTab = 'tactic-board'; }
+    else if (targetKind === 'live-board') { currentViewId = 'partido'; currentSubTab = 'tactic-board'; }
     else if (targetKind === 'tactic-board') { currentViewId = 'tacticas'; currentSubTab = 'tactic-board'; }
     else if (VIEWS_INFO.some(v => v.id === targetKind)) {
       currentViewId = targetKind;
@@ -8920,6 +8887,7 @@ function openQuickColorDialog(targetKind = null) {
     }
   }
 
+  let currentElementOptions = [];
   let currentTab = currentSubTab;
   if (currentSubTab === 'general') {
     if (currentViewId === 'plantilla') currentTab = 'dorsales';
@@ -9132,33 +9100,15 @@ function openQuickColorDialog(targetKind = null) {
     const calloutBg = val('calloutBg', '#dcfce7');
     const calloutInk = val('calloutInk', fontColor);
 
-    const viewsBarHtml = `
-      <div class="cbx-qc-views-bar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;border-bottom:1px solid var(--cardBorder, #e2e8f0);margin-bottom:6px;scrollbar-width:thin;">
-        ${VIEWS_INFO.map(v => `
-          <button type="button" class="cbx-qc-view-chip ${v.id === currentViewId ? 'active' : ''}" data-view="${v.id}" aria-pressed="${v.id === currentViewId}" style="padding:6px 12px;border-radius:999px;border:1px solid ${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${v.id === currentViewId ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">
-            ${v.icon} ${v.name}
-          </button>
-        `).join('')}
-      </div>
-    `;
-
-    const subtabsBarHtml = subtabs.length > 1 ? `
-      <div class="cbx-qc-subtabs-row" style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;margin-bottom:6px;scrollbar-width:thin;">
-        ${subtabs.map(st => `
-          <button type="button" class="cbx-qc-subtab-chip ${st.id === currentSubTab ? 'active' : ''}" data-subtab="${st.id}" aria-pressed="${st.id === currentSubTab}" style="padding:5px 12px;border-radius:8px;border:1px solid ${st.id === currentSubTab ? '#059669' : 'var(--cardBorder, #cbd5e1)'};background:${st.id === currentSubTab ? '#059669' : 'color-mix(in srgb, var(--cardBg, #ffffff) 96%, var(--cardBorder, #e2e8f0))'};color:${st.id === currentSubTab ? '#ffffff' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;">
-            ${st.label}
-          </button>
-        `).join('')}
-      </div>
-    ` : '';
-
+    const viewsBarHtml = '';
+    const subtabsBarHtml = '';
     const viewNoticeHtml = `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 88%, var(--cardBorder, #e2e8f0));padding:8px 12px;border-radius:10px;font-size:12px;border:1px solid var(--cardBorder, #e2e8f0);margin-bottom:8px;">
         <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">
           🎨 Ajustes exclusivos para: <u>${activeViewConfig.name}</u>
         </span>
         <span style="font-size:11px;font-weight:800;color:#047857;background:#dcfce7;padding:2px 8px;border-radius:999px;">
-          Colores propios · navegación compartida
+          Solo esta pantalla o sección
         </span>
       </div>
     `;
@@ -9778,25 +9728,36 @@ function openQuickColorDialog(targetKind = null) {
     }
 
 
+    if (!['specialists', 'tactic-board'].includes(currentSubTab)) {
     if (!controlsHtml.includes('data-prop="bannerBg"')) controlsHtml += colorRow('Cabecera · Fondo', 'bannerBg', bannerBg, '#0a251b', []);
     if (!controlsHtml.includes('data-prop="bannerInk"')) controlsHtml += colorRow('Cabecera · Texto', 'bannerInk', bannerInk, '#ffffff', []);
     controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
     controlsHtml += colorRow('Etiquetas de las fichas · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
     controlsHtml += colorRow('Etiquetas de las fichas · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
+    }
     const extraRows = (entries) => entries.map(([label, prop, fallback]) => colorRow(label, prop, val(prop, fallback), fallback, [])).join('');
     if (currentViewId === 'convocatorias') controlsHtml += extraRows([
+      ['Editar y abrir Preparación · Fondo', 'btn2Bg', btn2Bg], ['Editar y abrir Preparación · Texto', 'btn2Ink', btn2Ink],
+      ['Tarjetas y filas · Fondo', 'cardBg', cardBg],
       ['Botón + Convocatoria · Fondo', 'callupBtnBg', btnBg], ['Botón + Convocatoria · Texto', 'callupBtnInk', btnInk],
       ['Plan por tramos · Fondo del selector', 'planModeTrack', '#e2e8f0'],
       ['Plan · Opción inactiva fondo', 'planModeBg', '#f1f5f9'], ['Plan · Opción inactiva texto', 'planModeInk', '#334155'],
       ['Plan · Opción activa fondo', 'planModeActiveBg', '#ffffff'], ['Plan · Opción activa texto', 'planModeActiveInk', '#0f172a']
     ]);
+    if (currentViewId === 'hoy') controlsHtml += extraRows([
+      ['Goles a favor · Color de barras', 'seasonGoalsForColor', '#10b981'], ['Goles en contra · Color de barras', 'seasonGoalsAgainstColor', '#e11d48']
+    ]);
+    if (currentSubTab === 'specialists') controlsHtml += extraRows([1, 2, 3].flatMap((rank) => [
+      [rank + '.º capitán · Fondo del distintivo', 'captain' + rank + 'Bg', rank === 1 ? spLeadBg : spSubBg],
+      [rank + '.º capitán · Texto del distintivo', 'captain' + rank + 'Ink', rank === 1 ? spLeadInk : spSubInk]
+    ]));
     if (currentViewId === 'sesiones') controlsHtml += extraRows([
       ['Realizado marcado · Fondo', 'completedActiveBg', btnBg], ['Realizado marcado · Texto', 'completedActiveInk', btnInk]
     ]);
     if (currentViewId === 'exercise-detail') controlsHtml += extraRows([
       ['Cerrar ejercicio · Fondo', 'closeBg', btn2Bg], ['Cerrar ejercicio · Texto', 'closeInk', btn2Ink]
     ]);
-    controlsHtml += `<details><summary>Menú lateral y navegación inferior (independientes)</summary>${[
+    if (currentViewId === 'ajustes' || currentViewId === 'navegacion') controlsHtml += `<details><summary>Menú lateral y navegación inferior (independientes)</summary>${[
       ['Menú lateral · Fondo', 'sidebarBg', '#0a251b'], ['Menú lateral · Texto', 'sidebarInk', '#ffffff'],
       ['Barra inferior · Fondo', 'bottomNavBg', '#ffffff'], ['Barra inferior · Texto e iconos', 'bottomNavInk', '#64748b'],
       ['Barra inferior · Texto e iconos activos', 'bottomNavActive', '#c8102e'],
@@ -9805,9 +9766,13 @@ function openQuickColorDialog(targetKind = null) {
     ].map(([label, prop, fallback]) => colorRow(label, prop, theme[prop] || fallback, fallback, [])).join('')}</details>`;
 
 
-    const buttonRoot = document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
+    const buttonRoot = (currentSubTab === 'specialists' ? document.getElementById('plantilla-specialists-bar') : currentSubTab === 'tactic-board' ? document.getElementById(currentViewId === 'tacticas' ? 'cbx-tactics-board-section' : currentViewId === 'delegado' ? 'delegate-tactics' : 'live-tactics') : null) || document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
     const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot]), ...[...document.querySelectorAll('dialog[open][data-theme-view]')].filter((dialog) => dialog.dataset.themeView === currentViewId)];
-    const elements = elementRoots.flatMap(configurableElements);
+    const elements = elementRoots.flatMap(configurableElements).filter((item) => {
+      const element = document.querySelector(item.selector);
+      return !((currentSubTab === 'general' && currentViewId === 'plantilla' && element?.closest('#plantilla-specialists-bar')) || (currentSubTab === 'general' && currentViewId === 'tacticas' && element?.closest('#cbx-tactics-board-section')) || (currentSubTab === 'live' && element?.closest('#live-tactics')));
+    });
+    currentElementOptions = elements;
     const asHex = (value) => {
       if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
       const rgb = String(value).match(/\d+/g);
@@ -9920,50 +9885,20 @@ function openQuickColorDialog(targetKind = null) {
   }
 
   resetBtn.onclick = async () => {
-    resetViewTheme(currentViewId);
-    if (currentTab === 'dorsales') {
-      let t = {};
-      try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
-      delete t.dorsalBg; delete t.dorsalInk;
-      if (state.settings?.theme) { delete state.settings.theme.dorsalBg; delete state.settings.theme.dorsalInk; }
-      localStorage.setItem('campobase.theme', JSON.stringify(t));
-      applyCustomTheme(t);
-    } else if (currentTab === 'whatsapp') {
-      let t = {};
-      try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
-      delete t.waBg; delete t.waInk;
-      if (state.settings?.theme) { delete state.settings.theme.waBg; delete state.settings.theme.waInk; }
-      localStorage.setItem('campobase.theme', JSON.stringify(t));
-      applyCustomTheme(t);
-    } else if (currentTab === 'tactic-board') {
-      await resetTacticBoardColors();
-    } else if (currentTab === 'live') {
-      let t = {};
-      try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
-      delete t.gfBg; delete t.gfInk; delete t.gaBg; delete t.gaInk;
-      if (state.settings?.theme) { delete state.settings.theme.gfBg; delete state.settings.theme.gfInk; delete state.settings.theme.gaBg; delete state.settings.theme.gaInk; }
-      localStorage.setItem('campobase.theme', JSON.stringify(t));
-      applyCustomTheme(t);
+    const theme = structuredClone(state.settings?.theme || {});
+    const view = theme.views?.[currentViewId];
+    if (view) {
+      bodyEl.querySelectorAll('[data-prop]').forEach((input) => { delete view[input.dataset.prop]; });
+      for (const entry of currentElementOptions) delete view.elementColors?.[entry.selector];
     }
-    if (roleCanUseOwnerFeatures(state.role)) {
-      await put('settings', state.settings).catch(() => {});
-    }
-    const cfg = VIEWS_INFO.find((v) => v.id === currentViewId) || { name: 'Pestaña' };
-    toast(`Colores de «${cfg.name}» restablecidos.`);
+    state.settings.theme = theme;
+    localStorage.setItem('campobase.theme', JSON.stringify(theme));
+    applyCustomTheme(theme);
+    if (roleCanUseOwnerFeatures(state.role)) await put('settings', state.settings).catch(() => {});
+    toast('Colores de esta sección restablecidos.');
     renderContent();
   };
-
-  if (copyAllBtn) {
-    copyAllBtn.onclick = async () => {
-      copyViewThemeToAll(currentViewId);
-      if (roleCanUseOwnerFeatures(state.role)) {
-        await put('settings', state.settings).catch(() => {});
-      }
-      const cfg = VIEWS_INFO.find((v) => v.id === currentViewId) || { name: 'Pestaña' };
-      toast(`Colores de «${cfg.name}» copiados a todas las pestañas.`);
-      renderContent();
-    };
-  }
+  if (copyAllBtn) { copyAllBtn.hidden = true; copyAllBtn.style.display = 'none'; copyAllBtn.onclick = null; }
 
   if (saveBtn) {
     saveBtn.onclick = async () => {
@@ -12753,9 +12688,11 @@ function wireEvents() {
     const editPlayerStatsBtn = target.closest('.edit-player-stats');
     if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
     const deletePlayerBtn = target.closest('.delete-player');
-    if (target.matches('[data-callup-plan-mode]')) { callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
+    const restorePlanBtn = target.closest('.cbx-restore-callup-plan');
+    if (restorePlanBtn) { callupSuggestedPlans.delete(restorePlanBtn.dataset.callupId); renderCallups(); }
+    if (target.matches('[data-callup-plan-mode]')) { callupSuggestedPlans.delete(target.dataset.callupId); callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
     const genRotationBtn = target.closest('.cbx-generate-callup-rotation-btn');
-    if (genRotationBtn) { await generateAndSaveCallupRotation(genRotationBtn.dataset.callupId, genRotationBtn.dataset.matchId); }
+    if (genRotationBtn) { suggestCallupRotation(genRotationBtn.dataset.callupId); }
     if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
@@ -13153,7 +13090,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261005-ajustes-visuales-detallados').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261005-colores-locales-rotaciones').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

@@ -16,15 +16,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Oswald:wght@600;700&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260927-v66-real-calendar-dates">
-  <link rel="stylesheet" href="styles-redesign.css?v=color-controls-3">
+  <link rel="stylesheet" href="styles-redesign.css?v=color-controls-4">
   <link rel="stylesheet" href="billing.css?v=1">
   <link rel="stylesheet" href="css/campobase-diseno.css?v=hoy-real-2">
-  <link rel="stylesheet" href="css/claude-shell.css?v=color-controls-3">
-  <link rel="stylesheet" href="css/claude-hoy.css?v=color-controls-3">
-  <link rel="stylesheet" href="css/claude-plantilla.css?v=color-controls-3">
-  <link rel="stylesheet" href="css/claude-partido.css?v=color-controls-3">
-  <link rel="stylesheet" href="css/claude-entreno.css?v=color-controls-3">
-  <link rel="stylesheet" href="css/theme-component-colors.css?v=color-controls-3">
+  <link rel="stylesheet" href="css/claude-shell.css?v=color-controls-4">
+  <link rel="stylesheet" href="css/claude-hoy.css?v=color-controls-4">
+  <link rel="stylesheet" href="css/claude-plantilla.css?v=color-controls-4">
+  <link rel="stylesheet" href="css/claude-partido.css?v=color-controls-4">
+  <link rel="stylesheet" href="css/claude-entreno.css?v=color-controls-4">
+  <link rel="stylesheet" href="css/theme-component-colors.css?v=color-controls-4">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -307,7 +307,7 @@
         </div>
 
         <!-- Pizarra Interactiva Principal Card -->
-        <div class="cbx-tactics-board-card">
+        <div class="cbx-tactics-board-card" id="cbx-tactics-board-section">
           <!-- Selector de Formación F7 -->
           <div class="cbx-tactics-section-group">
             <span class="cbx-tactics-label">FORMACIÓN F7</span>
@@ -346,7 +346,7 @@
           <!-- Botones de Acción -->
           <div class="cbx-tactics-actions-row">
             <button type="button" class="btn-rival-toggle-claude" id="cbx-toggle-rival-btn" aria-pressed="false">👥 Mostrar rival</button>
-            <button type="button" class="cbx-context-gear-btn" data-gear-target="tacticas" title="Ajustar colores de la pizarra táctica" aria-label="Ajustar colores">⚙️</button>
+            <button type="button" class="cbx-context-gear-btn" data-gear-target="tactic-board" title="Ajustar colores de la pizarra táctica" aria-label="Ajustar colores">⚙️</button>
             <button type="button" class="btn-save-tactic-claude" id="cbx-save-tactic-btn">Guardar táctica</button>
             <button type="button" class="btn-clear-tactic-claude" id="cbx-clear-tactic-btn">Borrar todo</button>
           </div>
@@ -980,7 +980,7 @@
             <span class="cbx-badge-new">Nuevo</span>
           </div>
           <p class="meta" style="margin:4px 0 8px;">Color del fondo de la app y de las tarjetas con la intensidad que quieras, y colores de los botones secundarios, del texto de WhatsApp y de los resultados de temporada.</p>
-          
+
           <div class="cbx-color-group">
             <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Fondo de la app</div>
             <div class="cbx-swatches-row" id="cbx-app-bg-swatches"></div>
@@ -1076,7 +1076,7 @@
 
           <div class="cbx-color-group" style="padding-top:10px;border-top:1px solid #f1f5f9;margin-top:10px;">
             <div style="font:800 11px var(--ui, sans-serif);letter-spacing:.1em;text-transform:uppercase;color:#1e523d;margin-bottom:6px;">Goles «A favor» y «En contra» (Temporada · Liga)</div>
-            
+
             <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:4px;">A favor · color de barras</div>
             <div class="cbx-swatches-row" id="cbx-gf-swatches"></div>
 
@@ -1628,10 +1628,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20261005-ajustes-visuales-detallados';
+    window.__CAMPOBASE_BUILD = '20261005-colores-locales-rotaciones';
     if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20261005-ajustes-visuales-detallados')
+      navigator.serviceWorker.register('./sw.js?v=20261005-colores-locales-rotaciones')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1652,7 +1652,7 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=color-controls-3"></script>
+  <script type="module" src="js/app.js?v=color-controls-4"></script>
   <script type="module" src="js/redesign-nav.js?v=claude-tecnicos-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.

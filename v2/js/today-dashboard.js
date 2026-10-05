@@ -263,7 +263,7 @@ function seasonPanel(matches) {
   const max = Math.max(1, ...season.games.flatMap(m => [m.goalsFor, m.goalsAgainst]));
   return `<article class="panel cbx-card cbx-season"><div class="today-title-row"><h3>Temporada · Liga</h3><span class="pill today-ok">${season.points} pts</span></div>
     ${season.games.length ? `<div class="cbx-season-strip">${season.games.map((m,i) => `<button type="button" data-today-match="${esc(m.id)}" class="cbx-result cbx-result-${m.goalsFor > m.goalsAgainst ? 'W' : m.goalsFor === m.goalsAgainst ? 'D' : 'L'}" aria-label="${esc(m.opponent)}: ${m.goalsFor} a ${m.goalsAgainst}"><small>${m.round ? 'J' + esc(m.round) : i+1}</small><b>${m.goalsFor}-${m.goalsAgainst}</b><span>${esc(m.opponent)}</span></button>`).join('')}</div>
-    <div class="cbx-season-bars" aria-label="Goles a favor y en contra por partido">${season.games.map((m,i) => `<div><div><i style="height:${Math.max(2,m.goalsFor/max*60)}px"></i><i style="height:${Math.max(2,m.goalsAgainst/max*60)}px"></i></div><small>${m.round ? 'J'+esc(m.round) : i+1}</small></div>`).join('')}</div>` : '<div class="today-empty">Aún no hay resultados de Liga registrados.</div>'}
+    <div class="cbx-season-bars" aria-label="Goles a favor y en contra por partido">${season.games.map((m,i) => `<div><div><i class="cbx-season-goals-for" style="height:${Math.max(2,m.goalsFor/max*60)}px"></i><i class="cbx-season-goals-against" style="height:${Math.max(2,m.goalsAgainst/max*60)}px"></i></div><small>${m.round ? 'J'+esc(m.round) : i+1}</small></div>`).join('')}</div>` : '<div class="today-empty">Aún no hay resultados de Liga registrados.</div>'}
     <div class="cbx-season-totals"><span>A favor · ${season.goalsFor}</span><span>En contra · ${season.goalsAgainst}</span></div></article>`;
 }
 

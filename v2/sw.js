@@ -1,4 +1,4 @@
-const CACHE = '20261005-ajustes-visuales-detallados-campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2457-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2503-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917-promo-roster-1-saas-auth-v3-attendance-manual-v4-exercises-hotfix-v2-auth-recovery-v1-player-profile-guard-v1-exercise-media-filter-v2-derived-stats-link-v1-manual-player-profile-v1-exercise-cover-humanvideo-hotfix-20260918-force2508-final-preview-own-sessions-emergency-auth-restore-v4-prod-access-recovery-v1-session-rebind-v1-pin-session-preserve-v1-session-data-view-v1-mobile-sync-pin-v1-cloud-restore-v4-20260927-v66-real-calendar-dates-20261001-v69-ajustes-temas-20261002-v70-ajustes-pizarra-sidebar-20261002-v71-ajustes-preview-rico-bg-tacticas-fix-20261002-v72-ajustes-live-preview-completo-20261002-v73-preview-top-hoy-quick-buttons-fix-20261002-v74-mobile-settings-grid-responsive-fix-20261002-v75-remove-dummy-tactics-presets-20261002-v76-mobile-print-pdf-specialists-theme-fix-20261003-v77-match-plan-2pages-70min-callups-theme-fab-fix';
+const CACHE = '20261005-colores-locales-rotaciones-campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2457-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2503-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917-promo-roster-1-saas-auth-v3-attendance-manual-v4-exercises-hotfix-v2-auth-recovery-v1-player-profile-guard-v1-exercise-media-filter-v2-derived-stats-link-v1-manual-player-profile-v1-exercise-cover-humanvideo-hotfix-20260918-force2508-final-preview-own-sessions-emergency-auth-restore-v4-prod-access-recovery-v1-session-rebind-v1-pin-session-preserve-v1-session-data-view-v1-mobile-sync-pin-v1-cloud-restore-v4-20260927-v66-real-calendar-dates-20261001-v69-ajustes-temas-20261002-v70-ajustes-pizarra-sidebar-20261002-v71-ajustes-preview-rico-bg-tacticas-fix-20261002-v72-ajustes-live-preview-completo-20261002-v73-preview-top-hoy-quick-buttons-fix-20261002-v74-mobile-settings-grid-responsive-fix-20261002-v75-remove-dummy-tactics-presets-20261002-v76-mobile-print-pdf-specialists-theme-fix-20261003-v77-match-plan-2pages-70min-callups-theme-fab-fix';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -6,13 +6,13 @@ const BOARD_PARTS = [
   './assets/exercise-board/part-4.b64',
 ];
 const ASSETS = [
-  './styles-redesign.css?v=color-controls-3',
-  './css/claude-shell.css?v=color-controls-3',
-  './css/claude-hoy.css?v=color-controls-3',
-  './css/claude-plantilla.css?v=color-controls-3',
-  './css/claude-partido.css?v=color-controls-3',
-  './css/claude-entreno.css?v=color-controls-3',
-  './js/theme-component-colors.js', './js/theme-component-colors.js?v=color-controls-3', './css/theme-component-colors.css', './css/theme-component-colors.css?v=color-controls-3', './js/app.js?v=color-controls-3',
+  './styles-redesign.css?v=color-controls-4',
+  './css/claude-shell.css?v=color-controls-4',
+  './css/claude-hoy.css?v=color-controls-4',
+  './css/claude-plantilla.css?v=color-controls-4',
+  './css/claude-partido.css?v=color-controls-4',
+  './css/claude-entreno.css?v=color-controls-4',
+  './js/theme-component-colors.js', './js/theme-component-colors.js?v=color-controls-4', './css/theme-component-colors.css', './css/theme-component-colors.css?v=color-controls-4', './js/app.js?v=color-controls-4',
   './', './index.html', './styles.css', './styles.css?v=20260927-v66-real-calendar-dates', './styles-redesign.css', './styles-redesign.css?v=20260927-v66-real-calendar-dates', './billing.css', './billing.css?v=1', './manifest.webmanifest', './pwa-install.css', './pwa-install.css?v=2',
   './css/claude-partido.css', './css/claude-partido.css?v=20261001-v65-matchplan',
   './modo-campo-directo.html', './modo-campo-directo.css', './modo-campo-directo.css?v=4', './modo-campo-theme.css', './modo-campo-theme.css?v=3', './modo-campo-flow.css', './modo-campo-flow.css?v=1',

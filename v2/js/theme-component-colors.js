@@ -30,7 +30,9 @@ export function configurableElements(root) {
     for (let node = element; node && node !== root; node = node.parentElement) {
       if (node.id) { parts.unshift('#' + CSS.escape(node.id)); break; }
       const record = [...node.attributes].find((attribute) => /^data-.*id$/.test(attribute.name) && attribute.value);
-      if (record) { parts.unshift(node.tagName.toLowerCase() + '[' + record.name + '="' + CSS.escape(record.value) + '"]'); break; }
+      if (record) {
+        const actionClasses = [...node.classList].filter((name) => !/^(active|selected|is-)/.test(name));
+        parts.unshift(node.tagName.toLowerCase() + actionClasses.map((name) => '.' + CSS.escape(name)).join('') + '[' + record.name + '="' + CSS.escape(record.value) + '"]'); break; }
       const siblings = [...node.parentElement.children].filter((child) => child.tagName === node.tagName);
       parts.unshift(node.tagName.toLowerCase() + ':nth-of-type(' + (siblings.indexOf(node) + 1) + ')');
     }
@@ -67,6 +69,8 @@ export function configurableElements(root) {
 export function colorControlDescription(prop, label, screen) {
   const descriptions = {
     bannerBg: 'Fondo de la cabecera superior de esta pantalla.', bannerInk: 'Título y texto de esa cabecera.',
+    seasonGoalsForColor: 'Color de las barras de goles a favor; conserva sus alturas y datos.',
+    seasonGoalsAgainstColor: 'Color de las barras de goles en contra; independiente de goles a favor.',
     btnBg: 'Fondo de los botones de acción principal de esta pantalla.', btnInk: 'Texto e iconos de esos botones principales.',
     btn2Bg: 'Fondo de los botones secundarios de esta pantalla.', btn2Ink: 'Texto e iconos de esos botones secundarios.',
     fontColor: 'Texto descriptivo, notas y párrafos de esta pantalla.', cardTitle: 'Nombres y títulos de las tarjetas de esta pantalla.',
@@ -123,7 +127,20 @@ export function applyComponentColors(theme) {
       }
     });
   };
+  const today = document.getElementById('hoy');
+  paint(today, '.cbx-season-goals-for', '--season-goals-for');
+  paint(today, '.cbx-season-goals-against', '--season-goals-against');
+  const tactics = document.getElementById('tacticas');
+  paint(tactics, '.cbx-tactics-hero', '--bn');
+  paint(tactics, '.cbx-tactics-hero-text', null, '--bnInk');
+  const specialists = document.getElementById('plantilla-specialists-bar');
+  paint(specialists, '[data-specialist-kind="launcher"] [data-specialist-rank="1"] .specialist-rank', '--sp-lead-bg', '--sp-lead-ink');
+  paint(specialists, '[data-specialist-kind="launcher"] [data-specialist-rank="2"] .specialist-rank', '--sp-sub-bg', '--sp-sub-ink');
+  for (const rank of [1, 2, 3]) paint(specialists, '[data-specialist-kind="captain"] [data-specialist-rank="' + rank + '"] .specialist-rank', '--captain-' + rank + '-bg', '--captain-' + rank + '-ink');
   const callups = document.getElementById('convocatorias');
+  paint(callups, '.edit-callup,.callup-open-prep', '--btn2', '--btn2Ink');
+  paint(callups, '.cbx-callup-card,.cbx-callup-side .panel,.cbx-callup-metrics > div,.cbx-plan-change,.cbx-callup-player:not(.is-out)', '--cardBg');
+  paint(callups, '.cbx-callup-status.is-called', '--callup-status-bg', '--callup-status-ink');
   paint(callups, '.cbx-callup-card > header', '--callup-header-bg', '--callup-header-ink');
   paint(callups, '#new-callup', '--callup-btn-bg', '--callup-btn-ink');
   paint(callups, '.cbx-callup-badge-in', '--callup-badge-bg', '--callup-badge-ink');
