@@ -1,0 +1,31 @@
+name: Publish isolated CampoBase preview
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: isolated-preview-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout preview only
+        uses: actions/checkout@v6
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Package tested preview
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+      - name: Publish on the same runner
+        id: deployment
+        uses: actions/deploy-pages@v4
