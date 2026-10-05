@@ -48,6 +48,7 @@ export function configurableElements(root) {
   ];
   const seen = new Set();
   for (const [group, query] of groups) for (const element of root.querySelectorAll(query)) {
+    if (root.id === 'plantilla' && (element.closest('.cbx-player') || element.querySelector('.cbx-player') || element.closest('#squad-leaderboards tbody'))) continue;
     if (seen.has(element) || element.closest('#cbx-quick-color-dialog') || element.matches('.cbx-context-gear-btn')) continue;
     if (element.closest('svg') && group !== 'Iconos y gráficos') continue;
     if (group === 'Títulos y textos' && element.children.length && !element.matches('h1,h2,h3,h4,h5,h6,label,legend,th,td,li,p')) continue;
@@ -62,8 +63,46 @@ export function configurableElements(root) {
     const index = options.filter((option) => option.group === group && option.label === name).length + 1;
     options.push({ selector: selectorFor(element), group, label: name || 'Gráfico', context: heading ? named(heading) : '', tag: element.tagName.toLowerCase(), index });
   }
+  if (root.id === 'plantilla') {
+    const shared = [
+      ['Ficha completa', '.cbx-player'], ['Nombre del jugador', '.cbx-player .player-name h3'],
+      ['Dorsal', '.cbx-player .player-data > span:nth-child(1)'], ['Posición', '.cbx-player .player-data > span:nth-child(2)'],
+      ['Pierna', '.cbx-player .player-data > span:nth-child(3)'], ['Rotaciones', '.cbx-player .player-data > span:nth-child(4)'],
+      ['Media de Liga', '.cbx-player .player-rating-badge'], ['Minutos disputados', '.cbx-player .player-minute-bar'],
+      ['Barra de minutos · Fondo', '.cbx-player .player-minute-track'], ['Barra de minutos · Relleno', '.cbx-player .player-minute-fill'],
+      ['Distintivos de especialista', '.cbx-player .player-specialist-tags'],
+      ['Contacto del padre', '.cbx-player .player-family-contacts > :nth-child(1)'],
+      ['Contacto de la madre', '.cbx-player .player-family-contacts > :nth-child(2)'],
+      ['Botón WhatsApp', '.cbx-player .open-whatsapp-player'], ['Botón Editar', '.cbx-player .edit-player'],
+      ['Botón Borrar', '.cbx-player .delete-player'], ['Actividad y estadísticas', '.cbx-player .player-performance-summary'],
+      ['Resumen de estadísticas', '.cbx-player .player-summary'], ['Texto de estadísticas', '.cbx-player .player-summary span'],
+      ['Editar estadísticas de Liga', '.cbx-player .edit-player-stats[data-scope="league"]'],
+      ['Editar estadísticas de Pretemporada', '.cbx-player .edit-player-stats[data-scope="preseason"]'],
+      ['Títulos de estadísticas', '.cbx-player .player-stats-title'], ['Desplegables de actividad', '.cbx-player .player-stats-expanded details'],
+      ['Replegar estadísticas', '.cbx-player .collapse-stats-btn'],
+    ];
+    for (const [label, local] of shared) if (root.querySelector(local)) options.push({selector: '#plantilla ' + local, group: 'Fichas de jugadores · estilo común', label, context: 'Se aplica a todas las fichas de jugadores', tag: 'div', index: 1, shared: true});
+    for (const [label, local] of [['Filas de clasificación', '.lb-table tbody tr'], ['Nombres en clasificación', '.lb-table tbody .col-player'], ['Cifras de clasificación', '.lb-table tbody .col-num'], ['Orden en clasificación', '.lb-table tbody .col-rank']]) if (root.querySelector('#squad-leaderboards ' + local)) options.push({selector: '#plantilla #squad-leaderboards ' + local, group: 'Clasificación · estilo común', label, context: 'Se aplica a todas las filas de clasificación', tag: 'div', index: 1, shared: true});
+  }
   options.push({ selector: '#' + CSS.escape(root.id), group: 'Fondos, tarjetas y recuadros', label: 'Fondo de la pantalla o ventana', context: '', tag: root.tagName.toLowerCase(), index: 1 });
-  return options;
+  const playerNames = root.id === 'plantilla' ? [...root.querySelectorAll('.player-name h3')].map((element) => element.textContent.trim()) : [];
+  return options.filter((option) => option.shared || !playerNames.some((name) => name && option.label.includes(name)));
+}
+
+export function clearColourConflicts(settings, selector, properties) {
+  let targets;
+  try { targets = [...document.querySelectorAll(selector)]; } catch { return; }
+  for (const storeName of ['elementColors', 'buttonColors']) {
+    for (const [savedSelector, colours] of Object.entries(settings[storeName] || {})) {
+      let matches;
+      try { matches = [...document.querySelectorAll(savedSelector)]; } catch { continue; }
+      for (const prop of properties) {
+        const overlap = matches.some((element) => targets.some((target) => element === target || (prop === 'color' && target.contains(element))));
+        if (overlap) delete colours[storeName === 'buttonColors' ? (prop === 'background' ? 'bg' : prop === 'color' ? 'ink' : prop) : prop];
+      }
+      if (!Object.keys(colours).length) delete settings[storeName][savedSelector];
+    }
+  }
 }
 
 export function colorControlDescription(prop, label, screen) {
@@ -77,7 +116,7 @@ export function colorControlDescription(prop, label, screen) {
     cardBg: 'Superficie de las tarjetas y paneles de esta pantalla.', cardBorder: 'Línea que rodea las tarjetas y paneles.',
     dorsalBg: 'Fondo del distintivo donde aparece el dorsal.', dorsalInk: 'Número dentro del distintivo del dorsal.',
     accentColor: 'Color de acento usado por los elementos que heredan el tema de esta pantalla.',
-    badgeBg: 'Fondo de las etiquetas informativas de las fichas.', badgeInk: 'Texto de esas etiquetas informativas.',
+    badgeBg: 'Fondo de las etiquetas informativas de esta pantalla.', badgeInk: 'Texto de esas etiquetas de esta pantalla.',
     callupHeaderBg: 'Fondo de la tarjeta del rival, donde aparece su nombre; independiente de + Convocatoria.',
     callupHeaderInk: 'Nombre del rival y datos de la cabecera de su tarjeta.',
     callupBadgeBg: 'Fondo del contador de jugadores convocados.', callupBadgeInk: 'Número y texto del contador de convocados.',
@@ -97,7 +136,7 @@ export function colorControlDescription(prop, label, screen) {
     tbTeam: 'Fichas de los jugadores de tu equipo en la pizarra.', tbRival: 'Fichas del equipo rival en la pizarra.', tbArrow: 'Flechas de movimiento dibujadas en la pizarra.',
   };
   if (descriptions[prop]) return descriptions[prop];
-  const objects = {wa: 'botón WhatsApp', whistle: 'botón Silbato', print: 'botón Imprimir', edit: 'botón Editar', completed: 'botón Realizado sin marcar', completedActive: 'botón Realizado cuando está marcado', prepHeader: 'cabecera de la tarjeta del partido', todayMatch: 'tarjeta del partido en Hoy', callout: 'recuadro informativo', gf: 'marcador de goles de tu equipo', ga: 'marcador de goles del rival', spLead: 'distintivo del primer lanzador', spSub: 'distintivo del segundo lanzador'};
+  const objects = {wa: 'botón WhatsApp', whistle: 'botón Silbato', print: 'botón Imprimir', edit: 'botón Editar', completed: 'botón Realizado sin marcar', completedActive: 'botón Realizado cuando está marcado', prepHeader: 'cabecera de la tarjeta del partido', todayMatch: 'tarjeta del partido en Hoy', callout: 'recuadro informativo', gf: 'marcador de goles de tu equipo', ga: 'marcador de goles del rival', spLead: 'distintivo del primer lanzador', spSub: 'segundo lanzador en todas las tarjetas de balón parado'};
   const base = prop.replace(/(Bg|Ink)$/, '');
   if (objects[base]) return (prop.endsWith('Bg') ? 'Fondo del ' : 'Texto y números del ') + objects[base] + '.';
   return 'Cambia «' + label + '» en ' + screen + '.';
@@ -137,6 +176,13 @@ export function applyComponentColors(theme) {
   paint(specialists, '[data-specialist-kind="launcher"] [data-specialist-rank="1"] .specialist-rank', '--sp-lead-bg', '--sp-lead-ink');
   paint(specialists, '[data-specialist-kind="launcher"] [data-specialist-rank="2"] .specialist-rank', '--sp-sub-bg', '--sp-sub-ink');
   for (const rank of [1, 2, 3]) paint(specialists, '[data-specialist-kind="captain"] [data-specialist-rank="' + rank + '"] .specialist-rank', '--captain-' + rank + '-bg', '--captain-' + rank + '-ink');
+  const squadColours = currentTheme.views?.plantilla || {};
+  for (const [rank, prefix] of [[1, 'spLead'], [2, 'spSub']]) {
+    const row = '[data-specialist-kind="launcher"] [data-specialist-rank="' + rank + '"]';
+    const variable = rank === 1 ? '--sp-lead' : '--sp-sub';
+    if (squadColours[prefix + 'Bg'] || currentTheme[prefix + 'Bg']) paint(specialists, row, variable + '-bg');
+    if (squadColours[prefix + 'Ink'] || currentTheme[prefix + 'Ink']) paint(specialists, row, null, variable + '-ink');
+  }
   const callups = document.getElementById('convocatorias');
   paint(callups, '.edit-callup,.callup-open-prep', '--btn2', '--btn2Ink');
   paint(callups, '.cbx-callup-card,.cbx-callup-side .panel,.cbx-callup-metrics > div,.cbx-plan-change,.cbx-callup-player:not(.is-out)', '--cardBg');
@@ -213,7 +259,7 @@ export function applyComponentColors(theme) {
         if (!element.hasAttribute('data-theme-override')) originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
         element.dataset.themeOverride = '1';
         for (const [prop, value] of Object.entries(colours)) if (['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].includes(prop) && /^#[0-9a-f]{6}$/i.test(value)) element.style.setProperty(prop, value, 'important');
-        if (element.matches('button,a,summary') && /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll('span,strong,small,b,svg').forEach((child) => {
+        if ((element.matches('button,a,summary') || selector.startsWith('#plantilla .cbx-player')) && /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll(selector.startsWith('#plantilla .cbx-player') ? 'span,strong,small,b,svg,h3,h4,p,label,li,td' : 'span,strong,small,b,svg').forEach((child) => {
           if (!child.hasAttribute('data-theme-override')) originalColours.set(child, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, child.style.getPropertyValue(prop), child.style.getPropertyPriority(prop)]));
           child.dataset.themeOverride = '1';
           child.style.setProperty('color', colours.color, 'important');

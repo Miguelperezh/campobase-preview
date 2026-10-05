@@ -1,4 +1,4 @@
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription } from './theme-component-colors.js?v=color-controls-4';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-5';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -23,7 +23,7 @@ import { printMatchPlan } from './print-match-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-4';
+import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-5';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -8180,10 +8180,10 @@ function updateThemePreviewBox(theme) {
   }
 
   // 4. Panel Lanzadores y Tarjeta de Especialistas
-  const spLeadBg = theme.spLeadBg || '#c8102e';
-  const spLeadInk = theme.spLeadInk || '#ffffff';
-  const spSubBg = theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`;
-  const spSubInk = theme.spSubInk || cardTitle;
+  const spLeadBg = theme.views?.plantilla?.spLeadBg || theme.spLeadBg || '#c8102e';
+  const spLeadInk = theme.views?.plantilla?.spLeadInk || theme.spLeadInk || '#ffffff';
+  const spSubBg = theme.views?.plantilla?.spSubBg || theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`;
+  const spSubInk = theme.views?.plantilla?.spSubInk || theme.spSubInk || cardTitle;
 
   const spBox = $('#cbx-specialists-preview-box');
   if (spBox) {
@@ -8445,7 +8445,7 @@ function syncCustomizerControls(theme) {
   Object.entries(EXTENDED_SWATCH_CONFIGS).forEach(([key, config]) => {
     const container = document.getElementById(config.containerId);
     if (!container) return;
-    const currentVal = theme[key] || '';
+    const currentVal = (/^sp(Lead|Sub)(Bg|Ink)$/.test(key) ? theme.views?.plantilla?.[key] : null) || theme[key] || '';
     container.querySelectorAll('.cbx-swatch-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.color === currentVal);
     });
@@ -8745,6 +8745,7 @@ async function saveThemeSettings(event) {
 }
 
 function updateThemeProperty(prop, val, extra = {}) {
+  if (/^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) { updateViewThemeProperty('plantilla', prop, val); updateThemePreviewBox(state.settings.theme); return; }
   let localTheme = {};
   try {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
@@ -8789,6 +8790,15 @@ function updateViewThemeProperty(viewId, prop, val) {
       view['captain' + rank + 'Bg'] ||= view[prefix + 'Bg'] || currentTheme[prefix + 'Bg'] || (rank === 1 ? '#c8102e' : '#f1f5f9');
       view['captain' + rank + 'Ink'] ||= view[prefix + 'Ink'] || currentTheme[prefix + 'Ink'] || (rank === 1 ? '#ffffff' : '#0f172a');
     }
+  }
+  const viewSettings = currentTheme.views[viewId];
+  if (viewId === 'plantilla') {
+    const sharedControls = {cardBg: ['.cbx-player','background'], cardTitle: ['.cbx-player .player-name h3','color'], fontColor: ['.cbx-player .player-body','color'], dorsalBg: ['.cbx-player .player-data > span:first-child','background'], dorsalInk: ['.cbx-player .player-data > span:first-child','color']};
+    if (sharedControls[prop]) clearColourConflicts(viewSettings, '#plantilla ' + sharedControls[prop][0], [sharedControls[prop][1]]);
+  }
+  if (viewId === 'plantilla' && /^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) {
+    const rank = prop.startsWith('spLead') ? 1 : 2;
+    clearColourConflicts(viewSettings, '#plantilla-specialists-bar [data-specialist-kind="launcher"] [data-specialist-rank="' + rank + '"]' + (prop.endsWith('Bg') ? ', #plantilla-specialists-bar [data-specialist-kind="launcher"] [data-specialist-rank="' + rank + '"] .specialist-rank' : ''), [prop.endsWith('Bg') ? 'background' : 'color']);
   }
   currentTheme.views[viewId][prop] = val;
   if (state.settings) state.settings.theme = currentTheme;
@@ -9732,8 +9742,8 @@ function openQuickColorDialog(targetKind = null) {
     if (!controlsHtml.includes('data-prop="bannerBg"')) controlsHtml += colorRow('Cabecera · Fondo', 'bannerBg', bannerBg, '#0a251b', []);
     if (!controlsHtml.includes('data-prop="bannerInk"')) controlsHtml += colorRow('Cabecera · Texto', 'bannerInk', bannerInk, '#ffffff', []);
     controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
-    controlsHtml += colorRow('Etiquetas de las fichas · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
-    controlsHtml += colorRow('Etiquetas de las fichas · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
+    controlsHtml += colorRow(currentViewId === 'hoy' ? 'Etiquetas del resumen de Hoy · Fondo' : 'Etiquetas de esta pantalla · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
+    controlsHtml += colorRow(currentViewId === 'hoy' ? 'Etiquetas del resumen de Hoy · Texto' : 'Etiquetas de esta pantalla · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
     }
     const extraRows = (entries) => entries.map(([label, prop, fallback]) => colorRow(label, prop, val(prop, fallback), fallback, [])).join('');
     if (currentViewId === 'convocatorias') controlsHtml += extraRows([
@@ -9767,7 +9777,7 @@ function openQuickColorDialog(targetKind = null) {
 
 
     const buttonRoot = (currentSubTab === 'specialists' ? document.getElementById('plantilla-specialists-bar') : currentSubTab === 'tactic-board' ? document.getElementById(currentViewId === 'tacticas' ? 'cbx-tactics-board-section' : currentViewId === 'delegado' ? 'delegate-tactics' : 'live-tactics') : null) || document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
-    const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot]), ...[...document.querySelectorAll('dialog[open][data-theme-view]')].filter((dialog) => dialog.dataset.themeView === currentViewId)];
+    const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot])];
     const elements = elementRoots.flatMap(configurableElements).filter((item) => {
       const element = document.querySelector(item.selector);
       return !((currentSubTab === 'general' && currentViewId === 'plantilla' && element?.closest('#plantilla-specialists-bar')) || (currentSubTab === 'general' && currentViewId === 'tacticas' && element?.closest('#cbx-tactics-board-section')) || (currentSubTab === 'live' && element?.closest('#live-tactics')));
@@ -9779,7 +9789,7 @@ function openQuickColorDialog(targetKind = null) {
       return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
     };
     controlsHtml = '<section class="cbx-general-color-controls">' + controlsHtml + '</section>';
-    controlsHtml += '<section class="cbx-named-colors"><h3>Elementos propios de ' + escapeHtml(activeViewConfig.name) + '</h3><label>Buscar un elemento<input type="search" id="qc-element-search" placeholder="Ej.: dorsal, minutos, cerrar, imprimir…"></label><p>Abre un grupo para personalizar cada elemento por su nombre. Estos ajustes concretos tienen prioridad sobre los colores generales de arriba. Si una ventana o un desplegable tiene contenido adicional, ábrelo y pulsa su rueda para ver también sus elementos.</p>';
+    controlsHtml += '<section class="cbx-named-colors"><h3>Elementos propios de ' + escapeHtml(activeViewConfig.name) + '</h3><label>Buscar un elemento<input type="search" id="qc-element-search" placeholder="Buscar en esta pantalla…"></label><p>Abre un grupo para personalizar cada elemento por su nombre. Estos ajustes concretos tienen prioridad sobre los colores generales de arriba. Si una ventana o un desplegable tiene contenido adicional, ábrelo y pulsa su rueda para ver también sus elementos.</p>';
     for (const group of [...new Set(elements.map((element) => element.group))]) {
       controlsHtml += '<details class="cbx-colour-group"><summary>' + escapeHtml(group) + '</summary>';
       for (const item of elements.filter((element) => element.group === group)) {
@@ -9789,7 +9799,7 @@ function openQuickColorDialog(targetKind = null) {
         const graphical = group === 'Iconos y gráficos';
         const properties = graphical ? [['fill', 'Relleno'], ['stroke', 'Línea'], ['color', 'Color del icono']] : [['background', 'Fondo'], ['color', 'Texto e iconos'], ['border-color', 'Borde'], ...(target.matches('input[type="checkbox"],input[type="radio"],progress,meter') ? [['accent-color', 'Marca o progreso']] : [])];
         const buttonIndex = elements.indexOf(item);
-        controlsHtml += `<fieldset class="cbx-named-colour" data-element-index="${buttonIndex}"><legend>${escapeHtml(item.label)}${item.index > 1 ? ' · ' + item.index : ''}</legend><p class="cbx-color-control-help">${escapeHtml(item.context && item.context !== item.label ? 'Dentro de «' + item.context + '». ' : '')}Cambia solo este elemento de ${escapeHtml(activeViewConfig.name)}.</p>`;
+        controlsHtml += `<fieldset class="cbx-named-colour" data-element-index="${buttonIndex}"><legend>${escapeHtml(item.label)}${item.index > 1 ? ' · ' + item.index : ''}</legend><p class="cbx-color-control-help">${escapeHtml(item.context && item.context !== item.label ? 'Dentro de «' + item.context + '». ' : '')}${item.shared ? escapeHtml(item.context) + '.' : 'Cambia solo este elemento de ' + escapeHtml(activeViewConfig.name) + '.'}</p>`;
         for (const [prop, label] of properties) {
           const value = asHex(vSettings.elementColors?.[item.selector]?.[prop] || style.getPropertyValue(prop));
           controlsHtml += `<div class="cbx-color-control-row"><label>${label}<input type="color" data-element="${buttonIndex}" data-element-prop="${prop}" value="${value}" aria-label="${escapeHtml(label + ' de ' + item.label)}"><code>${value}</code></label><p class="cbx-color-control-help">${prop === 'background' ? 'Superficie detrás del contenido.' : prop === 'color' ? 'Color de las letras e iconos que heredan este texto.' : prop === 'border-color' ? 'Color del contorno existente; no añade un borde.' : prop === 'fill' ? 'Color interior de esta figura del gráfico.' : prop === 'accent-color' ? 'Marca de selección o barra de progreso.' : 'Color del trazo de esta figura del gráfico.'}</p></div>`;
@@ -9815,8 +9825,18 @@ function openQuickColorDialog(targetKind = null) {
     bodyEl.querySelectorAll('[data-element-prop]').forEach((picker) => {
       picker.addEventListener('input', (event) => {
         const item = elements[Number(picker.dataset.element)];
-        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.elementColors || {}) };
-        colours[item.selector] = { ...colours[item.selector], [picker.dataset.elementProp]: event.target.value };
+        const saved = structuredClone(state.settings?.theme?.views?.[currentViewId] || {});
+        const previous = saved.elementColors?.[item.selector] || {};
+        if (item.shared) clearColourConflicts(saved, item.selector, [picker.dataset.elementProp]);
+        const colours = saved.elementColors || {};
+        delete colours[item.selector];
+        colours[item.selector] = { ...previous, [picker.dataset.elementProp]: event.target.value };
+        if (item.shared && state.settings.theme.views[currentViewId]) {
+          state.settings.theme.views[currentViewId].buttonColors = saved.buttonColors;
+          state.settings.theme.views[currentViewId].elementColors = saved.elementColors;
+          localStorage.setItem('campobase.theme', JSON.stringify(state.settings.theme));
+        }
+
         picker.nextElementSibling.textContent = event.target.value;
         updateViewThemeProperty(currentViewId, 'elementColors', colours);
       });
@@ -13090,7 +13110,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261005-colores-locales-rotaciones').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261005-colores-compartidos').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

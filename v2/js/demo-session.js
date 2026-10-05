@@ -7,7 +7,7 @@ import './session-planner-ui.js?v=20260927-v66-real-calendar-dates';
 import './attendance-linked-sources.js?v=claude-asistencia-3';
 import './player-data-sync.js?v=2453';
 import './attendance-history-responsive.js?v=2455';
-import './today-dashboard.js?v=2457';
+import './today-dashboard.js?v=color-controls-5';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 
