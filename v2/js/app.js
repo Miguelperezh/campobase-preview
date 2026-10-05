@@ -1,4 +1,6 @@
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-6';
+import { suspendSessionDetail } from './session-detail-navigation.js';
+import { planFromMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-visual-1';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-7';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -7,7 +9,7 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v54-delegate-permissions-speed-fix';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=plan-visual-1';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, LIVE_OPPONENT, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
@@ -16,14 +18,14 @@ import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox 
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf, getAspectBoardData } from './tacticas-pdf-domain.js';
 import { initTacticBoard } from './tactic-board-controller.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-6';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-7';
 import { buildAutoPlan } from './reparto-plan.js';
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 import { printMatchPlan } from './print-match-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-6';
+import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-7';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -1636,6 +1638,10 @@ const callupPlanModes = new Map();
 let pendingPrepAfterCallupMatchId = '';
 
 const callupSuggestedPlans = new Map();
+let prepSuggestedMoments = null;
+let prepPreviousMoments = null;
+let prepPlanMode = 'escalonado';
+wireMinuteTimelines();
 function suggestCallupRotation(callupId) {
   const callup = state.callups.find((item) => item.id === callupId);
   if (!callup) return;
@@ -1758,10 +1764,7 @@ function renderClaudeCallup(callup) {
     const note = exclusion ? exclusionReasonLabel(exclusion) : 'Fuera de la convocatoria';
     return `<li class="cbx-callup-player${isCalled ? '' : ' is-out'}"><span class="cbx-callup-number">${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span><span class="cbx-callup-person"><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(playerPositions(player))}</small></span><span class="cbx-callup-status ${isCalled ? 'is-called' : 'is-excluded'}">${escapeHtml(isCalled ? 'Convocado' : note)}</span></li>`;
   }).join('');
-  const bars = plan ? [...keeperIds, ...plan.field].map((id) => {
-    const segments = keeperIds.includes(id) ? plan.gkPlan.filter((item) => item.id === id) : (plan.segs[id] || []);
-    return `<div class="cbx-plan-row"><span>${escapeHtml(playerName(id))}</span><div class="cbx-plan-track" aria-label="${escapeHtml(playerName(id))}: ${Math.round(plan.planned[id] || 0)} minutos previstos">${segments.map((segment) => `<i class="${keeperIds.includes(id) ? 'keeper' : ''}" style="left:${Math.max(0, segment.from / plan.D * 100)}%;width:${Math.max(0, (segment.to - segment.from) / plan.D * 100)}%"></i>`).join('')}</div><b>${Math.round(plan.planned[id] || 0)}′</b></div>`;
-  }).join('') : '';
+  const bars = plan ? renderMinuteTimeline(plan, state.players, 'callup:' + callup.id) : '';
   const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
   return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
     <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span class="cbx-callup-badge-in">${available.size} convocados</span><span class="cbx-callup-badge-out">${exclusions.length} fuera</span></div></header>
@@ -1770,7 +1773,7 @@ function renderClaudeCallup(callup) {
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row"><button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row"><button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
         <div style="padding:12px 6px;text-align:center;">
           <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -4343,6 +4346,8 @@ function prepCargarFormacion(team, formation, keeperId) {
 
 function capturePrepMoment() {
   if (!prepDraft || !prepMomentsDraft[prepMomentIndex]) return;
+  const current = prepMomentsDraft[prepMomentIndex];
+  if (JSON.stringify(current.team) !== JSON.stringify(prepDraft) || current.formation !== $('#prep-formacion')?.value) prepSuggestedMoments = null;
   prepMomentsDraft[prepMomentIndex].team = prepDraft.map((slot) => ({ ...slot }));
   prepMomentsDraft[prepMomentIndex].formation = $('#prep-formacion')?.value || '1-3-2-1';
 }
@@ -4569,7 +4574,14 @@ function renderPrepMoments() {
   const panel = $('#prep-moments');
   if (!panel || !prepMomentsDraft.length) return;
   const selected = prepMomentsDraft[prepMomentIndex];
-  const minutes = plannedMinutes(prepMomentsDraft);
+  const prepCallup = callupForMatch(state.matches.find(({ id }) => id === prepMatchId));
+  const prepConfig = FORMATS[prepCallup?.format || state.format] || FORMATS.F7;
+  const minutes = plannedMinutes(prepMomentsDraft, prepConfig.duration);
+  const availableIds = prepCallup?.availableIds || [];
+  const keeperIds = availableIds.filter(id => normalizePositions(state.players.find(player => player.id === id)).includes('Portero'));
+  const timelineMoments = prepSuggestedMoments || prepMomentsDraft;
+  const timeline = planFromMoments(timelineMoments, availableIds, keeperIds, prepConfig.duration);
+  const proposalChanges = timelineMoments.slice(1).map((moment,index) => `<div class="cbx-plan-change"><strong>${moment.minute}′</strong><span>${momentLines(timelineMoments[index],moment).map(escapeHtml).join('<br>')}</span></div>`).join('');
   const names = Object.entries(minutes).sort((a, b) => Number(playerById(state.players, a[0])?.number || 999) - Number(playerById(state.players, b[0])?.number || 999));
   panel.innerHTML = `<div class="cbx-moments-head"><div><p class="eyebrow">Preparar · Plan de cambios</p><h4>Cada momento es una alineación completa</h4><p>Entra X por Y; puedes mover a Z a otro puesto en el mismo momento.</p></div><label class="cbx-plan-switch"><input type="checkbox" id="prep-show-plan" ${panel.dataset.showPlan !== 'false' ? 'checked' : ''}> Mostrar este plan en Partido en vivo</label></div>
     <div class="cbx-moment-tabs" role="tablist" aria-label="Momentos del partido">${prepMomentsDraft.map((moment, index) => `<button type="button" role="tab" data-prep-moment="${index}" aria-selected="${index === prepMomentIndex}">${index ? `${moment.minute}′` : 'Inicio'}<small>${index ? `${momentLines(prepMomentsDraft[index - 1], moment).length} acciones` : 'Titulares'}</small></button>`).join('')}<button type="button" id="prep-add-moment">+ Cambio</button></div>
@@ -4578,8 +4590,14 @@ function renderPrepMoments() {
     <details class="cbx-moment-minutes"><summary>Minutos con este plan</summary><div>${names.map(([id, value]) => `<span>${escapeHtml(playerName(id))}<b>${value}′</b></span>`).join('')}</div></details>
     <div class="button-row" style="margin-top:0.5rem;display:flex;gap:8px;flex-wrap:wrap">
       <button type="button" id="prep-print-moments" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan de partido</button>
-      <button type="button" id="prep-copy-auto" class="secondary">Copiar cambios del reparto automático</button>
-    </div>`;
+      <button type="button" id="prep-propose-auto" class="secondary">Sugerir cambios y minutos</button>
+    </div>
+    <section class="cbx-prep-proposal"><h4>Plan por tramos</h4><p class="meta">${prepSuggestedMoments ? 'Propuesta según los convocados y reparto de minutos. Revisa las parejas antes de usarla.' : 'Tu plan actual. Selecciona una barra para seguir los minutos de ese jugador.'}</p>
+    <label>Tipo de reparto<select id="prep-plan-mode"><option value="escalonado" ${prepPlanMode === 'escalonado' ? 'selected' : ''}>Escalonado</option><option value="partes" ${prepPlanMode === 'partes' ? 'selected' : ''}>Por partes</option></select></label>
+    ${renderMinuteTimeline(timeline,state.players,'prep:' + prepMatchId)}
+    <div class="cbx-plan-changes">${proposalChanges}</div>
+    <div class="button-row">${prepSuggestedMoments ? '<button type="button" id="prep-copy-auto" class="primary">Usar esta propuesta en mi plan</button><button type="button" id="prep-discard-proposal" class="secondary">Seguir con mi plan</button>' : ''}${prepPreviousMoments ? '<button type="button" id="prep-restore-plan" class="secondary">Volver al plan anterior</button>' : ''}</div></section>`;
+  panel.querySelector('#prep-plan-mode').addEventListener('change', event => { prepPlanMode = event.target.value; prepSuggestedMoments = null; renderPrepMoments(); });
   panel.querySelector('#prep-show-plan').addEventListener('change', (event) => { panel.dataset.showPlan = String(event.target.checked); });
 }
 
@@ -4594,30 +4612,26 @@ function selectPrepMoment(index, shouldCapture = true) {
   renderPrepBoard(); renderPrepSlots(); renderPrepMoments();
 }
 
-function copyAutoPrepMoments() {
+function suggestPrepMoments() {
   capturePrepMoment();
   const callup = callupForMatch(state.matches.find(({ id }) => id === prepMatchId));
-  const availableIds = callup?.availableIds || [];
-  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
-  if (!keeperIds.length) keeperIds.push($('#prep-keeper1')?.value);
-  let auto;
-  try { auto = buildAutoPlan({ format: callup.format || 'F7', playerIds: availableIds, keeperIds, planMode: 'escalonado' }); }
-  catch { return toast('Completa la convocatoria para calcular los cambios automáticos.'); }
-  const moments = [prepMomentsDraft[0]];
-  for (const group of auto.groups) {
-    let team = moments.at(-1).team.map((slot) => ({ ...slot }));
-    for (const change of group.list) {
-      const index = team.findIndex((slot) => slot.playerId === change.out);
-      if (index >= 0 && availableIds.includes(change.inn)) team = asignarJugador(team, index, change.inn);
-    }
-    moments.push({ id: uid(), minute: group.m, formation: moments.at(-1).formation, team });
-  }
-  prepMomentsDraft = moments;
-  prepMomentIndex = 0;
-  prepDraft = moments[0].team.map((slot) => ({ ...slot }));
-  $('#prep-formacion').value = moments[0].formation;
-  renderPrepBoard(); renderPrepSlots(); renderPrepMoments();
-  toast('Plan automático copiado. Puedes modificar cada momento y mover jugadores de puesto.');
+  const playerIds = callup?.availableIds || [];
+  const keeperIds = playerIds.filter(id => normalizePositions(state.players.find(player => player.id === id)).includes('Portero'));
+  try {
+    prepSuggestedMoments = proposePrepMoments({initial:prepMomentsDraft[0],playerIds,keeperIds,format:callup?.format||state.format,mode:prepPlanMode,playerNumbers:Object.fromEntries(state.players.map(player=>[player.id,Number(cleanPlayerNumber(player.number))||999])),idFactory:uid});
+    renderPrepMoments();
+    toast('Propuesta lista. Tu plan sigue intacto hasta pulsar Usar esta propuesta.');
+  } catch(error) { toast(error.message); }
+}
+function copyAutoPrepMoments() {
+  capturePrepMoment();
+  if(!prepSuggestedMoments) suggestPrepMoments();
+  if(!prepSuggestedMoments) return;
+  prepPreviousMoments = structuredClone(prepMomentsDraft);
+  prepMomentsDraft = structuredClone(prepSuggestedMoments);
+  prepSuggestedMoments = null;
+  selectPrepMoment(0,false);
+  toast('Propuesta aplicada al borrador. Puedes cambiar posiciones y guardar cuando termines.');
 }
 
 function arrangeClaudePrepEditor() {
@@ -4700,6 +4714,8 @@ async function openPreparacionEditor(matchId) {
     : prepBuildTeam(formacion, firstKeeper);
   prepMomentsDraft = normalizeMoments({ team: prepDraft, formacion, moments: prep?.moments });
   prepMomentIndex = 0;
+  prepSuggestedMoments = null; prepPreviousMoments = null;
+  prepPlanMode = callupPlanModes.get(callup.id) || 'escalonado';
   const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === formacion ? 'selected' : ''}>${f}</option>`).join('');
   const convocados = availableIds
     .map((id) => state.players.find((p) => p.id === id))
@@ -4896,12 +4912,14 @@ function wirePrepEditor() {
       let minute = Math.min(69, (prepMomentsDraft.at(-1)?.minute || 0) + 15);
       while (used.has(minute) && minute < 69) minute += 1;
       if (used.has(minute)) return toast('No queda otro minuto libre para añadir un cambio.');
+      prepSuggestedMoments = null;
       const base = prepMomentsDraft.at(-1);
       prepMomentsDraft.push({ id: uid(), minute, formation: base.formation, team: base.team.map((slot) => ({ ...slot })) });
       selectPrepMoment(prepMomentsDraft.length - 1);
     }
     if (target.id === 'prep-remove-moment' && prepMomentIndex > 0) {
       capturePrepMoment();
+      prepSuggestedMoments = null;
       prepMomentsDraft.splice(prepMomentIndex, 1);
       selectPrepMoment(Math.max(0, prepMomentIndex - 1), false);
     }
@@ -4910,8 +4928,12 @@ function wirePrepEditor() {
       const moment = prepMomentsDraft[prepMomentIndex];
       const next = moment.minute + Number(target.dataset.prepMinute);
       if (next <= (prepMomentsDraft[prepMomentIndex - 1]?.minute || 0) || next >= (prepMomentsDraft[prepMomentIndex + 1]?.minute || 70)) return;
+      prepSuggestedMoments = null;
       moment.minute = next; renderPrepMoments();
     }
+    if (target.id === 'prep-propose-auto') suggestPrepMoments();
+    if (target.id === 'prep-discard-proposal') { prepSuggestedMoments = null; renderPrepMoments(); }
+    if (target.id === 'prep-restore-plan' && prepPreviousMoments) { prepMomentsDraft = prepPreviousMoments; prepPreviousMoments = null; prepSuggestedMoments = null; selectPrepMoment(0,false); }
     if (target.id === 'prep-copy-auto') copyAutoPrepMoments();
     if (target.id === 'prep-print-moments') {
       capturePrepMoment();
@@ -5810,6 +5832,7 @@ function wireExerciseDialogLifecycle(dialog) {
 
   // Teardown completo al cerrar: previene bloqueos en móviles, libera decodificadores y memoria
   dialog.addEventListener('close', () => {
+    if (dialog.open) return;
     // 1. Pausar y forzar descarga inmediata de todos los vídeos (libera recursos de hardware y de red)
     const videos = dialog.querySelectorAll('video');
     videos.forEach((video) => {
@@ -5838,7 +5861,14 @@ function showExerciseDetail(exerciseId) {
   const dialog = $('#exercise-detail-dialog');
   if (dialog) wireExerciseDialogLifecycle(dialog);
 
+  const custom = state.exercises.find(item => item.id === exerciseId && item.customBoard);
+  if (custom) {
+    window.dispatchEvent(new CustomEvent('campobase:view-own-exercise', { detail: { exerciseId } }));
+    return;
+  }
   const validated = findValidatedExercise(exerciseId);
+  const resumeSession = suspendSessionDetail();
+  dialog?.addEventListener('close', resumeSession, { once: true });
   const stickyFooter = dialog?.querySelector('.dialog-sticky-footer');
   if (stickyFooter) {
     stickyFooter.style.display = validated ? 'none' : '';
@@ -5860,7 +5890,7 @@ function showExerciseDetail(exerciseId) {
     return;
   }
   const item = state.exercises.find(({ id }) => id === exerciseId);
-  if (!item) return toast('El ejercicio ya no está disponible.');
+  if (!item) { resumeSession(); return toast('El ejercicio ya no está disponible.'); }
   $('#exercise-detail-title').textContent = item.name;
   $('#exercise-detail-body').innerHTML = exerciseCardHTML(item);
   if (dialog && !dialog.open) dialog.showModal();
@@ -5882,7 +5912,28 @@ async function toggleTrainingSessionCompleted(id) {
   toast(isCompleted ? 'Entrenamiento archivado como realizado.' : 'Entrenamiento desmarcado y movido a pendientes.');
 }
 
+function openOwnExercisesPrint() {
+  const own=state.exercises.filter(item=>item.customBoard===true);
+  if(!own.length) return toast('Todavía no hay ejercicios tuyos disponibles en esta copia.');
+  let picker=$('#own-exercises-print-dialog');
+  if(!picker){picker=document.createElement('dialog');picker.id='own-exercises-print-dialog';document.body.append(picker);}
+  picker.innerHTML=`<div class="dialog-head"><h2>Imprimir mis ejercicios</h2><button type="button" data-print-cancel aria-label="Cerrar">×</button></div><p>Elige tus ejercicios actuales. Se usará su portada guardada, con dos ejercicios por página. No cambia ninguna sesión antigua.</p><div class="stack">${own.map(item=>`<label><input type="checkbox" name="ownPrint" value="${escapeHtml(item.id)}" checked> ${escapeHtml(item.name)} · ${Number(item.duration)||15} min</label>`).join('')}</div><div class="button-row"><button type="button" class="primary" data-print-selected>Ver ficha de impresión</button><button type="button" class="secondary" data-print-cancel>Cancelar</button></div>`;
+  picker.querySelectorAll('[data-print-cancel]').forEach(button=>button.addEventListener('click',()=>picker.close()));
+  picker.querySelector('[data-print-selected]').addEventListener('click',()=>{
+    const ids=[...picker.querySelectorAll('[name="ownPrint"]:checked')].map(input=>input.value);
+    if(!ids.length)return toast('Selecciona al menos un ejercicio.');
+    picker.close();
+    printTrainingSession({id:'own-print-preview',name:'Mis ejercicios · ficha de sesión',date:localDateKey(),blocks:ids.map(id=>({exerciseId:id,type:'main',duration:Number(own.find(item=>item.id===id)?.duration)||15}))},state);
+  });
+  picker.showModal();
+}
+
 function renderTrainingSessions() {
+  const banner=$('#sesiones .cbx-banner');
+  if(banner&&!$('#print-own-exercises')) {
+    const button=document.createElement('button');button.id='print-own-exercises';button.type='button';button.className='secondary';button.textContent='Imprimir mis ejercicios';button.addEventListener('click',openOwnExercisesPrint);
+    (banner.querySelector('.button-row')||banner).append(button);
+  }
   const allSessions = sortTrainingSessions(state.trainingSessions, localDateKey());
   const activeSessions = allSessions.filter((s) => !s.completed);
   const completedSessions = allSessions.filter((s) => !!s.completed);
@@ -13152,7 +13203,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261005-colores-impresion-salida').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261005-plan-sesiones-reproductor').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

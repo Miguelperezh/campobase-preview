@@ -1,3 +1,4 @@
+import { exercisePreviewImage, sessionExerciseReference } from './exercise-preview-image.js';
 // js/print-session-export.js
 // Exportación e impresión profesional y ultra-compacta de sesiones y ejercicios de CampoBase.
 // Diseñado para entrenadores: formato de ficha de campo para carpeta con pinza,
@@ -62,8 +63,9 @@ export function resolveExerciseData(exerciseOrId, state) {
   const rawPreview = ex?.customBoard
     ? ex.boardPreview || ex.preview || ex.media?.preview || ''
     : validated?.media?.preview || validated?.preview || ex?.preview || ex?.media?.preview || ex?.boardPreview || '';
-  if (isUsableImage(rawPreview)) {
-    preview = rawPreview;
+  const imagePreview = exercisePreviewImage(rawPreview);
+  if (isUsableImage(imagePreview)) {
+    preview = imagePreview;
   }
 
   // Dynamic / Explanation / Steps
@@ -421,11 +423,11 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
 
   // Material total de la sesión
   const totalMaterial = session.material || blocks.map((b) => {
-    const data = resolveExerciseData(b.exerciseId, state);
+    const data = resolveExerciseData(sessionExerciseReference(b), state);
     return data.material;
   }).filter(Boolean).join(', ');
 
-  const sessionObjective = session.objective || blocks.map((b) => resolveExerciseData(b.exerciseId, state).objective).filter(Boolean)[0] || 'Desarrollo táctico y técnico de la sesión.';
+  const sessionObjective = session.objective || blocks.map((b) => resolveExerciseData(sessionExerciseReference(b), state).objective).filter(Boolean)[0] || 'Desarrollo táctico y técnico de la sesión.';
 
   // Timeline bar
   const timelineSegments = blocks.map((block) => {
@@ -436,7 +438,7 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
 
   // Tareas resumidas para la Portada
   const blocksSummaryHtml = blocks.map((block, idx) => {
-    const data = resolveExerciseData(block.exerciseId, state);
+    const data = resolveExerciseData(sessionExerciseReference(block), state);
     const blockDuration = block.duration ? `${block.duration} min` : data.duration;
     const blockPhase = block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte Principal' : block.type === 'final' ? 'Juego / Vuelta a la Calma' : data.category;
     const typeTagClass = block.type === 'warmup' ? 'badge-warmup' : block.type === 'final' ? 'badge-final' : 'badge-main';
@@ -606,7 +608,7 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
   const pages = [];
   for (let start = 0; start < blocks.length; start += 2) {
     const pageIndex = 2 + start / 2;
-    const exercises = blocks.slice(start, start + 2).map((block) => `<div class="cb-print-exercise-slot">${buildExercisePageHtml(block.exerciseId, state, {
+    const exercises = blocks.slice(start, start + 2).map((block) => `<div class="cb-print-exercise-slot">${buildExercisePageHtml(sessionExerciseReference(block), state, {
       isSessionExercise: true, compact: true, blockContext: block, pageIndex, totalPages,
     })}</div>`).join('');
     pages.push(`<div class="cb-print-sheet cb-print-page cb-print-session-exercise-page cb-print-session-pair">${exercises}</div>`);

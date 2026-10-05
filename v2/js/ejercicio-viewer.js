@@ -35,20 +35,23 @@ export function ensureVideoLoaded(video, placeholder, previewOnly = false) {
     return Promise.resolve(true);
   }
   if (video._loadPromise) return video._loadPromise;
-  if (!video.getAttribute('src')) video.src = src;
-  video.preload = previewOnly ? 'metadata' : 'auto';
-  video.load();
   video._loadPromise = new Promise((resolve) => {
+    let timeout;
     const ready = () => { cleanup(); resolve(true); };
     const failed = () => { cleanup(); resolve(false); };
     const cleanup = () => {
+      clearTimeout(timeout);
       video.removeEventListener('loadeddata', ready);
       video.removeEventListener('error', failed);
     };
-    if (video.readyState >= 2) return ready();
     video.addEventListener('loadeddata', ready, { once: true });
     video.addEventListener('error', failed, { once: true });
-  });
+    timeout = setTimeout(failed, 12000);
+    if (!video.getAttribute('src')) video.src = src;
+    video.preload = previewOnly ? 'metadata' : 'auto';
+    video.load();
+    if (video.readyState >= 2) ready();
+  }).finally(() => { video._loadPromise = null; });
   return video._loadPromise;
 }
 
@@ -1193,12 +1196,12 @@ export function initValidatedExerciseViewer(root) {
     videoDebugger?.render();
   }
 
-  let lastToggleTime = 0;
+  function playbackMessage(text = '') {
+    let message=root.querySelector('.video-play-message');
+    if(!message&&text){message=document.createElement('p');message.className='video-play-message meta';message.setAttribute('role','status');stage?.insertAdjacentElement('afterend',message);}
+    if(message){message.textContent=text;message.hidden=!text;}
+  }
   async function togglePlay() {
-    const now = Date.now();
-    if (now - lastToggleTime < 300) return;
-    lastToggleTime = now;
-
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
@@ -1207,18 +1210,27 @@ export function initValidatedExerciseViewer(root) {
     video.setAttribute('muted', '');
 
     if (video.paused) {
+      playbackMessage();
+      if(video.error) {
+        const original=video.dataset.src||video.querySelector('source')?.src||video.src;
+        const compatible=[3,4].includes(video.error.code)?resolveHostedVideoUrl(original,{mobile:true}):original;
+        if(compatible)video.src=compatible;
+      }
+      // Do not await network readiness: play must stay inside the user gesture.
+      if (!video.getAttribute('src') && video.dataset.src && !video.querySelector('source[src]')) video.src = video.dataset.src;
+      video.preload = 'auto';
       updatePlayState(true);
       try {
         const p = video.play();
         if (p && typeof p.catch === 'function') {
           p.catch((err) => {
             console.warn('Error al reproducir vídeo:', err);
-            if (video.paused) updatePlayState(false);
+            if (video.paused) { updatePlayState(false); playbackMessage('No se pudo iniciar el vídeo. Pulsa Play para reintentar.'); }
           });
         }
       } catch (err) {
         console.warn('Error síncrono al reproducir vídeo:', err);
-        if (video.paused) updatePlayState(false);
+        if (video.paused) { updatePlayState(false); playbackMessage('No se pudo iniciar el vídeo. Pulsa Play para reintentar.'); }
       }
     } else {
       video.pause();
@@ -1236,15 +1248,13 @@ export function initValidatedExerciseViewer(root) {
 
   if (btnPlay) {
     btnPlay.addEventListener('click', handleToggle);
-    btnPlay.addEventListener('touchend', handleToggle, { passive: false });
   }
   if (overlayPlay) {
     overlayPlay.addEventListener('click', handleToggle);
-    overlayPlay.addEventListener('touchend', handleToggle, { passive: false });
   }
   if (stage) {
     stage.addEventListener('click', (e) => {
-      if (e.target.closest('.video-overlay-play, .theater-exit-btn')) return;
+      if (e.target.closest('button, input, select, a, [role="button"], .v-controls') || (e.target === video && video.controls)) return;
       handleToggle(e);
     });
   }
@@ -1253,10 +1263,11 @@ export function initValidatedExerciseViewer(root) {
     console.warn('Error en elemento de vídeo:', video.error);
     updatePlayState(false);
     video.controls = true;
+    playbackMessage('No se pudo cargar el vídeo. Pulsa Play para reintentar.');
   });
 
   video.addEventListener('play', () => updatePlayState(true));
-  video.addEventListener('playing', () => updatePlayState(true));
+  video.addEventListener('playing', () => { playbackMessage(); updatePlayState(true); });
   video.addEventListener('pause', () => updatePlayState(false));
   video.addEventListener('timeupdate', () => {
     if (!video.paused) updatePlayState(true);
@@ -1485,6 +1496,7 @@ export function initValidatedExerciseViewer(root) {
   const parentDialog = root.closest('dialog') || document.querySelector('#exercise-detail-dialog');
   if (parentDialog) {
     const handleDialogClose = () => {
+      if (parentDialog.open) return;
       toggleTheater(false);
       try {
         if (video) {

@@ -328,3 +328,7 @@ body[data-font-scale="enormous"].cb-redesign-active #plantilla .cbx-plantilla-pl
 body[data-font-scale="ultra"].cb-redesign-active #plantilla .cbx-plantilla-players {
   grid-template-columns: repeat(auto-fit,minmax(min(100%,480px),1fr)) !important;
 }
+
+/* Media liga: valor y etiqueta completos dentro de la misma tarjeta. */
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .liga-media { width:76px;min-width:76px;height:auto;min-height:64px;padding:8px 5px;box-sizing:border-box;gap:3px; }
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .liga-media .etiqueta { display:block;max-width:100%;white-space:normal!important;overflow-wrap:normal;text-align:center;font-size:9px!important;line-height:1.2!important;letter-spacing:0!important;margin:0!important; }

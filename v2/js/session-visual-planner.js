@@ -1,7 +1,8 @@
+import { exercisePreviewImage } from './exercise-preview-image.js';
 import { getAll } from './db.js';
 import { EXERCISE_CATEGORIES } from './training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
+import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=plan-visual-1';
 import { renderVideoSectionHTML, videoPublicUrl } from './ejercicio-videos.js';
 import { calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 
@@ -223,12 +224,13 @@ async function enhanceSessionBuilder() {
 }
 
 function genericDetailCard(exercise, videos = []) {
+  const ownPreview=exercise.customBoard ? exercisePreviewImage(exercise.boardPreview||exercise.preview) : '';
   const item = completeExercise(exercise);
   const list = (items) => `<ul class="plain-list">${asTextList(items).map((value) => `<li>${esc(value)}</li>`).join('')}</ul>`;
   return `<article class="panel exercise-card session-generic-detail">
     <div class="exercise-card-head"><div><span class="pill">${esc(item.category)}</span><h2>${esc(item.name)}</h2></div></div>
     <div class="exercise-highlights"><span>${esc(item.players)}</span><span class="pill accent">${Number(item.duration) || 0} min</span><span class="meta">${esc(item.space)}</span></div>
-    ${renderBoardDiagrams(item)}
+    ${exercise.customBoard ? `${ownPreview ? `<img src="${esc(ownPreview)}" alt="Portada de ${esc(item.name)}" style="display:block;width:100%;max-height:340px;object-fit:contain;">` : renderBoardDiagrams(item)}<button type="button" class="view-exercise secondary" data-exercise-id="${esc(exercise.id)}">Ver ejercicio · pizarra y movimiento</button>` : renderBoardDiagrams(item)}
     ${videos.length ? renderVideoSectionHTML(videos, { exerciseId: exercise.id }) : ''}
     <p>${esc(item.description)}</p>
     <h3>Objetivo</h3><p>${esc(item.objective)}</p>

@@ -117,10 +117,6 @@ function installOuterPlay(frame) {
   };
 
   play.addEventListener('click', handlePlayClick);
-  play.addEventListener('touchend', handlePlayClick, { passive: false });
-  play.addEventListener('pointerup', (e) => {
-    if (e.pointerType === 'touch') handlePlayClick(e);
-  });
 
   setTimeout(() => syncPlayLabel(frame, play), 0);
   setTimeout(() => syncPlayLabel(frame, play), 200);

@@ -1,3 +1,4 @@
+import { suspendSessionDetail } from './session-detail-navigation.js';
 import { syncFromCloud, getAll } from './db.js';
 
 const BUTTON_ID = 'manual-refresh';
@@ -346,6 +347,9 @@ async function openCreator() {
 
 async function openViewer(record, version = 'static') {
   ensureOverlay();
+  const resumeSession=suspendSessionDetail();
+  const sessionReturn=new MutationObserver(()=>{if(!overlay.classList.contains('open')){sessionReturn.disconnect();resumeSession();}});
+  sessionReturn.observe(overlay,{attributes:true,attributeFilter:['class']});
   pendingViewer = { record, version };
   overlay.classList.add('viewer-mode', 'open');
   overlay.setAttribute('aria-hidden', 'false');
@@ -461,3 +465,5 @@ if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { installRuntimeRefresh(); install(); }, { once: true });
   else { installRuntimeRefresh(); install(); }
 }
+
+if (typeof window !== 'undefined') window.addEventListener('campobase:view-own-exercise',event=>{const record=window.__campobase?.state?.exercises?.find(item=>item.id===event.detail?.exerciseId&&item.customBoard);if(record)openViewer(record,'static').catch(error=>{closeOverlay();console.error(error);});});
