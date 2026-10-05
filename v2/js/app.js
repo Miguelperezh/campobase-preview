@@ -1,4 +1,4 @@
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription } from './theme-component-colors.js?v=color-controls-2';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription } from './theme-component-colors.js?v=color-controls-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -9135,7 +9135,7 @@ function openQuickColorDialog(targetKind = null) {
     const viewsBarHtml = `
       <div class="cbx-qc-views-bar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;border-bottom:1px solid var(--cardBorder, #e2e8f0);margin-bottom:6px;scrollbar-width:thin;">
         ${VIEWS_INFO.map(v => `
-          <button type="button" class="cbx-qc-view-chip ${v.id === currentViewId ? 'active' : ''}" data-view="${v.id}" style="padding:6px 12px;border-radius:999px;border:1px solid ${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${v.id === currentViewId ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">
+          <button type="button" class="cbx-qc-view-chip ${v.id === currentViewId ? 'active' : ''}" data-view="${v.id}" aria-pressed="${v.id === currentViewId}" style="padding:6px 12px;border-radius:999px;border:1px solid ${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${v.id === currentViewId ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${v.id === currentViewId ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">
             ${v.icon} ${v.name}
           </button>
         `).join('')}
@@ -9145,7 +9145,7 @@ function openQuickColorDialog(targetKind = null) {
     const subtabsBarHtml = subtabs.length > 1 ? `
       <div class="cbx-qc-subtabs-row" style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;margin-bottom:6px;scrollbar-width:thin;">
         ${subtabs.map(st => `
-          <button type="button" class="cbx-qc-subtab-chip ${st.id === currentSubTab ? 'active' : ''}" data-subtab="${st.id}" style="padding:5px 12px;border-radius:8px;border:1px solid ${st.id === currentSubTab ? '#059669' : 'var(--cardBorder, #cbd5e1)'};background:${st.id === currentSubTab ? '#059669' : 'color-mix(in srgb, var(--cardBg, #ffffff) 96%, var(--cardBorder, #e2e8f0))'};color:${st.id === currentSubTab ? '#ffffff' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;">
+          <button type="button" class="cbx-qc-subtab-chip ${st.id === currentSubTab ? 'active' : ''}" data-subtab="${st.id}" aria-pressed="${st.id === currentSubTab}" style="padding:5px 12px;border-radius:8px;border:1px solid ${st.id === currentSubTab ? '#059669' : 'var(--cardBorder, #cbd5e1)'};background:${st.id === currentSubTab ? '#059669' : 'color-mix(in srgb, var(--cardBg, #ffffff) 96%, var(--cardBorder, #e2e8f0))'};color:${st.id === currentSubTab ? '#ffffff' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;">
             ${st.label}
           </button>
         `).join('')}
@@ -9813,6 +9813,7 @@ function openQuickColorDialog(targetKind = null) {
       const rgb = String(value).match(/\d+/g);
       return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
     };
+    controlsHtml = '<section class="cbx-general-color-controls">' + controlsHtml + '</section>';
     controlsHtml += '<section class="cbx-named-colors"><h3>Elementos propios de ' + escapeHtml(activeViewConfig.name) + '</h3><label>Buscar un elemento<input type="search" id="qc-element-search" placeholder="Ej.: dorsal, minutos, cerrar, imprimir…"></label><p>Abre un grupo para personalizar cada elemento por su nombre. Estos ajustes concretos tienen prioridad sobre los colores generales de arriba. Si una ventana o un desplegable tiene contenido adicional, ábrelo y pulsa su rueda para ver también sus elementos.</p>';
     for (const group of [...new Set(elements.map((element) => element.group))]) {
       controlsHtml += '<details class="cbx-colour-group"><summary>' + escapeHtml(group) + '</summary>';
@@ -9835,6 +9836,7 @@ function openQuickColorDialog(targetKind = null) {
     controlsHtml += '</section>';
     titleEl.textContent = `⚙️ Personalizar: ${activeViewConfig.name}`;
     bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + previewHtml + controlsHtml;
+    bodyEl.scrollTop = 0;
     bodyEl.querySelector('#qc-element-search').addEventListener('input', (event) => {
       const query = event.target.value.trim().toLocaleLowerCase('es');
       bodyEl.querySelectorAll('[data-element-index]').forEach((item) => {
@@ -13151,7 +13153,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260927-v66-real-calendar-dates').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261005-ajustes-visuales-detallados').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
