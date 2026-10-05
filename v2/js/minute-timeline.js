@@ -47,6 +47,28 @@ export function proposePrepMoments({initial,playerIds,keeperIds,format='F7',mode
   }
   return moments;
 }
+export function rotationPlanMoments(plan, template, idFactory=()=>crypto.randomUUID()) {
+  if (!plan?.lineupAt || !template?.team?.length) throw new Error('El plan no contiene una alineación completa.');
+  const keeperSlot=template.team.findIndex(slot=>slot.pos==='Portero');
+  const fieldSlots=template.team.map((slot,index)=>index).filter(index=>index!==keeperSlot);
+  const first=plan.lineupAt(0);
+  const team=template.team.map(slot=>({...slot}));
+  if(keeperSlot<0 || first.slots.length!==fieldSlots.length) throw new Error('La formación no coincide con el plan.');
+  team[keeperSlot].playerId=first.gk;
+  first.slots.forEach((id,index)=>team[fieldSlots[index]].playerId=id);
+  const moments=[{...template,id:idFactory(),minute:0,team}];
+  const boundaries=[...new Set([...(plan.gkPlan||[]).map(s=>s.from),...Object.values(plan.segs||{}).flat().map(s=>s.from)])].filter(t=>t>0&&t<plan.D).sort((a,b)=>a-b);
+  for(const time of boundaries) {
+    const lineup=plan.lineupAt(time+0.00001);
+    const next=team.map(slot=>({...slot}));
+    next[keeperSlot].playerId=lineup.gk;
+    lineup.slots.forEach((id,index)=>next[fieldSlots[index]].playerId=id);
+    if(!validLineup(next,[...plan.gks,...plan.field],team.length)) throw new Error('El plan tiene jugadores duplicados.');
+    moments.push({id:idFactory(),minute:Number(time.toFixed(2)),formation:template.formation,team:next});
+  }
+  return moments;
+}
+const exact = value => Number(Number(value).toFixed(2)).toLocaleString('es-ES');
 export function accumulatedMinutes(segments, minute) {
   return segments.reduce((sum,segment)=>sum+Math.max(0,Math.min(minute,segment.to)-segment.from),0);
 }
@@ -58,7 +80,7 @@ export function renderMinuteTimeline(plan, players, key) {
   const selected=ids.includes(previous.selected)?previous.selected:ids[0];
   const minute=Math.min(plan.D,previous.minute??0);
   choices.set(key,{selected,minute});
-  return `<section class="cbx-minute-timeline" data-minute-timeline="${esc(key)}"><p class="meta">Toca un jugador o su barra y mueve el minuto para ver cuánto lleva jugado.</p><label class="cbx-minute-control">Minuto <output>${minute}′</output><input type="range" min="0" max="${plan.D}" value="${minute}" aria-label="Minuto del plan"></label><div class="cbx-minute-axis"><span>0′</span><span>${plan.H}′ · descanso</span><span>${plan.D}′</span></div><div class="cbx-minute-rows">${rows.map(row=>`<button type="button" class="cbx-minute-row secondary" data-minute-player="${esc(row.id)}" aria-pressed="${row.id===selected}" title="${esc(row.player?.name||row.id)}"><span class="cbx-minute-person"><b>${esc(row.player?.number||'—')}</b><span>${esc(row.player?.name||'Jugador')}</span></span><span class="cbx-minute-track">${row.segments.map(s=>`<i style="left:${s.from/plan.D*100}%;width:${(s.to-s.from)/plan.D*100}%" title="${s.from}′ a ${s.to}′"></i>`).join('')}<em style="left:${minute/plan.D*100}%"></em></span><span class="cbx-minute-total"><b>${Math.round(accumulatedMinutes(row.segments,minute))}′</b><small>de ${Math.round(plan.planned[row.id]||0)}′</small></span></button>`).join('')}</div><div class="cbx-minute-selection" aria-live="polite"></div></section>`;
+  return `<section class="cbx-minute-timeline" data-minute-timeline="${esc(key)}"><p class="meta">Toca un jugador o su barra y mueve el minuto para ver cuánto lleva jugado.</p><label class="cbx-minute-control">Minuto <output>${minute}′</output><input type="range" min="0" max="${plan.D}" value="${minute}" aria-label="Minuto del plan"></label><div class="cbx-minute-axis"><span>0′</span><span>${plan.H}′ · descanso</span><span>${plan.D}′</span></div><div class="cbx-minute-rows">${rows.map(row=>`<button type="button" class="cbx-minute-row secondary" data-minute-player="${esc(row.id)}" aria-pressed="${row.id===selected}" title="${esc(row.player?.name||row.id)}"><span class="cbx-minute-person"><b>${esc(row.player?.number||'—')}</b><span>${esc(row.player?.name||'Jugador')}</span></span><span class="cbx-minute-track">${row.segments.map(s=>`<i style="left:${s.from/plan.D*100}%;width:${(s.to-s.from)/plan.D*100}%" title="${s.from}′ a ${s.to}′"></i>`).join('')}<em style="left:${minute/plan.D*100}%"></em></span><span class="cbx-minute-total"><b>${exact(accumulatedMinutes(row.segments,minute))}′</b><small>de ${exact(plan.planned[row.id]||0)}′</small></span><span class="cbx-minute-spans">${row.segments.map(s=>`${exact(s.from)}′–${exact(s.to)}′ · ${exact(s.to-s.from)} min`).join(' / ')||'Sin minutos'}</span></button>`).join('')}</div><div class="cbx-minute-selection" aria-live="polite"></div></section>`;
 }
 function update(root) {
   const key=root.dataset.minuteTimeline;
@@ -68,11 +90,11 @@ function update(root) {
   root.querySelectorAll('[data-minute-player]').forEach(button=>{
     const row=model.rows.find(row=>row.id===button.dataset.minutePlayer);
     button.setAttribute('aria-pressed',String(row.id===choice.selected));
-    button.querySelector('.cbx-minute-total b').textContent=Math.round(accumulatedMinutes(row.segments,choice.minute))+'′';
+    button.querySelector('.cbx-minute-total b').textContent=exact(accumulatedMinutes(row.segments,choice.minute))+'′';
     button.querySelector('em').style.left=choice.minute/model.plan.D*100+'%';
   });
   const row=model.rows.find(row=>row.id===choice.selected);
-  if(row) root.querySelector('.cbx-minute-selection').innerHTML=`<strong>${esc(row.player?.name||'Jugador')}</strong><span>En el minuto ${choice.minute}′: <b>${Math.round(accumulatedMinutes(row.segments,choice.minute))}′ jugados</b> · total previsto ${Math.round(model.plan.planned[row.id]||0)}′</span><small>${row.segments.map(s=>`${Math.round(s.from)}′–${Math.round(s.to)}′`).join(' · ')||'Sin tramo asignado'}</small>`;
+  if(row) root.querySelector('.cbx-minute-selection').innerHTML=`<strong>${esc(row.player?.name||'Jugador')}</strong><span>En el minuto ${choice.minute}′: <b>${exact(accumulatedMinutes(row.segments,choice.minute))}′ jugados</b> · total previsto ${exact(model.plan.planned[row.id]||0)}′</span><small>${row.segments.map(s=>`${exact(s.from)}′–${exact(s.to)}′ (${exact(s.to-s.from)} min)`).join(' · ')||'Sin tramo asignado'}</small>`;
 }
 export function wireMinuteTimelines(doc=document) {
   if(doc.__minuteTimelineWired)return;doc.__minuteTimelineWired=true;

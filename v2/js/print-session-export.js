@@ -28,7 +28,8 @@ export function resolveExerciseData(exerciseOrId, state) {
     validated = findValidatedExercise(ex.id);
   }
   const saved = id ? state?.exercises?.find((item) => item.id === id) : null;
-  if (!ex || saved?.customBoard) ex = saved || ex;
+  if (!ex || saved?.customBoard || saved?.boardPreview || saved?.category === 'Mis ejercicios') ex = saved || ex;
+  const own = Boolean(ex?.customBoard || ex?.boardPreview || ex?.category === 'Mis ejercicios');
 
   const name = validated?.nombre || ex?.name || ex?.nombre || 'Ejercicio de entrenamiento';
   const category = validated?.categoria || ex?.category || ex?.categoria || 'General';
@@ -60,11 +61,11 @@ export function resolveExerciseData(exerciseOrId, state) {
 
   // Preview Image
   let preview = '';
-  const rawPreview = ex?.customBoard
+  const rawPreview = own
     ? ex.boardPreview || ex.preview || ex.media?.preview || ''
     : validated?.media?.preview || validated?.preview || ex?.preview || ex?.media?.preview || ex?.boardPreview || '';
   const imagePreview = exercisePreviewImage(rawPreview);
-  if (isUsableImage(imagePreview)) {
+  if (isUsableImage(imagePreview) || (own && imagePreview && !/\.(?:mp4|webm|mov|m4v)(?:$|[?#])/i.test(imagePreview))) {
     preview = imagePreview;
   }
 

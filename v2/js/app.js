@@ -1,6 +1,6 @@
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { planFromMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-visual-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-7';
+import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-visual-2';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-8';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -18,14 +18,14 @@ import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox 
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf, getAspectBoardData } from './tacticas-pdf-domain.js';
 import { initTacticBoard } from './tactic-board-controller.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-7';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-8';
 import { buildAutoPlan } from './reparto-plan.js';
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 import { printMatchPlan } from './print-match-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-7';
+import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-8';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -1638,6 +1638,7 @@ const callupPlanModes = new Map();
 let pendingPrepAfterCallupMatchId = '';
 
 const callupSuggestedPlans = new Map();
+const callupVisiblePlans = new Map();
 let prepSuggestedMoments = null;
 let prepPreviousMoments = null;
 let prepPlanMode = 'escalonado';
@@ -1756,6 +1757,7 @@ function renderClaudeCallup(callup) {
   }
   const suggested = callupSuggestedPlans.get(callup.id);
   if (suggested?.mode === mode) plan = suggested.plan;
+  if(plan) callupVisiblePlans.set(callup.id,{plan,moments:prep && !plan.lineupAt ? normalizeMoments(prep) : null});
   const fieldCount = available.size - keeperIds.length;
   const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(callup.date || ''))?.[1];
   const roster = players.map((player) => {
@@ -1773,7 +1775,7 @@ function renderClaudeCallup(callup) {
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row"><button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
         <div style="padding:12px 6px;text-align:center;">
           <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -4634,6 +4636,25 @@ function copyAutoPrepMoments() {
   toast('Propuesta aplicada al borrador. Puedes cambiar posiciones y guardar cuando termines.');
 }
 
+function callupPlanMoments(callupId, matchId) {
+  const visible=callupVisiblePlans.get(callupId);
+  if(!visible) throw new Error('Abre el plan de la convocatoria primero.');
+  if(visible.moments) return structuredClone(visible.moments);
+  const prep=prepForMatch(matchId);
+  const formation=prep?.formacion||'1-3-2-1';
+  const template={formation,team:prep?.team?.length ? prep.team : buildLiveState(state.players,[...visible.plan.gks,...visible.plan.field],formation,'F7',visible.plan.gks[0]).team};
+  return rotationPlanMoments(visible.plan,template,uid);
+}
+async function copyCallupPlanToPrep(callupId, matchId) {
+  const moments=callupPlanMoments(callupId,matchId);
+  showView('preparacion');
+  await openPreparacionEditor(matchId);
+  prepPreviousMoments=structuredClone(prepMomentsDraft);
+  prepMomentsDraft=moments;prepSuggestedMoments=null;
+  $('#prep-keeper1').value=moments[0].team.find(slot=>slot.pos==='Portero')?.playerId||'';
+  selectPrepMoment(0,false);
+  toast('Plan copiado al borrador. Edita jugadores, posiciones y minutos; guarda cuando termines.');
+}
 function arrangeClaudePrepEditor() {
   if (!document.body.classList.contains('cb-redesign-active')) return;
   const editor = $('#preparacion-editor');
@@ -9877,7 +9898,13 @@ function openQuickColorDialog(targetKind = null) {
     }
     controlsHtml += '</section>';
     titleEl.textContent = `⚙️ Personalizar: ${activeViewConfig.name}`;
-    bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + previewHtml + controlsHtml;
+    bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + '<div class="cbx-adjustments-layout"><aside class="cbx-adjustments-preview"><h4>Vista previa</h4><p>Comprueba aquí los colores de esta pantalla.</p>' + previewHtml + '</aside><div class="cbx-adjustments-controls">' + controlsHtml + '</div></div>';
+    bodyEl.querySelectorAll('.cbx-colour-group').forEach(group=>{
+      const summary=group.querySelector('summary');
+      const count=group.querySelectorAll('[data-element-index]').length;
+      const icons={'Botones':'◉','Textos':'Aa','Fondos y tarjetas':'▤','Iconos y gráficos':'◈','Campos y selectores':'☑'};
+      summary.innerHTML='<span class="cbx-adjustment-icon">'+(icons[summary.textContent]||'◈')+'</span><span>'+summary.innerHTML+'</span><small>'+count+' elementos</small>';
+    });
     bodyEl.scrollTop = 0;
     bodyEl.querySelector('#qc-element-search').addEventListener('input', (event) => {
       const query = event.target.value.trim().toLocaleLowerCase('es');
@@ -12806,6 +12833,12 @@ function wireEvents() {
     if (target.matches('[data-callup-plan-mode]')) { callupSuggestedPlans.delete(target.dataset.callupId); callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
     const genRotationBtn = target.closest('.cbx-generate-callup-rotation-btn');
     if (genRotationBtn) { suggestCallupRotation(genRotationBtn.dataset.callupId); }
+    const copyCallupPlanBtn=target.closest('.cbx-copy-callup-plan');
+    if(copyCallupPlanBtn) copyCallupPlanToPrep(copyCallupPlanBtn.dataset.callupId,copyCallupPlanBtn.dataset.matchId).catch(handleError);
+    const printCallupPlanBtn=target.closest('.cbx-print-callup-plan');
+    if(printCallupPlanBtn) {
+      try {const moments=callupPlanMoments(printCallupPlanBtn.dataset.callupId,printCallupPlanBtn.dataset.matchId);printMatchPlan(printCallupPlanBtn.dataset.matchId,state,{momentsDraft:moments,teamDraft:moments[0].team,formacionDraft:moments[0].formation});} catch(error) {handleError(error);}
+    }
     if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
@@ -13203,7 +13236,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261005-plan-sesiones-reproductor').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261005-plan-copia-ajustes').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

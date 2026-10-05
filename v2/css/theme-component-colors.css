@@ -85,3 +85,20 @@ body.cb-redesign-active #cb-sub-nav { background: var(--sub-nav-bg, #f1f5f9) !im
 #cbx-quick-color-body { flex: 1 1 auto; min-height: 0; }
 #cbx-quick-color-dialog > .dialog-sticky-footer { position: static !important; flex: 0 0 auto; padding: 8px 22px !important; margin: 0 !important; min-height: 0 !important; display: flex !important; justify-content: flex-end; box-shadow: none !important; }
 #cbx-quick-color-dialog > .dialog-sticky-footer button { min-height: 40px !important; height: auto !important; width: auto !important; padding: 8px 20px !important; font-size: 13px !important; }
+
+/* Settings-only visual hierarchy; existing controls and save handlers stay intact. */
+#cbx-quick-color-dialog { max-width:1120px!important;width:min(96vw,1120px)!important; }
+.cbx-adjustments-layout { display:grid;grid-template-columns:minmax(230px,.8fr) minmax(0,1.4fr);gap:20px;align-items:start; }
+.cbx-adjustments-preview { position:sticky;top:0;min-width:0;padding:16px;border:1px solid #dce3ea;border-radius:16px;background:#f8fafc; }
+.cbx-adjustments-preview > h4 { font-size:17px;margin:0 0 6px; }
+.cbx-adjustments-preview > p { margin:0 0 14px;font-size:12px;line-height:1.5;color:#475569; }
+.cbx-adjustments-controls { min-width:0; }
+#cbx-quick-color-body .cbx-color-control-row { border:1px solid #dce3ea!important;border-radius:12px!important;background:#fff!important; }
+#cbx-quick-color-body .cbx-color-control-row input[type=color] { width:54px!important;height:42px!important;flex-shrink:0; }
+#cbx-quick-color-body .cbx-colour-group > summary { display:flex;align-items:center;gap:10px;list-style:none;font-size:15px; }
+#cbx-quick-color-body .cbx-colour-group > summary::after { content:'＋';margin-left:auto;font-size:20px; }
+#cbx-quick-color-body .cbx-colour-group[open] > summary::after { content:'−'; }
+#cbx-quick-color-body .cbx-colour-group > summary > small { font-size:11px;color:#475569;margin-left:auto; }
+.cbx-adjustment-icon { display:grid;place-items:center;flex:0 0 34px;height:34px;border-radius:10px;background:#e8eef4;color:#1e293b; }
+#cbx-quick-color-body #qc-element-search { width:100%;min-height:44px;padding:10px 14px;border:1px solid #cbd5e1;border-radius:12px;box-sizing:border-box; }
+@media(max-width:800px){.cbx-adjustments-layout{grid-template-columns:minmax(0,1fr);}.cbx-adjustments-preview{position:static;} }

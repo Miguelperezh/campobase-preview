@@ -1881,3 +1881,6 @@ body.cb-redesign-active .cbx-minute-selection {display:grid;gap:4px;margin:12px 
 body.cb-redesign-active .cbx-minute-selection:empty {display:none;}
 body.cb-redesign-active .cbx-prep-proposal { padding:14px;border:1px solid var(--cardBorder,var(--cbx-line));border-radius:14px;background:var(--cardBg,#fff);margin-top:14px; }
 @media(max-width:620px){body.cb-redesign-active .cbx-minute-row {grid-template-columns:minmax(100px,1fr) minmax(60px,1fr) 46px;gap:5px;padding:6px;}body.cb-redesign-active .cbx-minute-person > span{font-size:11px;}}
+
+.cbx-minute-spans { grid-column:2 / -1;display:block;text-align:left;font-size:12px;line-height:1.5;white-space:normal;overflow-wrap:anywhere; }
+@media(max-width:600px){.cbx-minute-spans{grid-column:1 / -1;}}
