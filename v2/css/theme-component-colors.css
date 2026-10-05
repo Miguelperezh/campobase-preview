@@ -27,3 +27,15 @@ body.cb-redesign-active #convocatorias .cbx-plan-mode-track { border-radius: 999
 
 body.cb-redesign-active #cb-bottom-nav .cb-nav-tab.active::before { background: var(--bottom-nav-active, #c8102e) !important; }
 body.cb-redesign-active #cb-sub-nav { background: var(--sub-nav-bg, #f1f5f9) !important; }
+
+/* Same colour-row vocabulary in every screen, with an explicit description. */
+.cbx-color-control-help { margin: 0; font: 400 12px/1.45 var(--cbx-ui); color: var(--cbx-muted, #64748b); }
+.cbx-named-colors { margin-top: 16px; }
+.cbx-colour-group { margin: 10px 0; padding: 12px; border: 1px solid var(--cardBorder, #e2e8f0); border-radius: 12px; }
+.cbx-colour-group > summary { cursor: pointer; font-weight: 700; }
+.cbx-named-colour { min-width: 0; margin: 14px 0; padding: 12px; border: 1px solid var(--cardBorder, #e2e8f0); border-radius: 12px; }
+.cbx-named-colour legend { max-width: 100%; overflow-wrap: anywhere; font-weight: 700; }
+.cbx-named-colour .cbx-color-control-row { margin: 10px 0; }
+.cbx-named-colour label { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cbx-named-colour input[type="color"] { width: 36px; height: 32px; margin-left: auto; padding: 1px; }
+.cbx-named-colour code { font-size: 11px; }

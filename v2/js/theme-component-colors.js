@@ -21,6 +21,84 @@ export function configurableButtons(root) {
   return [...options.values()];
 }
 
+// The panel uses named controls rather than a generic button selector.
+export function configurableElements(root) {
+  if (!root?.id) return [];
+  const options = [];
+  const selectorFor = (element) => {
+    const parts = [];
+    for (let node = element; node && node !== root; node = node.parentElement) {
+      if (node.id) { parts.unshift('#' + CSS.escape(node.id)); break; }
+      const record = [...node.attributes].find((attribute) => /^data-.*id$/.test(attribute.name) && attribute.value);
+      if (record) { parts.unshift(node.tagName.toLowerCase() + '[' + record.name + '="' + CSS.escape(record.value) + '"]'); break; }
+      const siblings = [...node.parentElement.children].filter((child) => child.tagName === node.tagName);
+      parts.unshift(node.tagName.toLowerCase() + ':nth-of-type(' + (siblings.indexOf(node) + 1) + ')');
+    }
+    return '#' + CSS.escape(root.id) + ' ' + parts.join(' > ');
+  };
+  const named = (element) => (element.getAttribute('aria-label') || element.getAttribute('placeholder') || element.title || element.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 90);
+  const groups = [
+    ['Botones y acciones', 'button,summary,a[href]'],
+    ['Títulos y textos', 'h1,h2,h3,h4,h5,h6,p,label,legend,th,td,li,small,strong,b,span,dt,dd,time,div'],
+    ['Campos y selectores', 'input:not([type="hidden"]),select,textarea,progress,meter'],
+    ['Iconos y gráficos', 'svg,path,circle,rect,line,polyline,polygon'],
+    ['Fondos, tarjetas y recuadros', 'header,footer,article,section,details,fieldset,div'],
+  ];
+  const seen = new Set();
+  for (const [group, query] of groups) for (const element of root.querySelectorAll(query)) {
+    if (seen.has(element) || element.closest('#cbx-quick-color-dialog') || element.matches('.cbx-context-gear-btn')) continue;
+    if (element.closest('svg') && group !== 'Iconos y gráficos') continue;
+    if (group === 'Títulos y textos' && element.children.length && !element.matches('h1,h2,h3,h4,h5,h6,label,legend,th,td,li,p')) continue;
+    let context = element.parentElement;
+    while (context && context !== root && !context.matches('article,section,fieldset,details,.card,.cbx-banner') && !/card|panel|hero/.test(context.className || '')) context = context.parentElement;
+    context ||= root;
+    const heading = context.querySelector('h1,h2,h3,h4,legend,summary');
+    const name = named(element) || (element.labels?.[0] && named(element.labels[0])) || named(heading || context);
+    if (group === 'Fondos, tarjetas y recuadros' && !element.matches('header,footer,article,section,details,fieldset') && !/(card|panel|banner|hero|badge|pill|row|bar|grid|pitch|board|track)/.test(element.className || '')) continue;
+    if (!name && group !== 'Iconos y gráficos') continue;
+    seen.add(element);
+    const index = options.filter((option) => option.group === group && option.label === name).length + 1;
+    options.push({ selector: selectorFor(element), group, label: name || 'Gráfico', context: heading ? named(heading) : '', tag: element.tagName.toLowerCase(), index });
+  }
+  options.push({ selector: '#' + CSS.escape(root.id), group: 'Fondos, tarjetas y recuadros', label: 'Fondo de la pantalla o ventana', context: '', tag: root.tagName.toLowerCase(), index: 1 });
+  return options;
+}
+
+export function colorControlDescription(prop, label, screen) {
+  const descriptions = {
+    bannerBg: 'Fondo de la cabecera superior de esta pantalla.', bannerInk: 'Título y texto de esa cabecera.',
+    btnBg: 'Fondo de los botones de acción principal de esta pantalla.', btnInk: 'Texto e iconos de esos botones principales.',
+    btn2Bg: 'Fondo de los botones secundarios de esta pantalla.', btn2Ink: 'Texto e iconos de esos botones secundarios.',
+    fontColor: 'Texto descriptivo, notas y párrafos de esta pantalla.', cardTitle: 'Nombres y títulos de las tarjetas de esta pantalla.',
+    cardBg: 'Superficie de las tarjetas y paneles de esta pantalla.', cardBorder: 'Línea que rodea las tarjetas y paneles.',
+    dorsalBg: 'Fondo del distintivo donde aparece el dorsal.', dorsalInk: 'Número dentro del distintivo del dorsal.',
+    accentColor: 'Color de acento usado por los elementos que heredan el tema de esta pantalla.',
+    badgeBg: 'Fondo de las etiquetas informativas de las fichas.', badgeInk: 'Texto de esas etiquetas informativas.',
+    callupHeaderBg: 'Fondo de la tarjeta del rival, donde aparece su nombre; independiente de + Convocatoria.',
+    callupHeaderInk: 'Nombre del rival y datos de la cabecera de su tarjeta.',
+    callupBadgeBg: 'Fondo del contador de jugadores convocados.', callupBadgeInk: 'Número y texto del contador de convocados.',
+    callupOutBg: 'Fondo del contador de jugadores fuera de la convocatoria.', callupOutInk: 'Número y palabra «fuera» de ese contador.',
+    callupBtnBg: 'Fondo del botón + Convocatoria, sin cambiar la tarjeta del rival.', callupBtnInk: 'Texto e icono de + Convocatoria.',
+    planModeTrack: 'Fondo del recuadro que contiene Escalonado y Por partes.',
+    planModeBg: 'Fondo de Escalonado o Por partes cuando esa opción no está seleccionada.',
+    planModeInk: 'Texto de la opción del plan que no está seleccionada.',
+    planModeActiveBg: 'Fondo de la opción seleccionada del plan.', planModeActiveInk: 'Texto de la opción seleccionada del plan.',
+    closeBg: 'Fondo del botón Cerrar ejercicio.', closeInk: 'Texto e icono de Cerrar ejercicio.',
+    sidebarBg: 'Fondo del menú lateral de escritorio. Se comparte entre pantallas.', sidebarInk: 'Texto de las opciones del menú lateral; independiente de la barra inferior.',
+    bottomNavBg: 'Fondo de la barra inferior del móvil. Se comparte entre pantallas.', bottomNavInk: 'Texto e iconos de las pestañas inferiores sin seleccionar.',
+    bottomNavActive: 'Texto, icono e indicador de la pestaña inferior seleccionada.',
+    subNavBg: 'Fondo de las subpestañas sin seleccionar.', subNavInk: 'Texto de las subpestañas sin seleccionar.',
+    subNavActiveBg: 'Fondo de la subpestaña seleccionada.', subNavActiveInk: 'Texto de la subpestaña seleccionada.',
+    tbPitch: 'Césped de la pizarra táctica.', tbLines: 'Líneas que delimitan el campo de la pizarra.',
+    tbTeam: 'Fichas de los jugadores de tu equipo en la pizarra.', tbRival: 'Fichas del equipo rival en la pizarra.', tbArrow: 'Flechas de movimiento dibujadas en la pizarra.',
+  };
+  if (descriptions[prop]) return descriptions[prop];
+  const objects = {wa: 'botón WhatsApp', whistle: 'botón Silbato', print: 'botón Imprimir', edit: 'botón Editar', completed: 'botón Realizado sin marcar', completedActive: 'botón Realizado cuando está marcado', prepHeader: 'cabecera de la tarjeta del partido', todayMatch: 'tarjeta del partido en Hoy', callout: 'recuadro informativo', gf: 'marcador de goles de tu equipo', ga: 'marcador de goles del rival', spLead: 'distintivo del primer lanzador', spSub: 'distintivo del segundo lanzador'};
+  const base = prop.replace(/(Bg|Ink)$/, '');
+  if (objects[base]) return (prop.endsWith('Bg') ? 'Fondo del ' : 'Texto y números del ') + objects[base] + '.';
+  return 'Cambia «' + label + '» en ' + screen + '.';
+}
+
 export function applyComponentColors(theme) {
   if (theme) currentTheme = theme;
   document.querySelectorAll('dialog[data-theme-view]').forEach((dialog) => {
@@ -103,13 +181,30 @@ export function applyComponentColors(theme) {
       try { matches = document.querySelectorAll(selector); } catch { continue; }
       matches.forEach((button) => {
         for (const element of [button, ...button.querySelectorAll('span,strong,small,b,svg')]) {
-          originalColours.set(element, ['background', 'color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
+          originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
           element.dataset.themeOverride = '1';
           if (element === button && colours.bg) element.style.setProperty('background', colours.bg, 'important');
           if (colours.ink) element.style.setProperty('color', colours.ink, 'important');
         }
       });
     }
+    for (const [selector, colours] of Object.entries(settings.elementColors || {})) {
+      if (!/^#[\w-]+(?: |$)/.test(selector)) continue;
+      let matches;
+      try { matches = document.querySelectorAll(selector); } catch { continue; }
+      matches.forEach((element) => {
+        if (!element.hasAttribute('data-theme-override')) originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
+        element.dataset.themeOverride = '1';
+        for (const [prop, value] of Object.entries(colours)) if (['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].includes(prop) && /^#[0-9a-f]{6}$/i.test(value)) element.style.setProperty(prop, value, 'important');
+        if (element.matches('button,a,summary') && /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll('span,strong,small,b,svg').forEach((child) => {
+          if (!child.hasAttribute('data-theme-override')) originalColours.set(child, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, child.style.getPropertyValue(prop), child.style.getPropertyPriority(prop)]));
+          child.dataset.themeOverride = '1';
+          child.style.setProperty('color', colours.color, 'important');
+        });
+
+      });
+    }
+
   }
 }
 

@@ -1,4 +1,4 @@
-import { applyComponentColors, observeComponentColors, configurableButtons } from './theme-component-colors.js?v=color-controls-1';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription } from './theme-component-colors.js?v=color-controls-2';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -8885,6 +8885,7 @@ function openQuickColorDialog(targetKind = null) {
   if (!dialog || !bodyEl) return;
 
   const VIEWS_INFO = [
+    { id: 'navegacion', name: 'Cabecera y menús', icon: '☰', subtabs: [{ id: 'general', label: 'Elementos compartidos de navegación' }] },
     { id: 'exercise-detail', name: 'Ficha de ejercicio', icon: '📖', subtabs: [{ id: 'general', label: 'Texto, fondos y cierre' }] },
     { id: 'comunicador', name: 'Comunicador WhatsApp', icon: '💬', subtabs: [{ id: 'general', label: 'Texto, fondos y botones' }] },
     { id: 'plantilla', name: 'Plantilla', icon: '👥', desc: 'Jugadores, minutos y dorsales', hasDorsales: true, hasSetPieces: true, subtabs: [{ id: 'general', label: '📋 General & Dorsales' }, { id: 'specialists', label: '🎯 Balón Parado' }] },
@@ -8898,6 +8899,7 @@ function openQuickColorDialog(targetKind = null) {
     { id: 'calendario', name: 'Calendario', icon: '📅', desc: 'Próximos partidos y resultados', subtabs: [{ id: 'general', label: '📅 Partidos & Resultados' }] },
     { id: 'asistencia', name: 'Asistencia', icon: '📝', desc: 'Control de faltas y dorsales', hasDorsales: true, subtabs: [{ id: 'general', label: '📝 Asistencia & Dorsales' }] },
     { id: 'ejercicios', name: 'Ejercicios', icon: '📖', desc: 'Biblioteca de fichas tácticas', subtabs: [{ id: 'general', label: '📖 Biblioteca de Fichas' }] },
+    { id: 'delegado', name: 'Modo Campo', icon: '⚽', desc: 'Controles de campo', subtabs: [{ id: 'general', label: 'Modo Campo' }] },
     { id: 'ajustes', name: 'Ajustes', icon: '⚙️', desc: 'Preferencias y temas', subtabs: [{ id: 'general', label: '⚙️ Ajustes del Sistema' }] },
   ];
 
@@ -9156,13 +9158,13 @@ function openQuickColorDialog(targetKind = null) {
           🎨 Ajustes exclusivos para: <u>${activeViewConfig.name}</u>
         </span>
         <span style="font-size:11px;font-weight:800;color:#047857;background:#dcfce7;padding:2px 8px;border-radius:999px;">
-          Independiente de las demás pantallas
+          Colores propios · navegación compartida
         </span>
       </div>
     `;
 
     const colorRow = (label, propName, currentVal, fallbackVal, presets = []) => `
-      <div style="display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0));padding:10px 12px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+      <div class="cbx-color-control-row" style="display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0));padding:10px 12px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font:700 13px var(--cbx-ui);color:var(--cardTitle, #0f172a);">${label}</span>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -9170,6 +9172,7 @@ function openQuickColorDialog(targetKind = null) {
             <code style="font-size:11px;color:var(--cbx-muted, #64748b);min-width:55px;">${currentVal || fallbackVal}</code>
           </div>
         </div>
+        <p class="cbx-color-control-help">${escapeHtml(colorControlDescription(propName, label, activeViewConfig.name))}</p>
         ${presets && presets.length ? `
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;align-items:center;">
             <span style="font-size:11px;color:var(--cbx-muted, #64748b);">Sugerencias:</span>
@@ -9775,6 +9778,8 @@ function openQuickColorDialog(targetKind = null) {
     }
 
 
+    if (!controlsHtml.includes('data-prop="bannerBg"')) controlsHtml += colorRow('Cabecera · Fondo', 'bannerBg', bannerBg, '#0a251b', []);
+    if (!controlsHtml.includes('data-prop="bannerInk"')) controlsHtml += colorRow('Cabecera · Texto', 'bannerInk', bannerInk, '#ffffff', []);
     controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
     controlsHtml += colorRow('Etiquetas de las fichas · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
     controlsHtml += colorRow('Etiquetas de las fichas · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
@@ -9801,41 +9806,67 @@ function openQuickColorDialog(targetKind = null) {
 
 
     const buttonRoot = document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
-    const buttonChoices = [...configurableButtons(buttonRoot), ...[...document.querySelectorAll('dialog[open][data-theme-view]')].filter((dialog) => dialog.dataset.themeView === currentViewId).flatMap(configurableButtons)];
-    if (buttonChoices.length) controlsHtml += `<details id="qc-individual-buttons"><summary>Configurar un botón concreto</summary><label>Botón<select id="qc-button-selector">${buttonChoices.map(({ selector, label }) => `<option value="${escapeHtml(selector)}">${escapeHtml(label)}</option>`).join('')}</select></label><label>Fondo<input type="color" id="qc-button-bg"></label><label>Texto e iconos<input type="color" id="qc-button-ink"></label><button type="button" id="qc-button-reset" class="secondary">Restablecer este botón</button></details>`;
-
+    const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot]), ...[...document.querySelectorAll('dialog[open][data-theme-view]')].filter((dialog) => dialog.dataset.themeView === currentViewId)];
+    const elements = elementRoots.flatMap(configurableElements);
+    const asHex = (value) => {
+      if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
+      const rgb = String(value).match(/\d+/g);
+      return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
+    };
+    controlsHtml += '<section class="cbx-named-colors"><h3>Elementos propios de ' + escapeHtml(activeViewConfig.name) + '</h3><label>Buscar un elemento<input type="search" id="qc-element-search" placeholder="Ej.: dorsal, minutos, cerrar, imprimir…"></label><p>Abre un grupo para personalizar cada elemento por su nombre. Estos ajustes concretos tienen prioridad sobre los colores generales de arriba. Si una ventana o un desplegable tiene contenido adicional, ábrelo y pulsa su rueda para ver también sus elementos.</p>';
+    for (const group of [...new Set(elements.map((element) => element.group))]) {
+      controlsHtml += '<details class="cbx-colour-group"><summary>' + escapeHtml(group) + '</summary>';
+      for (const item of elements.filter((element) => element.group === group)) {
+        const target = document.querySelector(item.selector);
+        if (!target) continue;
+        const style = getComputedStyle(target);
+        const graphical = group === 'Iconos y gráficos';
+        const properties = graphical ? [['fill', 'Relleno'], ['stroke', 'Línea'], ['color', 'Color del icono']] : [['background', 'Fondo'], ['color', 'Texto e iconos'], ['border-color', 'Borde'], ...(target.matches('input[type="checkbox"],input[type="radio"],progress,meter') ? [['accent-color', 'Marca o progreso']] : [])];
+        const buttonIndex = elements.indexOf(item);
+        controlsHtml += `<fieldset class="cbx-named-colour" data-element-index="${buttonIndex}"><legend>${escapeHtml(item.label)}${item.index > 1 ? ' · ' + item.index : ''}</legend><p class="cbx-color-control-help">${escapeHtml(item.context && item.context !== item.label ? 'Dentro de «' + item.context + '». ' : '')}Cambia solo este elemento de ${escapeHtml(activeViewConfig.name)}.</p>`;
+        for (const [prop, label] of properties) {
+          const value = asHex(vSettings.elementColors?.[item.selector]?.[prop] || style.getPropertyValue(prop));
+          controlsHtml += `<div class="cbx-color-control-row"><label>${label}<input type="color" data-element="${buttonIndex}" data-element-prop="${prop}" value="${value}" aria-label="${escapeHtml(label + ' de ' + item.label)}"><code>${value}</code></label><p class="cbx-color-control-help">${prop === 'background' ? 'Superficie detrás del contenido.' : prop === 'color' ? 'Color de las letras e iconos que heredan este texto.' : prop === 'border-color' ? 'Color del contorno existente; no añade un borde.' : prop === 'fill' ? 'Color interior de esta figura del gráfico.' : prop === 'accent-color' ? 'Marca de selección o barra de progreso.' : 'Color del trazo de esta figura del gráfico.'}</p></div>`;
+        }
+        controlsHtml += `<button type="button" class="secondary" data-reset-element="${buttonIndex}">Restablecer ${escapeHtml(item.label)}</button></fieldset>`;
+      }
+      controlsHtml += '</details>';
+    }
+    controlsHtml += '</section>';
     titleEl.textContent = `⚙️ Personalizar: ${activeViewConfig.name}`;
     bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + previewHtml + controlsHtml;
-
-
-    const buttonSelector = bodyEl.querySelector('#qc-button-selector');
-    if (buttonSelector) {
-      const asHex = (value) => {
-        if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
-        const rgb = String(value).match(/\d+/g);
-        return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
-      };
-      const refreshButtonPickers = () => {
-        const target = document.querySelector(buttonSelector.value);
-        if (!target) return;
-        const style = getComputedStyle(target);
-        bodyEl.querySelector('#qc-button-bg').value = asHex(style.backgroundColor);
-        bodyEl.querySelector('#qc-button-ink').value = asHex(style.color);
-      };
-      buttonSelector.addEventListener('change', refreshButtonPickers);
-      for (const prop of ['bg', 'ink']) bodyEl.querySelector('#qc-button-' + prop).addEventListener('input', (event) => {
-        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.buttonColors || {}) };
-        colours[buttonSelector.value] = { ...colours[buttonSelector.value], [prop]: event.target.value };
-        updateViewThemeProperty(currentViewId, 'buttonColors', colours);
+    bodyEl.querySelector('#qc-element-search').addEventListener('input', (event) => {
+      const query = event.target.value.trim().toLocaleLowerCase('es');
+      bodyEl.querySelectorAll('[data-element-index]').forEach((item) => {
+        item.hidden = !item.textContent.toLocaleLowerCase('es').includes(query);
       });
-      bodyEl.querySelector('#qc-button-reset').onclick = () => {
-        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.buttonColors || {}) };
-        delete colours[buttonSelector.value];
-        updateViewThemeProperty(currentViewId, 'buttonColors', colours);
-        refreshButtonPickers();
+      bodyEl.querySelectorAll('.cbx-colour-group').forEach((group) => {
+        group.hidden = ![...group.querySelectorAll('[data-element-index]')].some((item) => !item.hidden);
+        if (query && !group.hidden) group.open = true;
+      });
+    });
+    bodyEl.querySelectorAll('[data-element-prop]').forEach((picker) => {
+      picker.addEventListener('input', (event) => {
+        const item = elements[Number(picker.dataset.element)];
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.elementColors || {}) };
+        colours[item.selector] = { ...colours[item.selector], [picker.dataset.elementProp]: event.target.value };
+        picker.nextElementSibling.textContent = event.target.value;
+        updateViewThemeProperty(currentViewId, 'elementColors', colours);
+      });
+    });
+    bodyEl.querySelectorAll('[data-reset-element]').forEach((button) => {
+      button.onclick = () => {
+        const item = elements[Number(button.dataset.resetElement)];
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.elementColors || {}) };
+        delete colours[item.selector];
+        updateViewThemeProperty(currentViewId, 'elementColors', colours);
+        const target = document.querySelector(item.selector);
+        if (target) button.closest('fieldset').querySelectorAll('[data-element-prop]').forEach((picker) => {
+          picker.value = asHex(getComputedStyle(target).getPropertyValue(picker.dataset.elementProp));
+          picker.nextElementSibling.textContent = picker.value;
+        });
       };
-      refreshButtonPickers();
-    }
+    });
 
     // Listeners para cambio de pestaña principal
     bodyEl.querySelectorAll('.cbx-qc-view-chip').forEach((chip) => {
