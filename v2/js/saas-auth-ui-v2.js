@@ -64,6 +64,20 @@ function clearBrowserSessionActive() {
   try { sessionStorage.removeItem(ACTIVE_BROWSER_SESSION_KEY); } catch { /* Sin estado que limpiar. */ }
 }
 
+function isUserAlreadyAuthenticated() {
+  if (typeof window !== 'undefined') {
+    if (window.__campobaseRole) return true;
+    if (window.__campobase?.state?.role) return true;
+    if (window.__campobaseState?.role) return true;
+  }
+  if (typeof document !== 'undefined' && document.body?.dataset?.userRole) return true;
+  try {
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('campobase.sessionRole')) return true;
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('campobase.lastAuthRole')) return true;
+  } catch {}
+  return false;
+}
+
 function bytesToBase64(bytes) {
   let binary = '';
   bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
@@ -650,7 +664,14 @@ async function handlePersistentSession(client) {
   const app = await waitForApp();
   const started = Date.now();
   while (app?.state && Date.now() - started < 6000) {
+    if (isUserAlreadyAuthenticated() || app.state.role) {
+      const dialog = $('#auth-dialog');
+      if (dialog?.open) dialog.close();
+      document.body?.classList.remove('auth-locked');
+      return true;
+    }
     if (app.state.settings?.ownerPinHash && app.state.settings?.delegatePinHash) {
+      if (isUserAlreadyAuthenticated()) return true;
       const dialog = $('#auth-dialog');
       if (dialog && !dialog.open) dialog.showModal();
       showLocalPin();
@@ -895,7 +916,7 @@ function bindEvents(client) {
     event.preventDefault();
     event.stopImmediatePropagation();
     event.stopPropagation();
-    await client.auth.signOut().catch(() => {});
+    await client.auth.signOut({ scope: 'local' }).catch(() => {});
     clearBoundSaasUserId();
     clearBrowserSessionActive();
     removeStored(localStorage, REMEMBERED_ACCOUNT_KEY);
@@ -921,6 +942,11 @@ function observeDialog(client) {
   if (!dialog) return;
   const sync = async () => {
     if (!dialog.open || localPinMode || recoveryMode) return;
+    if (isUserAlreadyAuthenticated()) {
+      if (dialog.open) dialog.close();
+      document.body?.classList.remove('auth-locked');
+      return;
+    }
     if (await handlePersistentSession(client)) return;
     showPane('login');
     prefillRememberedIdentifier();
@@ -952,12 +978,13 @@ export async function initSaasAuth(client) {
   const activeBrowserRole = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('campobase.sessionRole') : null;
 
   if (session?.user && bound === session.user.id) {
-    if (browserSessionIsActive(session.user.id) || activeBrowserRole) {
+    if (browserSessionIsActive(session.user.id) || activeBrowserRole || isUserAlreadyAuthenticated()) {
       unlockBoundSession(client).catch(() => {});
       return;
     }
     const remembered = rememberedAccount();
     if (remembered?.userId === session.user.id) {
+      if (isUserAlreadyAuthenticated()) return;
       const dialog = $('#auth-dialog');
       if (dialog && !dialog.open) dialog.showModal();
       showRememberedPane(remembered);
@@ -967,13 +994,14 @@ export async function initSaasAuth(client) {
     return;
   }
 
-  if (activeBrowserRole) {
+  if (activeBrowserRole || isUserAlreadyAuthenticated()) {
+    const role = activeBrowserRole || window.__campobaseRole || window.__campobase?.state?.role || window.__campobaseState?.role || 'owner';
     const dialog = $('#auth-dialog');
     if (dialog?.open) dialog.close();
     document.body.classList.remove('auth-locked');
     const app = await waitForApp();
     if (app?.state) {
-      app.state.role = activeBrowserRole;
+      app.state.role = role;
       try { if (typeof app.renderAll === 'function') app.renderAll(); } catch {}
     }
     return;
@@ -981,9 +1009,17 @@ export async function initSaasAuth(client) {
 
   const remembered = rememberedAccount();
   if (remembered?.userId) {
+    if (isUserAlreadyAuthenticated()) return;
     const dialog = $('#auth-dialog');
     if (dialog && !dialog.open) dialog.showModal();
     showRememberedPane(remembered);
+    return;
+  }
+
+  if (isUserAlreadyAuthenticated()) {
+    const dialog = $('#auth-dialog');
+    if (dialog?.open) dialog.close();
+    document.body.classList.remove('auth-locked');
     return;
   }
 

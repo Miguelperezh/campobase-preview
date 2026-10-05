@@ -26,9 +26,8 @@ export function resolveExerciseData(exerciseOrId, state) {
   if (!validated && ex?.id) {
     validated = findValidatedExercise(ex.id);
   }
-  if (!ex && id && state?.exercises) {
-    ex = state.exercises.find((item) => item.id === id);
-  }
+  const saved = id ? state?.exercises?.find((item) => item.id === id) : null;
+  if (!ex || saved?.customBoard) ex = saved || ex;
 
   const name = validated?.nombre || ex?.name || ex?.nombre || 'Ejercicio de entrenamiento';
   const category = validated?.categoria || ex?.category || ex?.categoria || 'General';
@@ -60,7 +59,9 @@ export function resolveExerciseData(exerciseOrId, state) {
 
   // Preview Image
   let preview = '';
-  const rawPreview = validated?.media?.preview || validated?.preview || ex?.preview || ex?.media?.preview || ex?.boardPreview || '';
+  const rawPreview = ex?.customBoard
+    ? ex.boardPreview || ex.preview || ex.media?.preview || ''
+    : validated?.media?.preview || validated?.preview || ex?.preview || ex?.media?.preview || ex?.boardPreview || '';
   if (isUsableImage(rawPreview)) {
     preview = rawPreview;
   }
@@ -216,7 +217,7 @@ export function buildExercisePageHtml(exerciseOrId, state, options = {}) {
   const eyebrowSubject = (data.works || 'TRANSICIONES').toUpperCase();
   const eyebrowText = `EJERCICIO · ${eyebrowPhase} · ${eyebrowSubject}`;
 
-  const sheetClass = options.isSessionExercise
+  const sheetClass = options.compact ? 'cb-print-session-exercise' : options.isSessionExercise
     ? 'cb-print-sheet cb-print-page cb-print-session-exercise-page'
     : 'cb-print-sheet cb-print-page';
 
@@ -413,6 +414,7 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
   const sessionName = session.name || 'Sesión de Entrenamiento';
   const sessionDate = session.date ? new Date(session.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const blocks = Array.isArray(session.blocks) ? session.blocks : [];
+  const totalPages = 1 + Math.ceil(blocks.length / 2);
 
   // Calcular duración total
   const totalDuration = blocks.reduce((sum, b) => sum + (Number(b.duration) || 0), 0) || session.totalDuration || session.targetDuration || 90;
@@ -595,23 +597,57 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
 
       <footer class="cbx-print-footer">
         <span>CampoBase · Portada de Sesión</span>
-        <span>Pág. 1 de ${blocks.length + 1} · Impreso el ${new Date().toLocaleDateString('es-ES')}</span>
+        <span>Pág. 1 de ${totalPages} · Impreso el ${new Date().toLocaleDateString('es-ES')}</span>
       </footer>
     </div>
   `;
 
-  // Páginas 2..N: Hoja A4 completa para cada ejercicio de la sesión en formato Claude
-  const exercisePagesHtml = blocks.map((block, idx) => {
-    return buildExercisePageHtml(block.exerciseId, state, {
-      isSessionExercise: true,
-      blockContext: block,
-      pageIndex: idx + 2,
-      totalPages: blocks.length + 1,
-    });
-  }).join('\n');
+  // Two exercises per A4 page, retaining order and all exercise content.
+  const pages = [];
+  for (let start = 0; start < blocks.length; start += 2) {
+    const pageIndex = 2 + start / 2;
+    const exercises = blocks.slice(start, start + 2).map((block) => `<div class="cb-print-exercise-slot">${buildExercisePageHtml(block.exerciseId, state, {
+      isSessionExercise: true, compact: true, blockContext: block, pageIndex, totalPages,
+    })}</div>`).join('');
+    pages.push(`<div class="cb-print-sheet cb-print-page cb-print-session-exercise-page cb-print-session-pair">${exercises}</div>`);
+  }
+  const exercisePagesHtml = pages.join('\n');
 
   return `
+
     <div id="cb-print-root" class="cb-print-root cb-print-session-page">
+    <style>
+      .cb-print-session-pair { height:1123px; gap:14px; justify-content:flex-start; }
+      .cb-print-exercise-slot { height:calc((100% - 14px)/2); min-height:0; position:relative; }
+      .cb-print-session-exercise { width:100%; transform-origin:top left; break-inside:avoid; color:#0f172a; }
+      .cb-print-session-exercise .cb-print-title { font-size:18px!important; margin:2px 0!important; }
+      .cb-print-session-exercise .cbx-print-crest-wrap { width:32px; height:32px; }
+      .cb-print-session-exercise .cbx-print-crest-img { max-height:32px; }
+      .cb-print-session-exercise .cb-print-header { margin-bottom:5px; padding-bottom:4px; }
+      .cb-print-session-exercise .cb-print-stage-box { height:120px!important; min-height:0!important; margin-bottom:5px!important; }
+      .cb-print-session-exercise .cb-print-field-img { height:100%; width:100%; object-fit:contain; }
+      .cb-print-session-exercise .cbx-print-stat-cards { gap:4px!important; margin-bottom:5px!important; }
+      .cb-print-session-exercise .cbx-print-stat-card { padding:3px 5px!important; }
+      .cb-print-session-exercise .cb-print-columns-grid { gap:6px!important; margin-bottom:5px!important; }
+      .cb-print-session-exercise .cb-print-col { gap:4px!important; }
+      .cb-print-session-exercise .cb-print-card { padding:4px 6px!important; }
+      .cb-print-session-exercise .cb-print-card-text,.cb-print-session-exercise .cbx-print-step-txt { font-size:9px!important; line-height:1.2!important; }
+      .cb-print-session-exercise .cb-print-card-title { font-size:9px!important; margin-bottom:3px!important; }
+      .cb-print-session-exercise .cbx-print-notes-section { margin-top:3px; }
+      .cb-print-session-exercise .cbx-print-note-line { height:8px!important; }
+      .cb-print-session-exercise .cbx-print-footer { margin-top:4px; font-size:8px; }
+      @media print {
+        @page { size:A4 portrait; margin:0; }
+        #cb-print-root.cb-print-session-page > .cb-print-sheet {
+          width:210mm!important; height:296mm!important; min-height:0!important;
+          max-height:296mm!important; box-sizing:border-box!important; margin:0!important;
+          padding:10mm 12mm 8mm!important;
+        }
+        #cb-print-root.cb-print-session-page > .cb-print-sheet:last-child {
+          break-after:auto!important; page-break-after:auto!important;
+        }
+      }
+    </style>
       ${coverPageHtml}
       ${exercisePagesHtml}
     </div>
@@ -758,6 +794,16 @@ function generateStandalonePrintPage(htmlContent) {
   </div>
   ${htmlContent}
   <script>
+    function fitSessionExercises() {
+      document.querySelectorAll('.cb-print-exercise-slot').forEach(slot => {
+        const card=slot.querySelector('.cb-print-session-exercise');
+        card.style.transform=''; card.style.width='100%';
+        const scale=Math.min(1,slot.clientHeight/card.scrollHeight);
+        card.style.transform='scale('+scale+')';
+      });
+    }
+    window.addEventListener('load',()=>document.fonts.ready.then(fitSessionExercises));
+    window.addEventListener('beforeprint',fitSessionExercises);
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => { if (typeof window.print === 'function') window.print(); }, 250);
     });
@@ -791,6 +837,16 @@ export async function ensurePdfLibraries() {
   return Boolean(window.jspdf && window.html2canvas);
 }
 
+export function fitSessionExercisePages(root) {
+  root?.querySelectorAll('.cb-print-exercise-slot').forEach((slot) => {
+    const card = slot.querySelector('.cb-print-session-exercise');
+    if (!card || !slot.clientHeight) return;
+    card.style.transform = '';
+    const scale = Math.min(1, slot.clientHeight / Math.max(1, card.scrollHeight));
+    card.style.transform = `scale(${scale})`;
+  });
+}
+
 export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') {
   if (typeof window === 'undefined' || typeof document === 'undefined') return null;
   const loaded = await ensurePdfLibraries();
@@ -799,6 +855,9 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
   const { jsPDF } = window.jspdf;
   const element = targetElement || document.getElementById('cb-print-root');
   if (!element) return null;
+  await document.fonts?.ready;
+  await Promise.all([...element.querySelectorAll('img')].map((img) => img.decode?.().catch(() => {}) || Promise.resolve()));
+  fitSessionExercisePages(element);
 
   const floatingBar = element.querySelector('.cb-print-floating-bar') || (typeof document !== 'undefined' ? document.querySelector('.cb-print-floating-bar') : null);
   const fabBtn = element.querySelector('.cb-print-fab-close') || (typeof document !== 'undefined' ? document.querySelector('.cb-print-fab-close') : null);
@@ -843,8 +902,14 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
       const imgData = canvas.toDataURL('image/jpeg', 0.88);
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const finalHeight = Math.min(imgHeight, 297);
-      doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, finalHeight);
+      if (imgHeight > 297) {
+        const scaleFactor = 297 / imgHeight;
+        const scaledWidth = imgWidth * scaleFactor;
+        const xOffset = Math.max(0, (210 - scaledWidth) / 2);
+        doc.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, 297);
+      } else {
+        doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      }
     }
 
     return doc.output('blob');
@@ -1070,8 +1135,11 @@ export function executePrint(htmlContent) {
   container.prepend(floatingBar);
   container.setAttribute('data-print', 'on');
   document.body.appendChild(container);
+  fitSessionExercisePages(container);
 
   let cleanedUp = false;
+  const handleBeforePrint = () => fitSessionExercisePages(container);
+  window.addEventListener('beforeprint', handleBeforePrint);
   const handleKeydown = (e) => {
     if (e.key === 'Escape') cleanup();
   };
@@ -1082,6 +1150,7 @@ export function executePrint(htmlContent) {
     cleanedUp = true;
     try {
       window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('beforeprint', handleBeforePrint);
       if (document.body && document.body.classList) {
         document.body.classList.remove('cb-is-printing');
       }
@@ -1254,6 +1323,7 @@ function triggerBrowserPrint(container, cleanup) {
   if (typeof window === 'undefined') return;
 
   if (typeof window.print === 'function') {
+    fitSessionExercisePages(container);
     window.print();
   }
 }

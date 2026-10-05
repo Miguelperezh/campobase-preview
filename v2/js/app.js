@@ -1,4 +1,4 @@
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-5';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-6';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -16,14 +16,14 @@ import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox 
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf, getAspectBoardData } from './tacticas-pdf-domain.js';
 import { initTacticBoard } from './tactic-board-controller.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-6';
 import { buildAutoPlan } from './reparto-plan.js';
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 import { printMatchPlan } from './print-match-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-5';
+import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-6';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -657,13 +657,15 @@ async function refresh() {
   try {
     const cachedTheme = JSON.parse(localStorage.getItem('campobase.theme') || 'null');
     if (cachedTheme && typeof cachedTheme === 'object') {
+      const storedTheme = state.settings.theme || {};
+      const isolated = window.__CAMPOBASE_READONLY_PREVIEW === true;
+      const viewIds = new Set([...Object.keys(cachedTheme.views || {}), ...Object.keys(storedTheme.views || {})]);
       state.settings.theme = {
-        ...cachedTheme,
-        ...(state.settings.theme || {}),
-        views: {
-          ...(cachedTheme.views || {}),
-          ...(state.settings.theme?.views || {}),
-        },
+        ...(isolated ? storedTheme : cachedTheme),
+        ...(isolated ? cachedTheme : storedTheme),
+        views: Object.fromEntries([...viewIds].map((id) => [id, isolated
+          ? { ...(storedTheme.views?.[id] || {}), ...(cachedTheme.views?.[id] || {}) }
+          : { ...(cachedTheme.views?.[id] || {}), ...(storedTheme.views?.[id] || {}) }])),
       };
     }
   } catch {}
@@ -8792,6 +8794,20 @@ function updateViewThemeProperty(viewId, prop, val) {
     }
   }
   const viewSettings = currentTheme.views[viewId];
+  const actionTargets = {
+    btnBg: '.primary,.cbx-btn,.btn-new-tactic-claude', btnInk: '.primary,.cbx-btn,.btn-new-tactic-claude',
+    btn2Bg: '.secondary,.cbx-btn-light,.cbx-btn-sub', btn2Ink: '.secondary,.cbx-btn-light,.cbx-btn-sub',
+    whistleBg: '.cbx-btn-whistle', whistleInk: '.cbx-btn-whistle', printBg: '.print-session', printInk: '.print-session',
+    editBg: '.edit-session', editInk: '.edit-session', completedBg: '.cbx-btn-completed:not(.is-completed)', completedInk: '.cbx-btn-completed:not(.is-completed)',
+    completedActiveBg: '.cbx-btn-completed.is-completed', completedActiveInk: '.cbx-btn-completed.is-completed',
+    waBg: '.cbx-btn-wa,[class*="open-whatsapp"],.staff-wa-btn', waInk: '.cbx-btn-wa,[class*="open-whatsapp"],.staff-wa-btn',
+    closeBg: '.modal-bottom-close-btn,.dialog-close-prominent-btn', closeInk: '.modal-bottom-close-btn,.dialog-close-prominent-btn'
+  };
+  if (actionTargets[prop]) {
+    const containerId = { 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[viewId] || viewId;
+    const selector = actionTargets[prop].split(',').map((part) => '#' + containerId + ' ' + part).join(',');
+    clearColourConflicts(viewSettings, selector, [prop.endsWith('Bg') ? 'background' : 'color']);
+  }
   if (viewId === 'plantilla') {
     const sharedControls = {cardBg: ['.cbx-player','background'], cardTitle: ['.cbx-player .player-name h3','color'], fontColor: ['.cbx-player .player-body','color'], dorsalBg: ['.cbx-player .player-data > span:first-child','background'], dorsalInk: ['.cbx-player .player-data > span:first-child','color']};
     if (sharedControls[prop]) clearColourConflicts(viewSettings, '#plantilla ' + sharedControls[prop][0], [sharedControls[prop][1]]);
@@ -9822,6 +9838,11 @@ function openQuickColorDialog(targetKind = null) {
         if (query && !group.hidden) group.open = true;
       });
     });
+    bodyEl.querySelectorAll('input[type="color"]').forEach((picker) => {
+      picker.dataset.renderedColour = picker.value;
+      picker.addEventListener('input', () => { picker.dataset.renderedColour = picker.value; });
+      picker.addEventListener('change', () => picker.dispatchEvent(new Event('input', { bubbles: true })));
+    });
     bodyEl.querySelectorAll('[data-element-prop]').forEach((picker) => {
       picker.addEventListener('input', (event) => {
         const item = elements[Number(picker.dataset.element)];
@@ -9894,6 +9915,7 @@ function openQuickColorDialog(targetKind = null) {
         const picker = bodyEl.querySelector(`input[data-prop="${prop}"]`);
         if (picker) {
           picker.value = val;
+          picker.dataset.renderedColour = val;
           const codeEl = picker.nextElementSibling;
           if (codeEl) codeEl.textContent = val;
         }
@@ -9922,14 +9944,21 @@ function openQuickColorDialog(targetKind = null) {
 
   if (saveBtn) {
     saveBtn.onclick = async () => {
+      bodyEl.querySelectorAll('input[type="color"]').forEach((picker) => {
+        if (picker.value !== picker.dataset.renderedColour) picker.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      const savedTheme = structuredClone(state.settings?.theme || {});
+      applyCustomTheme(savedTheme);
       try {
-        localStorage.setItem('campobase.theme', JSON.stringify(state.settings?.theme || {}));
+        localStorage.setItem('campobase.theme', JSON.stringify(savedTheme));
       } catch {}
       if (roleCanUseOwnerFeatures(state.role)) {
         if (!state.settings) state.settings = { id: 'main' };
+        state.settings.theme = savedTheme;
         state.settings.updatedAt = Date.now();
-        await put('settings', state.settings).catch(() => {});
+        await put('settings', { ...state.settings, theme: savedTheme }).catch(() => {});
       }
+      applyCustomTheme(savedTheme);
       toast('✅ Todos los colores guardados correctamente');
       dialog.close();
     };
@@ -10259,6 +10288,8 @@ async function startDemoSession(session) {
 
 async function endDemoSession(message = '') {
   const session = state.demoSession;
+  clearAccessMarkers();
+  state.role = null;
   state.demoSession = null;
   state.timer = null;
   clearInterval(state.tick);
@@ -10273,7 +10304,17 @@ async function endDemoSession(message = '') {
   if (message) $('#auth-error').textContent = message;
 }
 
+function clearAccessMarkers() {
+  window.__campobaseRole = null;
+  delete document.body.dataset.userRole;
+  const label = $('#role-label');
+  if (label) label.textContent = '';
+  try { localStorage.removeItem('campobase.lastAuthRole'); } catch {}
+  try { sessionStorage.removeItem('campobase.saasActiveBrowserSession'); } catch {}
+}
+
 async function logoutUser() {
+  clearAccessMarkers();
   if (state.role === 'demo') {
     await endDemoSession();
     return;
@@ -10287,7 +10328,7 @@ async function logoutUser() {
   } catch {}
   document.body.classList.remove('delegate-mode', 'delegate-single-view', 'delegate-multi-view', 'delegate-allow-modo-campo');
   restoreNormalNavUi();
-  showAuth();
+  await showAuth(false, { hydrate: false });
   toast('Sesión cerrada.');
 }
 
@@ -10339,8 +10380,9 @@ async function hydratePinSettingsFromSupabase() {
   }
 }
 
-async function showAuth(forceInitial = false) {
-  await hydratePinSettingsFromSupabase();
+async function showAuth(forceInitial = false, { hydrate = true } = {}) {
+  // El cierre explícito debe bloquear la interfaz sin esperar a la red.
+  if (hydrate) await hydratePinSettingsFromSupabase();
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash) {
     const candidates = await getLocalPinSettingsCandidates().catch(() => []);
     for (const candidate of candidates) {
@@ -13110,7 +13152,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261005-colores-compartidos').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261005-colores-impresion-salida').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

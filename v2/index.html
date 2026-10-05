@@ -16,15 +16,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Oswald:wght@600;700&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260927-v66-real-calendar-dates">
-  <link rel="stylesheet" href="styles-redesign.css?v=color-controls-5">
+  <link rel="stylesheet" href="styles-redesign.css?v=color-controls-6">
   <link rel="stylesheet" href="billing.css?v=1">
   <link rel="stylesheet" href="css/campobase-diseno.css?v=hoy-real-2">
-  <link rel="stylesheet" href="css/claude-shell.css?v=color-controls-5">
-  <link rel="stylesheet" href="css/claude-hoy.css?v=color-controls-5">
-  <link rel="stylesheet" href="css/claude-plantilla.css?v=color-controls-5">
-  <link rel="stylesheet" href="css/claude-partido.css?v=color-controls-5">
-  <link rel="stylesheet" href="css/claude-entreno.css?v=color-controls-5">
-  <link rel="stylesheet" href="css/theme-component-colors.css?v=color-controls-5">
+  <link rel="stylesheet" href="css/claude-shell.css?v=color-controls-6">
+  <link rel="stylesheet" href="css/claude-hoy.css?v=color-controls-6">
+  <link rel="stylesheet" href="css/claude-plantilla.css?v=color-controls-6">
+  <link rel="stylesheet" href="css/claude-partido.css?v=color-controls-6">
+  <link rel="stylesheet" href="css/claude-entreno.css?v=color-controls-6">
+  <link rel="stylesheet" href="css/theme-component-colors.css?v=color-controls-6">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -1628,10 +1628,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20261005-colores-compartidos';
+    window.__CAMPOBASE_BUILD = '20261005-colores-impresion-salida';
     if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20261005-colores-compartidos')
+      navigator.serviceWorker.register('./sw.js?v=20261005-colores-impresion-salida')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1652,7 +1652,7 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=color-controls-5"></script>
+  <script type="module" src="js/app.js?v=color-controls-6"></script>
   <script type="module" src="js/redesign-nav.js?v=claude-tecnicos-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
