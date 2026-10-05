@@ -1,5 +1,10 @@
 // Presentation only: keep the existing pickers, listeners and stored keys.
+const lifetimes = new WeakMap();
 export function enhanceColorSettings(root, elements = []) {
+  lifetimes.get(root)?.abort();
+  const lifetime = new AbortController();
+  lifetimes.set(root,lifetime);
+  const signal = lifetime.signal;
   const controls = root.querySelector('.cbx-adjustments-controls');
   if (!controls) return;
   const general = controls.querySelector('.cbx-general-color-controls');
@@ -50,8 +55,8 @@ export function enhanceColorSettings(root, elements = []) {
       sample.title = label + ': ' + picker.value;
     };
     row.append(sample); update();
-    root.addEventListener('input', update);
-    root.addEventListener('click', event => { if (event.target.closest('.cbx-swatch-btn')) queueMicrotask(update); });
+    root.addEventListener('input', update, {signal});
+    root.addEventListener('click', event => { if (event.target.closest('.cbx-swatch-btn')) queueMicrotask(update); }, {signal});
   });
   root.querySelectorAll('.cbx-colour-group').forEach(group => {
     group.addEventListener('toggle', () => {
