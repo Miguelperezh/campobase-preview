@@ -21,7 +21,7 @@ import { initTacticBoard } from './tactic-board-controller.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-8';
 import { buildAutoPlan } from './reparto-plan.js';
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
-import { printMatchPlan } from './print-match-plan.js';
+import { printMatchPlan } from './print-match-plan.js?v=plan-visual-2';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';

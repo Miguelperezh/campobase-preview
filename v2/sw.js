@@ -30,7 +30,7 @@ const ASSETS = [
 const REVALIDATE_PATHS = [
   '/index.html',
   '/js/app.js',
-  '/js/print-match-plan.js',
+  '/js/print-match-plan.js', './js/print-match-plan.js?v=plan-visual-2',
   '/css/claude-partido.css',
   '/js/db.js',
   '/js/training-domain.js',

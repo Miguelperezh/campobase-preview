@@ -5,6 +5,7 @@
 // y puestos, regla del portero, tabla de minutos equitativos y acta de campo.
 
 import { describeMoment, lineupIds, normalizeMoments, plannedMinutes } from './match-moments.js';
+import { buildAutoPlan } from './reparto-plan.js';
 import { executePrint } from './print-session-export.js';
 
 const esc = (val = '') => String(val ?? '').replace(/[&<>"']/g, (c) => ({
@@ -63,42 +64,164 @@ function calculatePlayerSpans(playerId, moments, totalDuration) {
   return spans.map((s) => `${s.from}′–${s.to}′`).join(', ');
 }
 
+function renderMomentCardHtml(moment, prevMoment, halfDuration, players, availableIds) {
+  const diff = describeMoment(prevMoment, moment);
+  const isHalftime = moment.minute === halfDuration;
+  const periodLabel = isHalftime ? 'Descanso' : moment.minute < halfDuration ? '1ª Parte' : '2ª Parte';
+  
+  const changeItems = [];
+
+  // Sustituciones pares (Entra X por Y)
+  diff.pairs.forEach(({ inId, outId }) => {
+    const inPl = playerById(players, inId);
+    const outPl = playerById(players, outId);
+    const inNum = inPl?.number ? `${inPl.number} · ` : '';
+    const outNum = outPl?.number ? `${outPl.number} · ` : '';
+    const targetSlot = moment.team.find((s) => s.playerId === inId);
+    const posText = targetSlot?.pos ? ` (${targetSlot.pos})` : '';
+
+    changeItems.push(`
+      <div class="cbx-pmp-change-row">
+        <span class="cbx-pmp-tag-in">🟢 ENTRA</span>
+        <strong class="cbx-pmp-in-name">${esc(inNum)}${esc(inPl?.name || inId)}</strong>
+        <span class="cbx-pmp-pos-badge">${esc(posText)}</span>
+        <span class="cbx-pmp-tag-arrow">⟵</span>
+        <span class="cbx-pmp-tag-out">🔴 SALE</span>
+        <span class="cbx-pmp-out-name">${esc(outNum)}${esc(outPl?.name || outId)}</span>
+      </div>
+    `);
+  });
+
+  // Salidas sin par directo
+  diff.outIds.filter((id) => !diff.pairs.some((p) => p.outId === id)).forEach((id) => {
+    const outPl = playerById(players, id);
+    const num = outPl?.number ? `${outPl.number} · ` : '';
+    changeItems.push(`
+      <div class="cbx-pmp-change-row">
+        <span class="cbx-pmp-tag-out">🔴 SALE</span>
+        <span class="cbx-pmp-out-name">${esc(num)}${esc(outPl?.name || id)}</span>
+      </div>
+    `);
+  });
+
+  // Reubicaciones en el campo
+  diff.moved.forEach(({ playerId, position }) => {
+    const pl = playerById(players, playerId);
+    const num = pl?.number ? `${pl.number} · ` : '';
+    changeItems.push(`
+      <div class="cbx-pmp-change-row is-move">
+        <span class="cbx-pmp-tag-move">🔄 REUBICACIÓN</span>
+        <strong>${esc(num)}${esc(pl?.name || playerId)}</strong>
+        <span>pasa a jugar de <b>${esc(position)}</b></span>
+      </div>
+    `);
+  });
+
+  // Relevo de portero explícito
+  if (diff.keeperId) {
+    const kPl = playerById(players, diff.keeperId);
+    const kNum = kPl?.number ? `${kPl.number} · ` : '';
+    changeItems.push(`
+      <div class="cbx-pmp-change-row is-keeper">
+        <span class="cbx-pmp-tag-gk">🧤 PORTERÍA</span>
+        <span>Relevo bajo palos: Entra <strong>${esc(kNum)}${esc(kPl?.name || diff.keeperId)}</strong></span>
+      </div>
+    `);
+  }
+
+  // Si no hubo diferencias detectadas
+  if (!changeItems.length) {
+    changeItems.push('<div class="cbx-pmp-change-row"><span>Sin sustituciones registradas para esta ventana.</span></div>');
+  }
+
+  // Quién queda en el campo y en el banquillo tras esta ventana
+  const momentOnField = moment.team.map((slot) => {
+    const pl = playerById(players, slot.playerId);
+    const num = pl?.number ? `${pl.number}·` : '';
+    return `${num}${pl?.name ? pl.name.split(' ')[0] : 'Jugador'} (${slot.pos})`;
+  }).join(' · ');
+
+  const momentBench = availableIds.filter((id) => !moment.team.some((s) => s.playerId === id)).map((id) => {
+    const pl = playerById(players, id);
+    const num = pl?.number ? `${pl.number}·` : '';
+    return `${num}${pl?.name ? pl.name.split(' ')[0] : 'Jugador'}`;
+  }).join(' · ');
+
+  return `
+    <div class="cbx-pmp-moment-card">
+      <div class="cbx-pmp-moment-header">
+        <div class="cbx-pmp-moment-badge">
+          <span class="cbx-pmp-min-pill">MINUTO ${moment.minute}′</span>
+          <span class="cbx-pmp-period-pill">${esc(periodLabel)}</span>
+        </div>
+        <div class="cbx-pmp-moment-sys">Sistema: <strong>${esc(moment.formation)}</strong></div>
+      </div>
+      <div class="cbx-pmp-moment-changes ${changeItems.length >= 4 ? 'is-multi-changes' : ''}">
+        ${changeItems.join('')}
+      </div>
+      <div class="cbx-pmp-moment-snapshot">
+        <div class="cbx-pmp-snap-col"><strong>Campo (${moment.team.length}):</strong> ${esc(momentOnField)}</div>
+        ${momentBench ? `<div class="cbx-pmp-snap-col is-bench"><strong>Banquillo:</strong> ${esc(momentBench)}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
 /**
  * Genera el documento HTML completo para impresión A4 del Plan de Partido.
  */
-export function buildMatchPlanHtml(matchOrId, state, options = {}) {
-  const match = typeof matchOrId === 'object' && matchOrId !== null
-    ? matchOrId
-    : state?.matches?.find((m) => String(m.id) === String(matchOrId));
+export function buildMatchPlanHtml(matchOrId, state = {}, options = {}) {
+  let match = null;
+  let effectiveState = state || {};
+  let effectiveOptions = options || {};
+
+  if (typeof matchOrId === 'object' && matchOrId !== null && ('prep' in matchOrId || 'players' in matchOrId || 'callup' in matchOrId)) {
+    match = matchOrId.match || matchOrId;
+    effectiveState = {
+      players: matchOrId.players || effectiveState.players || [],
+      callups: matchOrId.callup ? [matchOrId.callup] : (effectiveState.callups || []),
+      preparaciones: matchOrId.prep ? [matchOrId.prep] : (effectiveState.preparaciones || []),
+      settings: matchOrId.settings || effectiveState.settings || {},
+      ...effectiveState,
+    };
+    effectiveOptions = {
+      prep: matchOrId.prep || effectiveOptions.prep,
+      availableIds: matchOrId.availableIds || matchOrId.callup?.availableIds || effectiveOptions.availableIds,
+      ...effectiveOptions,
+    };
+  } else {
+    match = typeof matchOrId === 'object' && matchOrId !== null
+      ? matchOrId
+      : effectiveState?.matches?.find((m) => String(m.id) === String(matchOrId));
+  }
   if (!match) return '';
 
-  const prep = options.prep || state?.preparaciones?.find((p) => String(p.matchId) === String(match.id)) || null;
-  const callup = state?.callups?.find((c) => c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id)) || null;
-  const players = state?.players || [];
+  const prep = effectiveOptions.prep || effectiveState?.preparaciones?.find((p) => String(p.matchId) === String(match.id)) || null;
+  const callup = effectiveState?.callups?.find((c) => c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id)) || null;
+  const players = effectiveState?.players || [];
   const squadIds = players.map((p) => p.id);
-  const availableIds = (options.availableIds && options.availableIds.length)
-    ? options.availableIds
+  const availableIds = (effectiveOptions.availableIds && effectiveOptions.availableIds.length)
+    ? effectiveOptions.availableIds
     : (callup?.availableIds && callup.availableIds.length)
       ? callup.availableIds
       : (prep?.team && prep.team.length)
         ? prep.team.map((s) => s.playerId).filter(Boolean)
         : squadIds;
 
-  const format = String(callup?.format || match?.format || state?.format || 'F7').toUpperCase();
+  const format = String(callup?.format || match?.format || effectiveState?.format || 'F7').toUpperCase();
   const isF11 = format === 'F11';
 
   // Normalizar momentos planificados
   let moments = [];
   if (options.momentsDraft && options.momentsDraft.length) {
     moments = normalizeMoments({
-      team: options.teamDraft || prep?.team,
-      formacion: options.formacionDraft || prep?.formacion || (isF11 ? '1-4-3-3' : '1-3-2-1'),
+      team: options.momentsDraft.find(moment=>Number(moment.minute)===0)?.team || options.teamDraft || prep?.team,
+      formacion: options.momentsDraft.find(moment=>Number(moment.minute)===0)?.formation || options.formacionDraft || prep?.formacion || (isF11 ? '1-4-3-3' : '1-3-2-1'),
       moments: options.momentsDraft,
     });
   } else if (prep) {
     moments = normalizeMoments(prep);
   } else {
-    // Si aún no está preparado, usar formación base de 0′ con puestos estándar
     const basePositions = isF11
       ? ['Portero', 'Lateral derecho', 'Central derecho', 'Central izquierdo', 'Lateral izquierdo', 'Pivote', 'Interior derecho', 'Interior izquierdo', 'Extremo derecho', 'Delantero', 'Extremo izquierdo']
       : ['Portero', 'Lateral derecho', 'Central', 'Lateral izquierdo', 'Medio centro', 'Medio centro', 'Delantero'];
@@ -120,21 +243,60 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
   } else if (match?.totalDuration || match?.duration) {
     totalDuration = match.totalDuration || match.duration;
     halfDuration = match.halfDuration || match.half || Math.round(totalDuration / 2);
-  } else if (prep?.totalDuration || prep?.duration) {
-    totalDuration = prep.totalDuration || prep.duration;
-    halfDuration = prep.halfDuration || prep.half || Math.round(totalDuration / 2);
   } else if (!isF11) {
     const positiveMinutes = moments.map((m) => Number(m.minute) || 0).filter((m) => m > 0);
     const maxMin = Math.max(0, ...positiveMinutes);
-    if (positiveMinutes.length && maxMin <= 25) {
+    if (positiveMinutes.includes(25) && maxMin === 25) {
       totalDuration = 50;
       halfDuration = 25;
-    } else if (positiveMinutes.includes(30) && maxMin <= 30) {
+    } else if (positiveMinutes.includes(30) && maxMin === 30) {
       totalDuration = 60;
       halfDuration = 30;
     } else {
       totalDuration = 70;
       halfDuration = 35;
+    }
+  }
+
+  // Generación automática de rotación equitativa cuando se imprime sin preparación guardada pero hay suplentes
+  if (!prep && moments.length <= 1 && availableIds.length > (isF11 ? 11 : 7)) {
+    const keeperIds = availableIds.filter((id) => {
+      const pl = playerById(players, id);
+      return pl?.positions?.includes('Portero') || pl?.position === 'Portero';
+    });
+    if (!keeperIds.length && moments[0]?.team) {
+      const initGk = moments[0].team.find((s) => s.pos?.toLowerCase().includes('portero') || s.pos === 'POR')?.playerId;
+      if (initGk) keeperIds.push(initGk);
+    }
+    try {
+      const auto = buildAutoPlan({
+        format: isF11 ? 'F11' : 'F7',
+        playerIds: availableIds,
+        keeperIds,
+        planMode: 'escalonado',
+        customDuration: totalDuration,
+      });
+      if (auto?.groups && auto.groups.length) {
+        const autoMoments = [moments[0]];
+        for (const group of auto.groups) {
+          let team = autoMoments.at(-1).team.map((slot) => ({ ...slot }));
+          for (const change of group.list) {
+            const index = team.findIndex((slot) => slot.playerId === change.out);
+            if (index >= 0 && availableIds.includes(change.inn)) {
+              team[index] = { ...team[index], playerId: change.inn };
+            }
+          }
+          autoMoments.push({
+            id: `auto-${group.m}`,
+            minute: group.m,
+            formation: autoMoments.at(-1).formation,
+            team,
+          });
+        }
+        moments = autoMoments;
+      }
+    } catch {
+      // Fallback a los momentos base
     }
   }
 
@@ -185,121 +347,24 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
       }).join('')
     : '<span class="cbx-pmp-empty-text">Sin suplentes de inicio (plantilla justa)</span>';
 
-  // --- 2. RENDER CRONOGRAMA DE SUSTITUCIONES EXPLICADAS ---
+  // --- 2. RENDER CRONOGRAMA DE SUSTITUCIONES EXPLICADAS (DINÁMICO) ---
   const laterMoments = moments.slice(1);
-  let momentsTimelineHtml = '';
+  const totalPages = laterMoments.length > 3 ? 3 : 2;
+  const page1Moments = laterMoments.length > 3 ? laterMoments.slice(0, 2) : laterMoments;
+  const page2Moments = laterMoments.length > 3 ? laterMoments.slice(2) : [];
 
-  if (!laterMoments.length) {
-    momentsTimelineHtml = `
-      <div class="cbx-pmp-no-moments">
-        <p>No se han configurado ventanas de cambio intermedias. Los 7 titulares disputarán el partido completo según este borrador.</p>
-      </div>
-    `;
-  } else {
-    momentsTimelineHtml = laterMoments.map((moment, idx) => {
-      const prevMoment = moments[idx]; // idx 0 en slice(1) corresponde a moments[0]
-      const diff = describeMoment(prevMoment, moment);
-      const isHalftime = moment.minute === halfDuration;
-      const periodLabel = isHalftime ? 'Descanso' : moment.minute < halfDuration ? '1ª Parte' : '2ª Parte';
-      
-      const changeItems = [];
+  const getPrevMoment = (m) => {
+    const mIdx = moments.indexOf(m);
+    return mIdx > 0 ? moments[mIdx - 1] : moments[0];
+  };
 
-      // Sustituciones pares (Entra X por Y)
-      diff.pairs.forEach(({ inId, outId }) => {
-        const inPl = playerById(players, inId);
-        const outPl = playerById(players, outId);
-        const inNum = inPl?.number ? `${inPl.number} · ` : '';
-        const outNum = outPl?.number ? `${outPl.number} · ` : '';
-        const targetSlot = moment.team.find((s) => s.playerId === inId);
-        const posText = targetSlot?.pos ? ` (${targetSlot.pos})` : '';
+  const page1MomentsHtml = page1Moments.length
+    ? page1Moments.map((moment) => renderMomentCardHtml(moment, getPrevMoment(moment), halfDuration, players, availableIds)).join('')
+    : '<div class="cbx-pmp-no-moments"><p>No se han configurado ventanas de cambio intermedias. Los 7 titulares disputarán el partido completo según este borrador.</p></div>';
 
-        changeItems.push(`
-          <div class="cbx-pmp-change-row">
-            <span class="cbx-pmp-tag-in">🟢 ENTRA</span>
-            <strong class="cbx-pmp-in-name">${esc(inNum)}${esc(inPl?.name || inId)}</strong>
-            <span class="cbx-pmp-pos-badge">${esc(posText)}</span>
-            <span class="cbx-pmp-tag-arrow">⟵</span>
-            <span class="cbx-pmp-tag-out">🔴 SALE</span>
-            <span class="cbx-pmp-out-name">${esc(outNum)}${esc(outPl?.name || outId)}</span>
-          </div>
-        `);
-      });
-
-      // Salidas sin par directo
-      diff.outIds.filter((id) => !diff.pairs.some((p) => p.outId === id)).forEach((id) => {
-        const outPl = playerById(players, id);
-        const num = outPl?.number ? `${outPl.number} · ` : '';
-        changeItems.push(`
-          <div class="cbx-pmp-change-row">
-            <span class="cbx-pmp-tag-out">🔴 SALE</span>
-            <span class="cbx-pmp-out-name">${esc(num)}${esc(outPl?.name || id)}</span>
-          </div>
-        `);
-      });
-
-      // Reubicaciones en el campo
-      diff.moved.forEach(({ playerId, position }) => {
-        const pl = playerById(players, playerId);
-        const num = pl?.number ? `${pl.number} · ` : '';
-        changeItems.push(`
-          <div class="cbx-pmp-change-row is-move">
-            <span class="cbx-pmp-tag-move">🔄 REUBICACIÓN</span>
-            <strong>${esc(num)}${esc(pl?.name || playerId)}</strong>
-            <span>pasa a jugar de <b>${esc(position)}</b></span>
-          </div>
-        `);
-      });
-
-      // Relevo de portero explícito
-      if (diff.keeperId) {
-        const kPl = playerById(players, diff.keeperId);
-        const kNum = kPl?.number ? `${kPl.number} · ` : '';
-        changeItems.push(`
-          <div class="cbx-pmp-change-row is-keeper">
-            <span class="cbx-pmp-tag-gk">🧤 PORTERÍA</span>
-            <span>Relevo bajo palos: Entra <strong>${esc(kNum)}${esc(kPl?.name || diff.keeperId)}</strong></span>
-          </div>
-        `);
-      }
-
-      // Si no hubo diferencias detectadas
-      if (!changeItems.length) {
-        changeItems.push('<div class="cbx-pmp-change-row"><span>Sin sustituciones registradas para esta ventana.</span></div>');
-      }
-
-      // Quién queda en el campo y en el banquillo tras esta ventana
-      const momentOnField = moment.team.map((slot) => {
-        const pl = playerById(players, slot.playerId);
-        const num = pl?.number ? `${pl.number}·` : '';
-        return `${num}${pl?.name ? pl.name.split(' ')[0] : 'Jugador'} (${slot.pos})`;
-      }).join(' · ');
-
-      const momentBench = availableIds.filter((id) => !moment.team.some((s) => s.playerId === id)).map((id) => {
-        const pl = playerById(players, id);
-        const num = pl?.number ? `${pl.number}·` : '';
-        return `${num}${pl?.name ? pl.name.split(' ')[0] : 'Jugador'}`;
-      }).join(' · ');
-
-      return `
-        <div class="cbx-pmp-moment-card">
-          <div class="cbx-pmp-moment-header">
-            <div class="cbx-pmp-moment-badge">
-              <span class="cbx-pmp-min-pill">MINUTO ${moment.minute}′</span>
-              <span class="cbx-pmp-period-pill">${esc(periodLabel)}</span>
-            </div>
-            <div class="cbx-pmp-moment-sys">Sistema: <strong>${esc(moment.formation)}</strong></div>
-          </div>
-          <div class="cbx-pmp-moment-changes">
-            ${changeItems.join('')}
-          </div>
-          <div class="cbx-pmp-moment-snapshot">
-            <div class="cbx-pmp-snap-col"><strong>Campo (${moment.team.length}):</strong> ${esc(momentOnField)}</div>
-            ${momentBench ? `<div class="cbx-pmp-snap-col is-bench"><strong>Banquillo:</strong> ${esc(momentBench)}</div>` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
+  const page2MomentsHtml = page2Moments.length
+    ? page2Moments.map((moment) => renderMomentCardHtml(moment, getPrevMoment(moment), halfDuration, players, availableIds)).join('')
+    : '';
 
   // --- 3. RENDER TABLA DE REPARTO DE MINUTOS ---
   // Ordenar convocados: primero por minutos descendente o por dorsal
@@ -411,22 +476,68 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
           </div>
 
           <div class="cbx-pmp-moments-list">
-            ${momentsTimelineHtml}
+            ${page1MomentsHtml}
           </div>
         </section>
 
         <!-- Pie de página Hoja 1 -->
         <footer class="cbx-pmp-footer">
-          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página 1 de 2)</span>
+          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página 1 de ${totalPages})</span>
           <span>Impreso el ${esc(nowPrintDate)} · Entrenador: ${esc(coachName)} · Delegado: ${esc(delegateName)}</span>
         </footer>
 
       </div>
 
-      <!-- ================= HOJA 2: REPARTO DE MINUTOS Y ACTA ================= -->
+      ${totalPages === 3 ? `
+      <!-- ================= HOJA 2: CONTINUACIÓN DE CRONOGRAMA ================= -->
+      <div class="cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-1b">
+        
+        <header class="cbx-pmp-header cbx-pmp-header-compact">
+          <div class="cbx-pmp-head-left">
+            <div class="cbx-pmp-crest-box">
+              <img src="${esc(crestUrl)}" class="cbx-pmp-crest-img" alt="Escudo" onerror="this.style.display='none'">
+            </div>
+            <div class="cbx-pmp-head-meta">
+              <span class="cbx-pmp-kicker">${esc(teamName)} · ${esc(format)}</span>
+              <h2 class="cbx-pmp-title" style="font-size: 16px; margin: 0;">VENTANAS DE SUSTITUCIÓN (CONTINUACIÓN)</h2>
+              <div class="cbx-pmp-match-banner">
+                <span class="cbx-pmp-rival">vs <strong>${esc(opponentName)}</strong> (${esc(venueText)})</span>
+                <span class="cbx-pmp-dot">·</span>
+                <span>${esc(formattedDate)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="cbx-pmp-head-right">
+            <span class="cbx-pmp-badge-accent">PÁGINA 2 DE 3</span>
+          </div>
+        </header>
+
+        <section class="cbx-pmp-section">
+          <div class="cbx-pmp-sec-head">
+            <div class="cbx-pmp-sec-title">
+              <span class="cbx-pmp-badge-accent">CRONOGRAMA</span>
+              <h3>VENTANAS FINALES</h3>
+            </div>
+            <span class="cbx-pmp-sec-desc">${page2Moments.length} ventanas adicionales</span>
+          </div>
+
+          <div class="cbx-pmp-moments-list">
+            ${page2MomentsHtml}
+          </div>
+        </section>
+
+        <footer class="cbx-pmp-footer">
+          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página 2 de 3)</span>
+          <span>Impreso el ${esc(nowPrintDate)} · Entrenador: ${esc(coachName)} · Delegado: ${esc(delegateName)}</span>
+        </footer>
+
+      </div>
+      ` : ''}
+
+      <!-- ================= HOJA FINAL: REPARTO DE MINUTOS Y ACTA ================= -->
       <div class="cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-2">
         
-        <!-- Cabecera Compacta Hoja 2 -->
+        <!-- Cabecera Compacta Hoja Final -->
         <header class="cbx-pmp-header cbx-pmp-header-compact">
           <div class="cbx-pmp-head-left">
             <div class="cbx-pmp-crest-box">
@@ -443,7 +554,7 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
             </div>
           </div>
           <div class="cbx-pmp-head-right">
-            <span class="cbx-pmp-badge-accent">PÁGINA 2 DE 2</span>
+            <span class="cbx-pmp-badge-accent">PÁGINA ${totalPages} DE ${totalPages}</span>
           </div>
         </header>
 
@@ -505,7 +616,7 @@ export function buildMatchPlanHtml(matchOrId, state, options = {}) {
 
         <!-- Pie de página Hoja 2 -->
         <footer class="cbx-pmp-footer">
-          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página 2 de 2)</span>
+          <span>CampoBase · Hoja Oficial de Banquillo y Plan de Partido (Página ${totalPages} de ${totalPages})</span>
           <span>Impreso el ${esc(nowPrintDate)} · Entrenador: ${esc(coachName)} · Delegado: ${esc(delegateName)}</span>
         </footer>
 
