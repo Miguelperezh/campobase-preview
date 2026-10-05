@@ -1,5 +1,6 @@
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-visual-2';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=visual-1';
+import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-intuitivo-3';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-8';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
@@ -1775,7 +1776,7 @@ function renderClaudeCallup(callup) {
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3><button type="button" class="cbx-context-gear-btn" data-gear-target="callup-plan" aria-label="Colores de Plan por tramos">⚙️</button>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
         <div style="padding:12px 6px;text-align:center;">
           <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -4245,13 +4246,13 @@ function renderPreparaciones() {
   root.innerHTML = matches.map((match) => {
     const callup = callupForMatch(match);
     if (!callup) {
-      return `<article class="panel cbx-prep-card is-pending"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div><span class="pill">Sin preparar</span></div><p class="meta">Prepara la alineación directamente con la plantilla o personaliza la convocatoria previa.</p><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">Preparar partido</button><button type="button" class="prep-create-callup secondary" data-id="${escapeHtml(match.id)}">Convocar y preparar</button><button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button></div></article>`;
+      return `<article class="panel cbx-prep-card is-pending"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div><span class="pill">Sin preparar</span></div><p class="meta">Prepara la alineación directamente con la plantilla o personaliza la convocatoria previa.</p><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">Preparar partido</button><button type="button" class="prep-create-callup secondary" data-id="${escapeHtml(match.id)}">Convocar y preparar</button><button type="button" class="prep-open secondary" data-focus-plan="true" data-id="${escapeHtml(match.id)}">Plan por tramos</button><button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button></div></article>`;
     }
     const prep = prepForMatch(match.id);
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button><button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button>${prep ? `<button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
+    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button><button type="button" class="prep-open secondary" data-focus-plan="true" data-id="${escapeHtml(match.id)}">Plan por tramos</button><button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button>${prep ? `<button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
 }
 
@@ -4592,10 +4593,10 @@ function renderPrepMoments() {
     <details class="cbx-moment-minutes"><summary>Minutos con este plan</summary><div>${names.map(([id, value]) => `<span>${escapeHtml(playerName(id))}<b>${value}′</b></span>`).join('')}</div></details>
     <div class="button-row" style="margin-top:0.5rem;display:flex;gap:8px;flex-wrap:wrap">
       <button type="button" id="prep-print-moments" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan de partido</button>
-      <button type="button" id="prep-propose-auto" class="secondary">Sugerir cambios y minutos</button>
     </div>
-    <section class="cbx-prep-proposal"><h4>Plan por tramos</h4><p class="meta">${prepSuggestedMoments ? 'Propuesta según los convocados y reparto de minutos. Revisa las parejas antes de usarla.' : 'Tu plan actual. Selecciona una barra para seguir los minutos de ese jugador.'}</p>
-    <label>Tipo de reparto<select id="prep-plan-mode"><option value="escalonado" ${prepPlanMode === 'escalonado' ? 'selected' : ''}>Escalonado</option><option value="partes" ${prepPlanMode === 'partes' ? 'selected' : ''}>Por partes</option></select></label>
+    <section class="cbx-prep-proposal" id="prep-plan-tramos"><div class="cbx-plan-heading"><h4>Plan por tramos</h4><button type="button" class="cbx-context-gear-btn" data-gear-target="prep-plan" aria-label="Colores de Plan por tramos">⚙️</button></div><p class="meta">${prepSuggestedMoments ? 'Propuesta según los convocados y reparto de minutos. Revisa las parejas antes de usarla.' : 'Tu plan actual. Selecciona una barra para seguir los minutos de ese jugador.'}</p>
+    <p class="cbx-plan-guide"><b>1. Elige el reparto</b> · Escalonado: relevos a lo largo del partido. Por partes: relevos agrupados.<br><b>2. Pulsa Sugerir cambios</b> y revisa las barras.<br><b>3. Usa la propuesta</b> para editar jugadores y posiciones. Guarda cuando esté lista.</p><label>Tipo de reparto<select id="prep-plan-mode"><option value="escalonado" ${prepPlanMode === 'escalonado' ? 'selected' : ''}>Escalonado</option><option value="partes" ${prepPlanMode === 'partes' ? 'selected' : ''}>Por partes</option></select></label>
+    <button type="button" id="prep-propose-auto" class="primary">✨ Sugerir cambios y minutos</button>
     ${renderMinuteTimeline(timeline,state.players,'prep:' + prepMatchId)}
     <div class="cbx-plan-changes">${proposalChanges}</div>
     <div class="button-row">${prepSuggestedMoments ? '<button type="button" id="prep-copy-auto" class="primary">Usar esta propuesta en mi plan</button><button type="button" id="prep-discard-proposal" class="secondary">Seguir con mi plan</button>' : ''}${prepPreviousMoments ? '<button type="button" id="prep-restore-plan" class="secondary">Volver al plan anterior</button>' : ''}</div></section>`;
@@ -7445,6 +7446,10 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     viewEl.style.setProperty('--callup-status-ink', v.badgeInk || vFontColor);
     viewEl.style.setProperty('--callup-out-bg', callupOutBg);
     viewEl.style.setProperty('--callup-out-ink', callupOutInk);
+    for (const prop of ['planBarColor','planTrackColor','planTextColor','planRowColor','planSelectionColor','planCursorColor']) {
+      const name = '--' + prop.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
+      if (v[prop]) viewEl.style.setProperty(name,v[prop]); else viewEl.style.removeProperty(name);
+    }
     viewEl.style.setProperty('--plan-mode-track', planModeTrack);
     viewEl.style.setProperty('--plan-mode-bg', planModeBg);
     viewEl.style.setProperty('--plan-mode-ink', planModeInk);
@@ -8971,7 +8976,8 @@ function openQuickColorDialog(targetKind = null) {
   let currentSubTab = 'general';
 
   if (targetKind) {
-    if (targetKind === 'dorsales') { currentViewId = 'plantilla'; currentSubTab = 'general'; }
+    if (targetKind === 'callup-plan' || targetKind === 'prep-plan') { currentViewId = targetKind === 'callup-plan' ? 'convocatorias' : 'preparacion'; currentSubTab = 'plan'; }
+    else if (targetKind === 'dorsales') { currentViewId = 'plantilla'; currentSubTab = 'general'; }
     else if (targetKind === 'specialists') { currentViewId = 'plantilla'; currentSubTab = 'specialists'; }
     else if (targetKind === 'whatsapp') { currentViewId = 'cuerpo-tecnico'; currentSubTab = 'general'; }
     else if (targetKind === 'callups') { currentViewId = 'convocatorias'; currentSubTab = 'general'; }
@@ -9135,7 +9141,7 @@ function openQuickColorDialog(targetKind = null) {
 
     const activeViewConfig = VIEWS_INFO.find((v) => v.id === currentViewId) || VIEWS_INFO[0];
     const subtabs = activeViewConfig.subtabs || [{ id: 'general', label: 'General' }];
-    if (!subtabs.some((st) => st.id === currentSubTab)) {
+    if (!(currentSubTab === 'plan' && ['convocatorias','preparacion'].includes(currentViewId)) && !subtabs.some((st) => st.id === currentSubTab)) {
       currentSubTab = subtabs[0].id;
     }
 
@@ -9203,7 +9209,7 @@ function openQuickColorDialog(targetKind = null) {
     const viewNoticeHtml = `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 88%, var(--cardBorder, #e2e8f0));padding:8px 12px;border-radius:10px;font-size:12px;border:1px solid var(--cardBorder, #e2e8f0);margin-bottom:8px;">
         <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">
-          🎨 Ajustes exclusivos para: <u>${activeViewConfig.name}</u>
+          🎨 Ajustes exclusivos para: <u>${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}</u>
         </span>
         <span style="font-size:11px;font-weight:800;color:#047857;background:#dcfce7;padding:2px 8px;border-radius:999px;">
           Solo esta pantalla o sección
@@ -9826,7 +9832,7 @@ function openQuickColorDialog(targetKind = null) {
     }
 
 
-    if (!['specialists', 'tactic-board'].includes(currentSubTab)) {
+    if (!['specialists', 'tactic-board', 'plan'].includes(currentSubTab)) {
     if (!controlsHtml.includes('data-prop="bannerBg"')) controlsHtml += colorRow('Cabecera · Fondo', 'bannerBg', bannerBg, '#0a251b', []);
     if (!controlsHtml.includes('data-prop="bannerInk"')) controlsHtml += colorRow('Cabecera · Texto', 'bannerInk', bannerInk, '#ffffff', []);
     controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
@@ -9864,7 +9870,24 @@ function openQuickColorDialog(targetKind = null) {
     ].map(([label, prop, fallback]) => colorRow(label, prop, theme[prop] || fallback, fallback, [])).join('')}</details>`;
 
 
-    const buttonRoot = (currentSubTab === 'specialists' ? document.getElementById('plantilla-specialists-bar') : currentSubTab === 'tactic-board' ? document.getElementById(currentViewId === 'tacticas' ? 'cbx-tactics-board-section' : currentViewId === 'delegado' ? 'delegate-tactics' : 'live-tactics') : null) || document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
+    if (currentSubTab === 'plan') {
+      previewHtml = `<div class="cbx-plan-colour-example"><strong>Plan por tramos</strong><p>Titular · 0′–35′ · 35 minutos</p><div class="cbx-minute-track"><i style="left:0;width:50%"></i></div></div>`;
+      controlsHtml = extraRows([
+        ['Barra de minutos jugados', 'planBarColor', btnBg],
+        ['Barra de tiempo sin jugar', 'planTrackColor', '#e2e8f0'],
+        ['Nombres y minutos · Texto', 'planTextColor', cardTitle],
+        ['Filas de jugadores · Fondo', 'planRowColor', cardBg],
+        ['Jugador seleccionado · Contorno', 'planSelectionColor', btnBg],
+        ['Minuto que estás consultando · Línea', 'planCursorColor', cardTitle],
+        ['Reparto · Fondo del selector', 'planModeTrack', '#e2e8f0'],
+        ['Reparto · Opción inactiva fondo', 'planModeBg', '#f1f5f9'],
+        ['Reparto · Opción inactiva texto', 'planModeInk', '#334155'],
+        ['Reparto · Opción activa fondo', 'planModeActiveBg', '#ffffff'],
+        ['Reparto · Opción activa texto', 'planModeActiveInk', '#0f172a']
+      ]);
+    }
+    const buttonRoot = (currentSubTab === 'plan' ? (currentViewId === 'preparacion' ? document.getElementById('prep-plan-tramos') : document.querySelector('#convocatorias .cbx-callup-plan')) : null) || (currentSubTab === 'specialists' ? document.getElementById('plantilla-specialists-bar') : currentSubTab === 'tactic-board' ? document.getElementById(currentViewId === 'tacticas' ? 'cbx-tactics-board-section' : currentViewId === 'delegado' ? 'delegate-tactics' : 'live-tactics') : null) || document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
+    if (currentSubTab === 'plan' && buttonRoot && !buttonRoot.id) buttonRoot.id = 'callup-plan-tramos';
     const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot])];
     const elements = elementRoots.flatMap(configurableElements).filter((item) => {
       const element = document.querySelector(item.selector);
@@ -9897,7 +9920,7 @@ function openQuickColorDialog(targetKind = null) {
       controlsHtml += '</details>';
     }
     controlsHtml += '</section>';
-    titleEl.textContent = `⚙️ Personalizar: ${activeViewConfig.name}`;
+    titleEl.textContent = `⚙️ Personalizar: ${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}`;
     bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + '<div class="cbx-adjustments-layout"><aside class="cbx-adjustments-preview"><h4>Vista previa</h4><p>Comprueba aquí los colores de esta pantalla.</p>' + previewHtml + '</aside><div class="cbx-adjustments-controls">' + controlsHtml + '</div></div>';
     bodyEl.querySelectorAll('.cbx-colour-group').forEach(group=>{
       const summary=group.querySelector('summary');
@@ -9905,6 +9928,7 @@ function openQuickColorDialog(targetKind = null) {
       const icons={'Botones':'◉','Textos':'Aa','Fondos y tarjetas':'▤','Iconos y gráficos':'◈','Campos y selectores':'☑'};
       summary.innerHTML='<span class="cbx-adjustment-icon">'+(icons[summary.textContent]||'◈')+'</span><span>'+summary.innerHTML+'</span><small>'+count+' elementos</small>';
     });
+    enhanceColorSettings(bodyEl, elements);
     bodyEl.scrollTop = 0;
     bodyEl.querySelector('#qc-element-search').addEventListener('input', (event) => {
       const query = event.target.value.trim().toLocaleLowerCase('es');
@@ -12852,7 +12876,7 @@ function wireEvents() {
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
-    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id).catch(handleError);
+    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id).then(() => { if (target.dataset.focusPlan) document.querySelector('#prep-plan-tramos')?.scrollIntoView({block:'start',behavior:'smooth'}); }).catch(handleError);
     if (target.matches('.prep-print-plan')) printMatchPlan(target.dataset.id, state);
     if (target.matches('#prep-print-banner')) {
       const targetMatch = state.matches.find((m) => prepForMatch(m.id)) || state.matches.find((m) => m.status !== 'finished') || state.matches[0];

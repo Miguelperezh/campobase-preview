@@ -1884,3 +1884,16 @@ body.cb-redesign-active .cbx-prep-proposal { padding:14px;border:1px solid var(-
 
 .cbx-minute-spans { grid-column:2 / -1;display:block;text-align:left;font-size:12px;line-height:1.5;white-space:normal;overflow-wrap:anywhere; }
 @media(max-width:600px){.cbx-minute-spans{grid-column:1 / -1;}}
+
+/* Local Plan por tramos preferences in both planning views. */
+body.cb-redesign-active .cbx-minute-row { background:var(--plan-row-color,var(--cardBg,#fff));color:var(--plan-text-color,var(--cardTitle,var(--cbx-ink))); }
+body.cb-redesign-active .cbx-minute-row[aria-pressed=true] { outline-color:var(--plan-selection-color,var(--btn,var(--cbx-acc))); }
+body.cb-redesign-active .cbx-minute-track { background:var(--plan-track-color,color-mix(in srgb,var(--cardBg,#fff) 80%,var(--cardBorder,#cbd5e1))); }
+body.cb-redesign-active .cbx-minute-track i { background:var(--plan-bar-color,var(--btn,var(--cbx-acc))); }
+body.cb-redesign-active .cbx-minute-track em { border-color:var(--plan-cursor-color,var(--cardTitle,var(--cbx-ink))); }
+body.cb-redesign-active .cbx-plan-guide { padding:12px;border:1px solid var(--cardBorder,var(--cbx-line));border-radius:10px;color:var(--fontColor,var(--cbx-ink));font-size:13px;line-height:1.8; }
+body.cb-redesign-active .cbx-plan-heading { flex-wrap:wrap;gap:8px; }
+.cbx-plan-colour-example { --plan-bar-color:var(--btn,#c8102e); }
+
+.cbx-minute-shortcuts { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px; }
+body.cb-redesign-active .cbx-minute-shortcuts button { flex:1;min-height:40px;font-size:12px;padding:8px;white-space:normal; }

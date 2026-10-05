@@ -102,3 +102,13 @@ body.cb-redesign-active #cb-sub-nav { background: var(--sub-nav-bg, #f1f5f9) !im
 .cbx-adjustment-icon { display:grid;place-items:center;flex:0 0 34px;height:34px;border-radius:10px;background:#e8eef4;color:#1e293b; }
 #cbx-quick-color-body #qc-element-search { width:100%;min-height:44px;padding:10px 14px;border:1px solid #cbd5e1;border-radius:12px;box-sizing:border-box; }
 @media(max-width:800px){.cbx-adjustments-layout{grid-template-columns:minmax(0,1fr);}.cbx-adjustments-preview{position:static;} }
+
+/* Intuitive contextual settings, without changing any application palette. */
+#cbx-quick-color-body [hidden] { display:none!important; }
+.cbx-settings-sections { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px; }
+#cbx-quick-color-body .cbx-settings-sections button { min-height:48px;flex:1;padding:10px!important;white-space:normal;border:1px solid #cbd5e1;background:#fff;color:#17202a; }
+#cbx-quick-color-body .cbx-settings-sections [aria-pressed=true] { outline:2px solid #475569;background:#eef2f6;font-weight:800; }
+#cbx-quick-color-body .cbx-setting-live-sample { padding:13px;border:2px solid transparent;border-radius:10px;min-height:24px;text-align:center;font-size:15px;font-weight:700;line-height:1.45;overflow-wrap:anywhere; }
+#cbx-quick-color-body .cbx-color-control-row[data-visual-symbol]::before { content:attr(data-visual-symbol);font-size:21px;font-weight:800;color:#475569; }
+#cbx-quick-color-body .cbx-swatch-btn { width:36px!important;height:36px!important; }
+#cbx-quick-color-body .cbx-named-colors { border-top:0;padding-top:0; }
