@@ -71,7 +71,7 @@ export function enhanceColorSettings(root, elements = []) {
     sample.textContent = /fuente|texto|nombre/i.test(label) ? 'Así se leerá este texto · Aa 123' : /barra|minutos/i.test(label) ? '▰ 35 minutos' : /bot[oó]n|cerrar|editar/i.test(label) ? 'Ejemplo de botón' : 'Ejemplo de ' + label.toLocaleLowerCase('es');
     const prop = picker.dataset.prop || picker.dataset.elementProp;
     const isInk = /Ink|fontColor|textColor|cardTitle|planTextColor|^color$/.test(prop);
-    const paired = picker.dataset.prop ? prop.replace(/Ink$/, 'Bg').replace(/Bg$/, 'Ink') : null;
+    const paired = !picker.dataset.prop ? null : /Ink$/.test(prop) ? prop.replace(/Ink$/, 'Bg') : /Bg$/.test(prop) ? prop.replace(/Bg$/, 'Ink') : ['fontColor','textColor','cardTitle'].includes(prop) ? 'cardBg' : prop === 'planTextColor' ? 'planRowColor' : null;
     const update = () => {
       const counterpart = paired && paired !== prop ? root.querySelector(`input[data-prop="${paired}"]`) : null;
       sample.style.backgroundColor = isInk ? counterpart?.value || '#f1f5f9' : picker.value;
