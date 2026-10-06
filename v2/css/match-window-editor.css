@@ -1,0 +1,45 @@
+#cbx-window-dialog { width:min(1100px,96vw);height:min(900px,94dvh);max-width:96vw;max-height:94dvh;padding:0;border:1px solid var(--cardBorder,#cbd5e1);border-radius:18px;background:var(--cardBg,#fff);color:var(--cardTitle,#0f172a);font:14px var(--cbx-ui,system-ui); }
+#cbx-window-dialog[open] {display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;}
+#cbx-window-dialog > .dialog-head {padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--cardBorder,#e2e8f0);}
+#cbx-window-dialog h2 {margin:0;font-size:22px;}
+#cbx-window-dialog p {line-height:1.5;}
+#cbx-window-dialog .cbx-window-body {min-height:0;overflow:auto;padding:16px 18px;}
+#cbx-window-dialog .cbx-window-tabs {display:flex;gap:8px;margin-bottom:12px;}
+#cbx-window-dialog .cbx-window-tabs button {flex:1;min-height:46px;white-space:normal;}
+#cbx-window-dialog [aria-pressed=true] {outline:2px solid var(--btn,#c8102e);}
+#cbx-window-dialog .cbx-window-layout {display:grid;grid-template-columns:minmax(0,1.8fr) minmax(200px,.8fr);gap:20px;align-items:start;}
+#cbx-window-dialog .cbx-window-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0;}
+#cbx-window-dialog label {display:grid;gap:6px;min-width:0;font-weight:700;}
+#cbx-window-dialog input,#cbx-window-dialog select {width:100%;min-width:0;max-width:100%;min-height:44px;box-sizing:border-box;border:1px solid var(--cardBorder,#cbd5e1);border-radius:9px;padding:8px;background:var(--cardBg,#fff);color:var(--fontColor,#0f172a);font:14px var(--cbx-ui,system-ui);}
+#cbx-window-dialog button {min-height:40px;white-space:normal;}
+#cbx-window-dialog .cbx-player-intervals {display:grid;gap:10px;}
+#cbx-window-dialog .cbx-player-interval {display:grid;grid-template-columns:75px minmax(0,1fr) minmax(0,1fr) 65px 35px;gap:8px;align-items:center;padding:12px;border:1px solid var(--cardBorder,#e2e8f0);border-radius:12px;background:var(--cardBg,#fff);}
+#cbx-window-dialog .cbx-player-interval label {font-size:12px;}
+#cbx-window-dialog .cbx-window-player-sum {padding:12px;border:1px solid var(--cardBorder,#e2e8f0);border-radius:10px;font-size:16px;}
+#cbx-window-dialog .cbx-window-recommend {border:1px solid var(--cardBorder,#e2e8f0);border-radius:12px;padding:14px;margin-top:16px;}
+#cbx-window-dialog .cbx-window-totals {position:sticky;top:0;border:1px solid var(--cardBorder,#e2e8f0);border-radius:12px;padding:14px;background:var(--cardBg,#fff);}
+#cbx-window-dialog .cbx-window-total {display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--cardBorder,#e2e8f0);}
+#cbx-window-dialog .cbx-window-total span {overflow-wrap:anywhere;}
+#cbx-window-dialog .cbx-window-total strong {flex-shrink:0;}
+#cbx-window-dialog .cbx-window-total.is-selected {font-weight:800;}
+#cbx-window-dialog .cbx-window-error {padding:12px;border:2px solid var(--btn,#c8102e);border-radius:10px;font-weight:700;}
+#cbx-window-dialog .cbx-window-error[hidden] {display:none!important;}
+#cbx-window-dialog .cbx-complete-windows {display:grid;gap:10px;margin-top:14px;}
+#cbx-window-dialog .cbx-complete-window {padding:12px;border:1px solid var(--cardBorder,#e2e8f0);border-radius:12px;}
+#cbx-window-dialog .cbx-complete-window summary {cursor:pointer;min-height:38px;}
+#cbx-window-dialog .cbx-complete-window summary strong {font-size:18px;margin-right:12px;}
+#cbx-window-dialog .cbx-window-lineup {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;}
+#cbx-window-dialog .cbx-window-actions {padding:12px 18px;border-top:1px solid var(--cardBorder,#e2e8f0);background:var(--cardBg,#fff);}
+#cbx-window-dialog .cbx-window-actions p {margin:0 0 8px;font-size:12px;}
+#cbx-window-dialog .cbx-window-actions > div {display:flex;gap:8px;justify-content:flex-end;}
+#cbx-window-dialog > .cb-global-close-footer {display:none!important;}
+@media(max-width:700px){
+ #cbx-window-dialog .cbx-window-layout {grid-template-columns:minmax(0,1fr);}
+ #cbx-window-dialog .cbx-window-totals {position:static;}
+ #cbx-window-dialog .cbx-window-body {padding:12px;}
+ #cbx-window-dialog .cbx-player-interval {grid-template-columns:repeat(2,minmax(0,1fr));}
+ #cbx-window-dialog .cbx-player-interval > b {grid-column:1/-1;}
+ #cbx-window-dialog .cbx-player-interval > button {justify-self:end;}
+ #cbx-window-dialog .cbx-window-lineup {grid-template-columns:minmax(0,1fr);}
+ #cbx-window-dialog .cbx-window-actions {padding:10px 12px;}
+}
