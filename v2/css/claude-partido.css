@@ -1897,3 +1897,5 @@ body.cb-redesign-active .cbx-plan-heading { flex-wrap:wrap;gap:8px; }
 
 .cbx-minute-shortcuts { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px; }
 body.cb-redesign-active .cbx-minute-shortcuts button { flex:1;min-height:40px;font-size:12px;padding:8px;white-space:normal; }
+
+#prep-plan-tramos { scroll-margin-top:140px; }

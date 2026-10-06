@@ -7,6 +7,31 @@ export function enhanceColorSettings(root, elements = []) {
   const signal = lifetime.signal;
   const controls = root.querySelector('.cbx-adjustments-controls');
   if (!controls) return;
+  const preview = root.querySelector('.cbx-adjustments-preview');
+  if (preview) {
+    const fold = document.createElement('details');
+    fold.open = window.matchMedia('(min-width:801px)').matches;
+    const summary = document.createElement('summary');
+    summary.textContent = '👁 Vista previa';
+    fold.append(summary);
+    for (const child of [...preview.children]) if (child.tagName !== 'H4') fold.append(child); else child.remove();
+    preview.append(fold);
+  }
+  const planSample = root.querySelector('.cbx-plan-colour-example');
+  if (planSample) {
+    const updatePlanSample = () => {
+      const value = prop => root.querySelector(`input[data-prop="${prop}"]`)?.value;
+      planSample.style.color = value('planTextColor');
+      planSample.style.background = value('planRowColor');
+      planSample.style.border = '2px solid ' + value('planSelectionColor');
+      planSample.style.padding = '12px';
+      planSample.style.borderRadius = '10px';
+      planSample.querySelector('.cbx-minute-track').style.background = value('planTrackColor');
+      planSample.querySelector('i').style.background = value('planBarColor');
+    };
+    updatePlanSample();
+    root.addEventListener('input', updatePlanSample, {signal});
+  }
   const general = controls.querySelector('.cbx-general-color-controls');
   const concrete = controls.querySelector('.cbx-named-colors');
   const toolbar = document.createElement('div');

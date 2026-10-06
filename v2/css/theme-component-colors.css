@@ -112,3 +112,11 @@ body.cb-redesign-active #cb-sub-nav { background: var(--sub-nav-bg, #f1f5f9) !im
 #cbx-quick-color-body .cbx-color-control-row[data-visual-symbol]::before { content:attr(data-visual-symbol);font-size:21px;font-weight:800;color:#475569; }
 #cbx-quick-color-body .cbx-swatch-btn { width:36px!important;height:36px!important; }
 #cbx-quick-color-body .cbx-named-colors { border-top:0;padding-top:0; }
+
+#cbx-quick-color-dialog[open] { display:grid!important;grid-template-rows:auto minmax(0,1fr) auto;height:min(900px,94dvh)!important;max-height:94dvh!important;overflow:hidden; }
+#cbx-quick-color-dialog #cbx-quick-color-body { max-height:none!important;overflow:auto; }
+#cbx-quick-color-dialog > .cb-global-close-footer { display:none!important; }
+#cbx-quick-color-body .cbx-adjustments-preview summary { font:700 15px var(--cbx-ui);cursor:pointer;min-height:28px; }
+#cbx-quick-color-body .cbx-adjustments-preview details > p { font-size:12px;line-height:1.5; }
+#cbx-quick-color-dialog { --cbx-ui:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--disp:var(--cbx-ui);font-family:var(--cbx-ui); }
+#cbx-quick-color-dialog :is(label,p,code,summary,legend,button,h3,h4) { font-family:var(--cbx-ui)!important; }

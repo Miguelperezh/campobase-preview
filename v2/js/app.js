@@ -1,5 +1,5 @@
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { enhanceColorSettings } from './settings-visual-ui.js?v=visual-2';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=visual-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-intuitivo-3';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-8';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
@@ -9871,14 +9871,21 @@ function openQuickColorDialog(targetKind = null) {
 
 
     if (currentSubTab === 'plan') {
+      const planRoot = currentViewId === 'preparacion' ? document.getElementById('prep-plan-tramos') : document.querySelector('#convocatorias .cbx-callup-plan');
+      const actualPlanColor = (selector, property, fallback) => {
+        const element = planRoot?.querySelector(selector);
+        const color = element && getComputedStyle(element).getPropertyValue(property);
+        const rgb = color?.startsWith('rgb') ? color.match(/\d+/g) : null;
+        return rgb?.length >= 3 ? '#' + rgb.slice(0,3).map(value => Number(value).toString(16).padStart(2,'0')).join('') : fallback;
+      };
       previewHtml = `<div class="cbx-plan-colour-example"><strong>Plan por tramos</strong><p>Titular · 0′–35′ · 35 minutos</p><div class="cbx-minute-track"><i style="left:0;width:50%"></i></div></div>`;
       controlsHtml = extraRows([
-        ['Barra de minutos jugados', 'planBarColor', btnBg],
-        ['Barra de tiempo sin jugar', 'planTrackColor', '#e2e8f0'],
-        ['Nombres y minutos · Texto', 'planTextColor', cardTitle],
-        ['Filas de jugadores · Fondo', 'planRowColor', cardBg],
-        ['Jugador seleccionado · Contorno', 'planSelectionColor', btnBg],
-        ['Minuto que estás consultando · Línea', 'planCursorColor', cardTitle],
+        ['Barra de minutos jugados', 'planBarColor', actualPlanColor('.cbx-minute-track i','background-color',btnBg)],
+        ['Barra de tiempo sin jugar', 'planTrackColor', actualPlanColor('.cbx-minute-track','background-color','#e2e8f0')],
+        ['Nombres y minutos · Texto', 'planTextColor', actualPlanColor('.cbx-minute-row','color',cardTitle)],
+        ['Filas de jugadores · Fondo', 'planRowColor', actualPlanColor('.cbx-minute-row','background-color',cardBg)],
+        ['Jugador seleccionado · Contorno', 'planSelectionColor', actualPlanColor('.cbx-minute-row[aria-pressed=true]','outline-color',btnBg)],
+        ['Minuto que estás consultando · Línea', 'planCursorColor', actualPlanColor('.cbx-minute-track em','border-left-color',cardTitle)],
         ['Reparto · Fondo del selector', 'planModeTrack', '#e2e8f0'],
         ['Reparto · Opción inactiva fondo', 'planModeBg', '#f1f5f9'],
         ['Reparto · Opción inactiva texto', 'planModeInk', '#334155'],
