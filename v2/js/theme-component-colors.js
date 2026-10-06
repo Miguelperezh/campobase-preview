@@ -194,6 +194,13 @@ export function applyComponentColors(theme) {
   paint(callups, '.cbx-plan-mode-track', '--plan-mode-track');
   paint(callups, '.cbx-plan-mode-btn[aria-pressed="false"]', '--plan-mode-bg', '--plan-mode-ink');
   paint(callups, '.cbx-plan-mode-btn[aria-pressed="true"]', '--plan-mode-active-bg', '--plan-mode-active-ink');
+  // Explicit plan choices override the legacy secondary-button paint only here.
+  for (const viewId of ['convocatorias','preparacion']) {
+    const root = document.getElementById(viewId);
+    const settings = currentTheme.views?.[viewId] || {};
+    if (settings.planRowColor) paint(root, '.cbx-minute-row', '--plan-row-color');
+    if (settings.planTextColor) paint(root, '.cbx-minute-person > span,.cbx-minute-total,.cbx-minute-spans', null, '--plan-text-color');
+  }
   const sessions = document.getElementById('sesiones');
   for (const [selector, bg, ink] of [
     ['.cbx-btn-whistle', '--whistle-bg', '--whistle-ink'],
