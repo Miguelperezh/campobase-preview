@@ -2,13 +2,13 @@ import {plannedMinutes,describeMoment} from './match-moments.js';
 import {validateWindowPlan,insertWindowBoundary,changeWindowPlayer,configurePlayerIntervals,playerIntervals,recommendedPlayerIntervals} from './match-window-plan.js';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const minutes=value=>Number(Number(value).toFixed(3)).toLocaleString('es-ES');
-export function openMatchWindowEditor({moments,players,availableIds,keeperIds,duration,targets=[],opponent='',recommend,onApply}) {
+export function openMatchWindowEditor({moments,players,availableIds,keeperIds,duration,targets=[],opponent='',recommend,onApply,selectedPlayerId=''}) {
   document.getElementById('cbx-window-dialog')?.close();
   let draft=structuredClone(moments),mode='player',selectedMinute=0,error='',history=[];
   validateWindowPlan(draft,availableIds,duration);
   const roster=availableIds.map(id=>players.find(p=>p.id===id)).filter(Boolean);
   const playerName=id=>{const player=roster.find(p=>p.id===id);return player?`${player.number||'—'} · ${player.name}`:'Jugador';};
-  let playerId=draft[0].team.find(s=>s.pos!=='Portero')?.playerId || availableIds[0];
+  let playerId=(availableIds.includes(selectedPlayerId)?selectedPlayerId:'') || draft[0].team.find(s=>s.pos!=='Portero')?.playerId || availableIds[0];
   let reliefId='',intervals=[],pairSource,target=0,block=5;
   const dialog=document.createElement('dialog');dialog.id='cbx-window-dialog';dialog.className='cbx-window-dialog';dialog.dataset.themeView='preparacion';
   dialog.innerHTML=`<header class="dialog-head"><div><h2>Ventanas de cambios</h2><p>${esc(opponent)} · ${duration} minutos</p></div><button type="button" data-window-close aria-label="Cerrar sin aplicar">✕</button></header><div class="cbx-window-body"></div><footer class="cbx-window-actions"><p>Es un borrador. Después de aplicarlo, guarda la preparación.</p><div><button type="button" class="secondary" data-window-close>Cancelar</button><button type="button" class="primary" id="window-apply">Aplicar al borrador de Preparación</button></div></footer>`;

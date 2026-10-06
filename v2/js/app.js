@@ -1,8 +1,8 @@
-import { openMatchWindowEditor } from './match-window-editor.js?v=windows-1';
+import { openMatchWindowEditor } from './match-window-editor.js?v=player-edit-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=visual-4';
-import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=plan-intuitivo-3';
+import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-9';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
@@ -4618,7 +4618,7 @@ function selectPrepMoment(index, shouldCapture = true) {
   renderPrepBoard(); renderPrepSlots(); renderPrepMoments();
 }
 
-function openPrepWindowEditor() {
+function openPrepWindowEditor(selectedPlayerId = '') {
   if (!prepMatchId || !prepMomentsDraft.length) return toast('Abre primero la preparación del partido.');
   capturePrepMoment();
   const matchId=prepMatchId;
@@ -4629,7 +4629,7 @@ function openPrepWindowEditor() {
   const config=FORMATS[callup?.format || state.format] || FORMATS.F7;
   try {
     const draft=prepMomentsDraft.map(moment=>completeProposedStarters(moment,playerIds,keeperIds));
-    openMatchWindowEditor({moments:draft,players:state.players,availableIds:playerIds,keeperIds,duration:config.duration,
+    openMatchWindowEditor({selectedPlayerId,moments:draft,players:state.players,availableIds:playerIds,keeperIds,duration:config.duration,
       targets:Array.isArray(callup?.targets)?callup.targets:calculateMinuteTargets(playerIds,config.duration,config.players,keeperIds),opponent:match?.opponent,
       recommend:initial=>{
         const proposed=structuredClone(initial);
@@ -12899,6 +12899,17 @@ function wireEvents() {
     if (target.matches('[data-callup-plan-mode]')) { callupSuggestedPlans.delete(target.dataset.callupId); callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
     const genRotationBtn = target.closest('.cbx-generate-callup-rotation-btn');
     if (genRotationBtn) { suggestCallupRotation(genRotationBtn.dataset.callupId); }
+    const editPlayer=target.closest('[data-minute-edit]');
+    if(editPlayer) {
+      const timeline=editPlayer.closest('[data-minute-timeline]');
+      const playerId=editPlayer.dataset.minuteEdit;
+      if(timeline?.dataset.minuteTimeline.startsWith('prep:'))openPrepWindowEditor(playerId);
+      else {
+        const card=editPlayer.closest('[data-callup-id]');
+        const callup=state.callups.find(c=>c.id===card?.dataset.callupId);
+        if(callup?.matchId)copyCallupPlanToPrep(callup.id,callup.matchId).then(()=>openPrepWindowEditor(playerId)).catch(handleError);
+      }
+    }
     const editCallupWindows=target.closest('.cbx-edit-callup-windows');
     if(editCallupWindows) copyCallupPlanToPrep(editCallupWindows.dataset.callupId,editCallupWindows.dataset.matchId).then(openPrepWindowEditor).catch(handleError);
     const copyCallupPlanBtn=target.closest('.cbx-copy-callup-plan');
